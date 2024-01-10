@@ -11,11 +11,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.backoffice.operations.entity.UrlResponse;
+import com.backoffice.operations.payloads.PinRequestDTO;
+import com.backoffice.operations.utils.PinGenerationUtil;
 
 @RestController
 @RequestMapping("/api/v1/dashboard")
@@ -39,6 +43,19 @@ public class DashboardController {
         return urls.stream()
                 .map(UrlResponse::new)
                 .collect(Collectors.toList());
+    }
+    
+    @PostMapping("/encrypt")
+    public String encryptPin(@RequestBody PinRequestDTO pinRequestDTO) throws Exception {
+        String setPinKey = pinRequestDTO.getSetPinKey();
+        String kitNo = pinRequestDTO.getKitNo();
+        String pin = pinRequestDTO.getPin();
+
+        // Encryption
+        String formattedPinBlock = PinGenerationUtil.format0Encode(pin, kitNo);
+        String encryptedPin = PinGenerationUtil.encrypt(formattedPinBlock, setPinKey);
+
+        return encryptedPin;
     }
 	
 	@GetMapping(value = "/image", produces = MediaType.IMAGE_PNG_VALUE)
