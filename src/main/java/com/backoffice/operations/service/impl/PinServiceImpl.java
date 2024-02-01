@@ -32,7 +32,7 @@ public class PinServiceImpl implements PinService {
         // Store data in the database
         PinRequestEntity pinRequestEntity = new PinRequestEntity();
         pinRequestEntity.setEntityId(pinRequestDTO.getEntityId());
-        pinRequestEntity.setPin(pinRequestDTO.getPin());
+//        pinRequestEntity.setPin(pinRequestDTO.getPin());
         pinRequestEntity.setKitNo(pinRequestDTO.getKitNo());
         pinRequestEntity.setExpiryDate(pinRequestDTO.getExpiryDate());
         pinRequestEntity.setDob(pinRequestDTO.getDob());

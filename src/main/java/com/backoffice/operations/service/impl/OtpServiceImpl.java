@@ -1,6 +1,7 @@
 package com.backoffice.operations.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,12 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.backoffice.operations.entity.OtpEntity;
+import com.backoffice.operations.entity.SecuritySettings;
 import com.backoffice.operations.exceptions.MaxResendAttemptsException;
 import com.backoffice.operations.exceptions.OtpValidationException;
+import com.backoffice.operations.payloads.SecuritySettingsDTO;
 import com.backoffice.operations.repository.OtpRepository;
+import com.backoffice.operations.repository.SecuritySettingsRepository;
 import com.backoffice.operations.service.OtpService;
-
-import io.jsonwebtoken.lang.Objects;
 
 @Service
 public class OtpServiceImpl implements OtpService {
@@ -26,6 +28,9 @@ public class OtpServiceImpl implements OtpService {
     
     @Value("${otp.cooldownPeriodMinutes}")
     private int cooldownPeriodMinutes;
+    
+    @Autowired
+    private SecuritySettingsRepository securitySettingsRepository;
 
     // Maximum allowed attempts for OTP validation
 //    private static final int MAX_ATTEMPTS = 5;
@@ -84,6 +89,22 @@ public class OtpServiceImpl implements OtpService {
             // Reset attempts and generate a new OTP
             otpEntity.setAttempts(0);
             generateAndSaveOtp(otpEntity);
+        }
+    }
+    
+    @Override
+    public void saveSecuritySettings(SecuritySettingsDTO securitySettingsDTO) {
+        SecuritySettings securitySettings = new SecuritySettings();
+        if(Objects.nonNull(securitySettingsDTO)) {
+        	if(Objects.nonNull(securitySettingsDTO.isBiometricEnabled()))
+        		securitySettings.setBiometricEnabled(securitySettingsDTO.isBiometricEnabled());
+        	if(Objects.nonNull(securitySettingsDTO.isTouchIdEnabled()))
+        		securitySettings.setTouchIdEnabled(securitySettingsDTO.isTouchIdEnabled());
+        	if(Objects.nonNull(securitySettingsDTO.isPasscodeEnabled()))
+        		securitySettings.setPasscodeEnabled(securitySettingsDTO.isPasscodeEnabled());
+        	if(Objects.nonNull(securitySettingsDTO.isPinEnabled()))
+        		securitySettings.setPinEnabled(securitySettingsDTO.isPinEnabled());	
+            securitySettingsRepository.save(securitySettings);
         }
     }
 

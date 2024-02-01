@@ -21,6 +21,7 @@ import com.backoffice.operations.payloads.EntityIdDTO;
 import com.backoffice.operations.payloads.ExternalApiResponseDTO;
 import com.backoffice.operations.payloads.GetPinDTO;
 import com.backoffice.operations.payloads.OtpRequestDTO;
+import com.backoffice.operations.payloads.SecuritySettingsDTO;
 import com.backoffice.operations.service.CivilIdService;
 import com.backoffice.operations.service.OtpService;
 import com.backoffice.operations.service.PinService;
@@ -77,7 +78,6 @@ public class OtpController {
         }
     }
     
-    
     @PostMapping("/card/fetchAllCustomerData")
     public ResponseEntity<Object> fetchAllCustomerData(@RequestBody @Validated EntityIdDTO entityIdDTO) {
     	Object responseDTO = civilIdService.fetchAllCustomerData(entityIdDTO.getEntityId());
@@ -89,4 +89,11 @@ public class OtpController {
     	Object responseDTO = civilIdService.blockUnblockCard(blockUnblockCard);
         return ResponseEntity.ok(responseDTO);
     }
+    
+    @PostMapping("/saveSettings")
+    public ResponseEntity<String> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
+        otpService.saveSecuritySettings(securitySettingsDTO);
+        return new ResponseEntity<>("Security settings updated successfully", HttpStatus.OK);
+    }
+    
 }
