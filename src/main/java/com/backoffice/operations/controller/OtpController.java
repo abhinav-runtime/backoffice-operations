@@ -1,6 +1,6 @@
 package com.backoffice.operations.controller;
 
-import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,10 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backoffice.operations.exceptions.MaxResendAttemptsException;
 import com.backoffice.operations.exceptions.OtpValidationException;
-import com.backoffice.operations.payloads.CardDTO;
+import com.backoffice.operations.payloads.BlockUnblockActionDTO;
+import com.backoffice.operations.payloads.EntityIdDTO;
+import com.backoffice.operations.payloads.ExternalApiResponseDTO;
+import com.backoffice.operations.payloads.GetPinDTO;
 import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.service.CivilIdService;
 import com.backoffice.operations.service.OtpService;
+import com.backoffice.operations.service.PinService;
 
 @RestController
 @RequestMapping("/api/otp")
@@ -29,6 +33,8 @@ public class OtpController {
     private OtpService otpService;
 	@Autowired
 	private CivilIdService civilIdService;
+	@Autowired
+    private PinService pinService;
 
     @PostMapping("/validate")
     public ResponseEntity<String> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
@@ -50,16 +56,37 @@ public class OtpController {
         }
     }
     
-    @GetMapping("/civilId/{civilId}")
-    public ResponseEntity<String> validateCivilId(@PathVariable @Validated String civilId) {
-        String result = civilIdService.validateCivilId(civilId);
-        return ResponseEntity.ok(result);
+    @GetMapping("/civil/{civilId}")
+    public ResponseEntity<String> getEntityId(@PathVariable @Validated String civilId) {
+        Optional<String> entityId = civilIdService.getEntityId(civilId);
+        return entityId.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
     
-    @GetMapping("/card/{civilId}")
-    public ResponseEntity<List<CardDTO>> getCardListing(@PathVariable @Validated CardDTO cardDTO) {
-        List<CardDTO> cardListing = civilIdService.getCardListing(cardDTO.getCivilId());
-        return ResponseEntity.ok(cardListing);
+    @PostMapping("/card/getCardList")
+    public ResponseEntity<ExternalApiResponseDTO> getCardList(@RequestBody @Validated EntityIdDTO entityIdDTO) {
+        ExternalApiResponseDTO responseDTO = civilIdService.getCardList(entityIdDTO.getEntityId());
+        return ResponseEntity.ok(responseDTO);
     }
 
+    @PostMapping("/pin/storeAndSetPin")
+    public ResponseEntity<String> storeAndSetPin(@RequestBody GetPinDTO pinRequestDTO) {
+        if (pinService.storeAndSetPin(pinRequestDTO)) {
+            return ResponseEntity.ok("Pin stored and set successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error storing or setting pin");
+        }
+    }
+    
+    
+    @PostMapping("/card/fetchAllCustomerData")
+    public ResponseEntity<Object> fetchAllCustomerData(@RequestBody @Validated EntityIdDTO entityIdDTO) {
+    	Object responseDTO = civilIdService.fetchAllCustomerData(entityIdDTO.getEntityId());
+        return ResponseEntity.ok(responseDTO);
+    }
+
+    @PostMapping("/card/blockUnblockCard")
+    public ResponseEntity<Object> blockUnblockCard(@RequestBody @Validated BlockUnblockActionDTO blockUnblockCard) {
+    	Object responseDTO = civilIdService.blockUnblockCard(blockUnblockCard);
+        return ResponseEntity.ok(responseDTO);
+    }
 }

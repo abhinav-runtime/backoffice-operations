@@ -1,13 +1,19 @@
 package com.backoffice.operations.service;
 
-import java.util.List;
+import java.util.Optional;
 
-import com.backoffice.operations.payloads.CardDTO;
+import com.backoffice.operations.payloads.AllCustomerResponseDTO;
+import com.backoffice.operations.payloads.BlockUnblockActionDTO;
+import com.backoffice.operations.payloads.ExternalApiResponseDTO;
 
 public interface CivilIdService {
-	
-	String validateCivilId(String civilId);
-	
-	List<CardDTO> getCardListing(String civilId);
+		
+	Optional<String> getEntityId(String civilId);
+
+	ExternalApiResponseDTO getCardList(String entityId);
+
+	Object fetchAllCustomerData(String entityId);
+
+	Object blockUnblockCard(BlockUnblockActionDTO blockUnblockCard);
 
 }

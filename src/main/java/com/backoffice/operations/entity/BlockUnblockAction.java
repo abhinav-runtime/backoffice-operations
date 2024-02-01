@@ -14,36 +14,44 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class CivilIdEntity {
-
+public class BlockUnblockAction {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String civilId;
-    private String entityId;
-    
+	private String entityId;
+    private String kitNo;
+    private String flag;
+    private String reason;
 	public Long getId() {
 		return id;
 	}
-
 	public void setId(Long id) {
 		this.id = id;
 	}
-
-	public String getCivilId() {
-		return civilId;
-	}
-
-	public void setCivilId(String civilId) {
-		this.civilId = civilId;
-	}
-
 	public String getEntityId() {
 		return entityId;
 	}
-
 	public void setEntityId(String entityId) {
 		this.entityId = entityId;
 	}
-	
+	public String getKitNo() {
+		return kitNo;
+	}
+	public void setKitNo(String kitNo) {
+		this.kitNo = kitNo;
+	}
+	public String getFlag() {
+		return flag;
+	}
+	public void setFlag(String flag) {
+		this.flag = flag;
+	}
+	public String getReason() {
+		return reason;
+	}
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+
 }
