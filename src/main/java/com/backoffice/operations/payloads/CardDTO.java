@@ -14,17 +14,6 @@ public class CardDTO {
     private String kitNo;
     private String pin;
 
-    // Constructors, getters, and setters
-
-    public CardDTO() {
-    }
-
-    public CardDTO(String setPinKey, String kitNo, String pin) {
-        this.setPinKey = setPinKey;
-        this.kitNo = kitNo;
-        this.pin = pin;
-    }
-
     public String getSetPinKey() {
         return setPinKey;
     }

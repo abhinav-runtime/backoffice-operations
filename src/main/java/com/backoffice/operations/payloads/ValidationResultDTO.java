@@ -12,10 +12,6 @@ import lombok.Setter;
 public class ValidationResultDTO {
 	private ValidationResult result;
 
-	public ValidationResultDTO(ValidationResult result) {
-		this.result = result;
-	}
-
 	public ValidationResult getResult() {
 		return result;
 	}
@@ -31,11 +27,6 @@ public class ValidationResultDTO {
 	public static class ValidationResult {
 		private String message;
 		private String civilID;
-
-		public ValidationResult(String message, String civilID) {
-			this.message = message;
-			this.civilID = civilID;
-		}
 
 		public String getMessage() {
 			return message;
