@@ -4,6 +4,6 @@ import com.backoffice.operations.payloads.GetPinDTO;
 
 public interface PinService {
 	
-	public boolean storeAndSetPin(GetPinDTO pinRequestDTO);
+	public boolean storeAndSetPin(GetPinDTO pinRequestDTO, String token);
 
 }

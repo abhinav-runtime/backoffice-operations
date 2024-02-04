@@ -8,7 +8,7 @@ public interface OtpService {
 	
 	void validateOtp(String otp) throws OtpValidationException;
 	
-    void resendOtp(String userId) throws MaxResendAttemptsException;
+    void resendOtp(String uniqueKeyCivilId) throws MaxResendAttemptsException;
     
     void saveSecuritySettings(SecuritySettingsDTO securitySettingsDTO);
 

@@ -6,6 +6,6 @@ import com.backoffice.operations.entity.Comment;
 
 import java.util.List;
 
-public interface CommentRepository extends JpaRepository<Comment, Long> {
-    List<Comment> findByPostId(long postId);
+public interface CommentRepository extends JpaRepository<Comment, String> {
+    List<Comment> findByPostId(String postId);
 }

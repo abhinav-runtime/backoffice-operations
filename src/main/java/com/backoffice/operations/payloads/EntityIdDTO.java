@@ -12,17 +12,40 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EntityIdDTO {
-	
-	@NotBlank(message = "Entity ID cannot be blank")
-//    @Pattern(regexp = "\\d{10}", message = "Entity ID must be 10 digits")
-    private String entityId;
 
-	public String getEntityId() {
-		return entityId;
+	@NotBlank(message = "First Four Digits Card No cannot be blank")
+	@Pattern(regexp = "\\d{4}", message = "First Four Digits Card No must be 4 digits")
+	private String firstFourDigitscardNo;
+
+	@NotBlank(message = "Last Four Digits Card No cannot be blank")
+	@Pattern(regexp = "\\d{4}", message = "Last Four Digits Card No must be 4 digits")
+	private String lastFourDigitscardNo;
+
+	@NotBlank(message = "Uique Key Civil Id cannot be blank")
+	private String uniqueKeyCivilId;
+
+	public String getUniqueKeyCivilId() {
+		return uniqueKeyCivilId;
 	}
 
-	public void setEntityId(String entityId) {
-		this.entityId = entityId;
+	public void setUniqueKeyCivilId(String uniqueKeyCivilId) {
+		this.uniqueKeyCivilId = uniqueKeyCivilId;
+	}
+
+	public String getFirstFourDigitscardNo() {
+		return firstFourDigitscardNo;
+	}
+
+	public void setFirstFourDigitscardNo(String firstFourDigitscardNo) {
+		this.firstFourDigitscardNo = firstFourDigitscardNo;
+	}
+
+	public String getLastFourDigitscardNo() {
+		return lastFourDigitscardNo;
+	}
+
+	public void setLastFourDigitscardNo(String lastFourDigitscardNo) {
+		this.lastFourDigitscardNo = lastFourDigitscardNo;
 	}
 
 }

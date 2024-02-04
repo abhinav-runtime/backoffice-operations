@@ -6,21 +6,23 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.annotations.GenericGenerator;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(
-        name = "posts", uniqueConstraints = {@UniqueConstraint(columnNames = {"title"})}
+        name = "az_posts_bk", uniqueConstraints = {@UniqueConstraint(columnNames = {"title"})}
 )
 public class Post {
 
-    @Id
-    @GeneratedValue(
-            strategy = GenerationType.IDENTITY
-    )
-    private Long id;
+	@Id
+    @GeneratedValue(generator = "uuid")
+    @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
+    @Column(name = "id", unique = true, nullable = false)
+    private String id;
 
     @Column(name = "title", nullable = false)
     private String title;
@@ -38,11 +40,11 @@ public class Post {
     @JoinColumn(name = "category_id")
     private Category category;
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

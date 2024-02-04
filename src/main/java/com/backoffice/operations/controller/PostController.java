@@ -77,7 +77,7 @@ public class PostController {
     )
     // get post by id
     @GetMapping("/{id}")
-    public ResponseEntity<PostDto> getPostById(@PathVariable(name = "id") long id){
+    public ResponseEntity<PostDto> getPostById(@PathVariable(name = "id") String id){
         return ResponseEntity.ok(postService.getPostById(id));
     }
 
@@ -95,7 +95,7 @@ public class PostController {
     // update post by id rest api
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<PostDto> updatePost(@Valid @RequestBody PostDto postDto, @PathVariable(name = "id") long id){
+    public ResponseEntity<PostDto> updatePost(@Valid @RequestBody PostDto postDto, @PathVariable(name = "id") String id){
 
        PostDto postResponse = postService.updatePost(postDto, id);
 
@@ -116,7 +116,7 @@ public class PostController {
     // delete post rest api
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deletePost(@PathVariable(name = "id") long id){
+    public ResponseEntity<String> deletePost(@PathVariable(name = "id") String id){
 
         postService.deletePostById(id);
 
@@ -126,7 +126,7 @@ public class PostController {
     // Build Get Posts by Category REST API
     // http://localhost:8080/api/posts/category/3
     @GetMapping("/category/{id}")
-    public ResponseEntity<List<PostDto>> getPostsByCategory(@PathVariable("id") Long categoryId){
+    public ResponseEntity<List<PostDto>> getPostsByCategory(@PathVariable("id") String categoryId){
         List<PostDto> postDtos = postService.getPostsByCategory(categoryId);
         return ResponseEntity.ok(postDtos);
     }

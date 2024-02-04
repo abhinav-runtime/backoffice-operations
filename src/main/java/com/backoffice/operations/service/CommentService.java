@@ -5,13 +5,13 @@ import java.util.List;
 import com.backoffice.operations.payloads.CommentDto;
 
 public interface CommentService {
-    CommentDto createComment(long postId, CommentDto commentDto);
+    CommentDto createComment(String postId, CommentDto commentDto);
 
-    List<CommentDto> getCommentsByPostId(long postId);
+    List<CommentDto> getCommentsByPostId(String postId);
 
-    CommentDto getCommentById(Long postId, Long commentId);
+    CommentDto getCommentById(String postId, String commentId);
 
-    CommentDto updateComment(Long postId, long commentId, CommentDto commentRequest);
+    CommentDto updateComment(String postId, String commentId, CommentDto commentRequest);
 
-    void deleteComment(Long postId, Long commentId);
+    void deleteComment(String postId, String commentId);
 }

@@ -22,7 +22,6 @@ public class ContactUSService {
 
     public ContactUSEntity createContact(ContactUSDTO contactDTO) {
         ContactUSEntity contact = new ContactUSEntity();
-        contact.setId(contactDTO.getId());
         contact.setContactType(contactDTO.getContactType());
         contact.setContactNo(contactDTO.getContactNo());
         return contactUSRepository.save(contact);

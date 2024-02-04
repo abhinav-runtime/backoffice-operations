@@ -13,7 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostDto {
-    private long id;
+    private String id;
 
 
     // title should not be null  or empty
@@ -33,14 +33,22 @@ public class PostDto {
     private String content;
     private Set<CommentDto> comments;
 
-    private Long categoryId;
+    private String categoryId;
 
-	public long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getCategoryId() {
+		return categoryId;
+	}
+
+	public void setCategoryId(String categoryId) {
+		this.categoryId = categoryId;
 	}
 
 	public String getTitle() {
@@ -74,14 +82,5 @@ public class PostDto {
 	public void setComments(Set<CommentDto> comments) {
 		this.comments = comments;
 	}
-
-	public Long getCategoryId() {
-		return categoryId;
-	}
-
-	public void setCategoryId(Long categoryId) {
-		this.categoryId = categoryId;
-	}
-    
     
 }

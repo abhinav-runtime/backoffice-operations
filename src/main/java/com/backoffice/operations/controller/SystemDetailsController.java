@@ -43,13 +43,9 @@ public class SystemDetailsController {
     public SystemDetailDTO updateSystemDetail(@PathVariable Long id, @RequestBody SystemDetailDTO updatedSystemDetailDTO) {
         SystemDetail existingSystemDetail = systemDetailRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("System detail not found with id: " + id));
-
-        // Update fields based on your requirements
         existingSystemDetail.setName(updatedSystemDetailDTO.getName());
         existingSystemDetail.setType(updatedSystemDetailDTO.getType());
         existingSystemDetail.setStatus(updatedSystemDetailDTO.getStatus());
-        // ...
-
         SystemDetail updatedSystemDetail = systemDetailRepository.save(existingSystemDetail);
         return mapToDTO(updatedSystemDetail);
     }

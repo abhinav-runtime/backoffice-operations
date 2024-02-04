@@ -8,70 +8,96 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import com.backoffice.operations.entity.User;
 import com.backoffice.operations.exceptions.BlogAPIException;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 @Component
 public class JwtTokenProvider {
 
-    @Value("${app.jwt-secret}")
-    private String jwtSecret;
+	@Value("${app.jwt-secret}")
+	private String jwtSecret;
 
-    @Value("${app-jwt-expiration-milliseconds}")
-    private long jwtExpirationDate;
+	@Value("${app-jwt-expiration-milliseconds}")
+	private long jwtExpirationDate;
 
-    // generate JWT token
-    public String generateToken(Authentication authentication){
-        String username = authentication.getName();
+	// generate JWT token
+	public String generateToken(Authentication authentication) {
+		String username = authentication.getName();
 
-        Date currentDate = new Date();
+		Date currentDate = new Date();
 
-        Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
+		Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
 
-        String token = Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(expireDate)
-                .signWith(key())
-                .compact();
-        return token;
-    }
+		String token = Jwts.builder().setSubject(username).setIssuedAt(new Date()).setExpiration(expireDate)
+				.signWith(key()).compact();
+		return token;
+	}
 
-    private Key key(){
-        return Keys.hmacShaKeyFor(
-                Decoders.BASE64.decode(jwtSecret)
-        );
-    }
+	private Key key() {
+		return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+	}
 
-    // get username from Jwt token
-    public String getUsername(String token){
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        String username = claims.getSubject();
-        return username;
-    }
+	// get username from Jwt token
+	public String getUsername(String token) {
+		Claims claims = Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(token).getBody();
+		String username = claims.getSubject();
+		return username;
+	}
 
-    // validate Jwt token
-    public boolean validateToken(String token){
-        try{
-            Jwts.parserBuilder()
-                    .setSigningKey(key())
-                    .build()
-                    .parse(token);
-            return true;
-        } catch (MalformedJwtException ex) {
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Invalid JWT token");
-        } catch (ExpiredJwtException ex) {
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Expired JWT token");
-        } catch (UnsupportedJwtException ex) {
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Unsupported JWT token");
-        } catch (IllegalArgumentException ex) {
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "JWT claims string is empty.");
-        }
-    }
+	// validate Jwt token
+	public boolean validateToken(String token) {
+		try {
+			Jwts.parserBuilder().setSigningKey(key()).build().parse(token);
+			return true;
+		} catch (MalformedJwtException ex) {
+			throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Invalid JWT token");
+		} catch (ExpiredJwtException ex) {
+			throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Expired JWT token");
+		} catch (UnsupportedJwtException ex) {
+			throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Unsupported JWT token");
+		} catch (IllegalArgumentException ex) {
+			throw new BlogAPIException(HttpStatus.BAD_REQUEST, "JWT claims string is empty.");
+		}
+	}
+
+	public boolean isTokenExpired(String token) {
+		Date expirationDate = getExpirationDateFromToken(token);
+		return expirationDate != null && expirationDate.before(new Date());
+	}
+
+	private Date getExpirationDateFromToken(String token) {
+		return getClaimFromToken(token, Claims::getExpiration);
+	}
+
+	private <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
+		Claims claims = getAllClaimsFromToken(token);
+		return claimsResolver.apply(claims);
+	}
+
+	private Claims getAllClaimsFromToken(String token) {
+		return Jwts.parserBuilder().setSigningKey(jwtSecret.getBytes(StandardCharsets.UTF_8)).build()
+				.parseClaimsJws(token).getBody();
+	}
+
+	public String generateToken(User userDetails) {
+		Map<String, Object> claims = new HashMap<>();
+		return doGenerateToken(claims, userDetails.getUsername());
+	}
+
+	private String doGenerateToken(Map<String, Object> claims, String subject) {
+		Date currentDate = new Date();
+		Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
+		String token = Jwts.builder().setSubject(subject).setIssuedAt(new Date()).setExpiration(expireDate)
+				.signWith(key()).compact();
+
+		return token;
+	}
+
 }

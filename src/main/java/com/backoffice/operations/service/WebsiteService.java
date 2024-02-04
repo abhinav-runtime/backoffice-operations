@@ -22,7 +22,6 @@ public class WebsiteService {
 
     public WebsiteEntity createWebsite(WebsiteDTO websiteDTO) {
         WebsiteEntity website = new WebsiteEntity();
-        website.setId(websiteDTO.getId());
         website.setWebsiteName(websiteDTO.getWebsiteName());
         website.setWebsiteLink(websiteDTO.getWebsiteLink());
         return websiteRepository.save(website);

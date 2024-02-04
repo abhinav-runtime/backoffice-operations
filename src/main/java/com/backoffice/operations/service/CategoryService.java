@@ -8,11 +8,11 @@ import com.backoffice.operations.payloads.CategoryDto;
 public interface CategoryService {
     CategoryDto addCategory(CategoryDto categoryDto);
 
-    CategoryDto getCategory(Long categoryId);
+    CategoryDto getCategory(String categoryId);
 
     List<CategoryDto> getAllCategories();
 
-    CategoryDto updateCategory(CategoryDto categoryDto, Long categoryId);
+    CategoryDto updateCategory(CategoryDto categoryDto, String categoryId);
 
-    void deleteCategory(Long categoryId);
+    void deleteCategory(String categoryId);
 }

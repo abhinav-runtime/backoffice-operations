@@ -22,7 +22,6 @@ public class EmailService {
 
     public EmailEntity createEmail(EmailDTO emailDTO) {
         EmailEntity email = new EmailEntity();
-        email.setId(emailDTO.getId());
         email.setEmailName(emailDTO.getEmailName());
         email.setEmailId(emailDTO.getEmailId());
         return emailRepository.save(email);

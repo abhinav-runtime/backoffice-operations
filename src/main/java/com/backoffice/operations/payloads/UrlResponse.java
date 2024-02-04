@@ -1,10 +1,8 @@
-package com.backoffice.operations.entity;
+package com.backoffice.operations.payloads;
 
 public class UrlResponse {
 	
 	private String url;
-
-    // Constructors, getters, and setters (generated or written manually)
     
     // Default constructor
     public UrlResponse() {}

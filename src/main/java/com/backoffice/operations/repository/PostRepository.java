@@ -6,8 +6,8 @@ import com.backoffice.operations.entity.Post;
 
 import java.util.List;
 
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, String> {
 
-    List<Post> findByCategoryId(Long categoryId);
+    List<Post> findByCategoryId(String categoryId);
 
 }

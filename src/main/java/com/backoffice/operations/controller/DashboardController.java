@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.backoffice.operations.entity.UrlResponse;
-import com.backoffice.operations.payloads.PinRequestDTO;
+import com.backoffice.operations.payloads.CardDTO;
+import com.backoffice.operations.payloads.UrlResponse;
 import com.backoffice.operations.utils.PinGenerationUtil;
 
 @RestController
@@ -46,7 +46,7 @@ public class DashboardController {
     }
     
     @PostMapping("/encrypt")
-    public String encryptPin(@RequestBody PinRequestDTO pinRequestDTO) throws Exception {
+    public String encryptPin(@RequestBody CardDTO pinRequestDTO) throws Exception {
         String setPinKey = pinRequestDTO.getSetPinKey();
         String kitNo = pinRequestDTO.getKitNo();
         String pin = pinRequestDTO.getPin();

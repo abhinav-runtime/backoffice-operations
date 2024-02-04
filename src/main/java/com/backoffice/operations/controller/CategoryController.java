@@ -30,7 +30,7 @@ public class CategoryController {
 
     // Build Get Category REST API
     @GetMapping("{id}")
-    public ResponseEntity<CategoryDto> getCategory(@PathVariable("id") Long categoryId){
+    public ResponseEntity<CategoryDto> getCategory(@PathVariable("id") String categoryId){
          CategoryDto categoryDto = categoryService.getCategory(categoryId);
          return ResponseEntity.ok(categoryDto);
     }
@@ -45,14 +45,14 @@ public class CategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("{id}")
     public ResponseEntity<CategoryDto> updateCategory(@RequestBody CategoryDto categoryDto,
-                                                      @PathVariable("id") Long categoryId){
+                                                      @PathVariable("id") String categoryId){
         return ResponseEntity.ok(categoryService.updateCategory(categoryDto, categoryId));
     }
 
     // Build Delete Category REST API
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteCategory(@PathVariable("id") Long categoryId){
+    public ResponseEntity<String> deleteCategory(@PathVariable("id") String categoryId){
         categoryService.deleteCategory(categoryId);
         return ResponseEntity.ok("Category deleted successfully!.");
     }
