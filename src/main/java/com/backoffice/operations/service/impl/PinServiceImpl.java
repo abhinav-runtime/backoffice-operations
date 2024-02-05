@@ -51,7 +51,7 @@ public class PinServiceImpl implements PinService {
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		if (user.isPresent()) {
-			CardEntity cardEntity = cardRepository.findByUniqueKeyCivilId(pinRequestDTO.getUniqueKeyCivilId());
+			CardEntity cardEntity = cardRepository.findByUniqueKeyCivilId(pinRequestDTO.getUniqueKey());
 			if (Objects.nonNull(cardEntity)) {
 				PinRequestEntity pinRequestEntity = pinRequestRepository
 						.findByUniqueKeyCivilId(cardEntity.getUniqueKeyCivilId());

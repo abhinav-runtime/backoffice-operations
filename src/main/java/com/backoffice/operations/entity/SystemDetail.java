@@ -26,7 +26,6 @@ public class SystemDetail {
     @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "id", unique = true, nullable = false)
     private String id;
-	private String userId;
     private String deviceId;
     private String name;
     private String type;
@@ -40,6 +39,15 @@ public class SystemDetail {
     private Date created;
     private Date lastSeen;
     private String action;
+   	private String uniqueKey;
+
+	public String getUniqueKey() {
+		return uniqueKey;
+	}
+
+	public void setUniqueKey(String uniqueKey) {
+		this.uniqueKey = uniqueKey;
+	}
 
 	public String getId() {
 		return id;
@@ -47,14 +55,6 @@ public class SystemDetail {
 
 	public void setId(String id) {
 		this.id = id;
-	}
-
-	public String getUserId() {
-		return userId;
-	}
-
-	public void setUserId(String userId) {
-		this.userId = userId;
 	}
 
 	public String getOsVersion() {

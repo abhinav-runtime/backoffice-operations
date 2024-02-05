@@ -21,15 +21,15 @@ public class EntityIdDTO {
 	@Pattern(regexp = "\\d{4}", message = "Last Four Digits Card No must be 4 digits")
 	private String lastFourDigitscardNo;
 
-	@NotBlank(message = "Uique Key Civil Id cannot be blank")
-	private String uniqueKeyCivilId;
+	@NotBlank(message = "Unique Key cannot be blank")
+	private String uniqueKey;
 
-	public String getUniqueKeyCivilId() {
-		return uniqueKeyCivilId;
+	public String getUniqueKey() {
+		return uniqueKey;
 	}
 
-	public void setUniqueKeyCivilId(String uniqueKeyCivilId) {
-		this.uniqueKeyCivilId = uniqueKeyCivilId;
+	public void setUniqueKey(String uniqueKey) {
+		this.uniqueKey = uniqueKey;
 	}
 
 	public String getFirstFourDigitscardNo() {

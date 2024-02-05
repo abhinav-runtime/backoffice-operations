@@ -37,12 +37,13 @@ public class OtpController {
 	private CivilIdService civilIdService;
 	@Autowired
 	private PinService pinService;
+	@Autowired
 	private JwtTokenProvider jwtTokenProvider;
 
 	@PostMapping("/validate")
 	public ResponseEntity<String> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
 		try {
-			otpService.validateOtp(otpRequest.getOtp());
+			otpService.validateOtp(otpRequest);
 			return ResponseEntity.ok("OTP validation successful");
 		} catch (OtpValidationException e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -50,11 +51,11 @@ public class OtpController {
 	}
 
 	@PostMapping("/resend")
-	public ResponseEntity<String> resendOtp(@RequestParam String uniqueKeyCivilId,
+	public ResponseEntity<String> resendOtp(@RequestParam String uniqueKey,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		try {
-			if (jwtTokenProvider.validateToken(token)) {
-				otpService.resendOtp(uniqueKeyCivilId);
+			if (jwtTokenProvider.validateToken(token.substring("Bearer ".length()))) {
+				otpService.resendOtp(uniqueKey);
 				return ResponseEntity.ok("OTP resent successfully");
 			}
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(HttpStatus.BAD_GATEWAY.name());

@@ -2,14 +2,20 @@ package com.backoffice.operations.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.backoffice.operations.entity.CivilIdEntity;
 import com.backoffice.operations.entity.OtpEntity;
 import com.backoffice.operations.entity.SecuritySettings;
 import com.backoffice.operations.exceptions.MaxResendAttemptsException;
 import com.backoffice.operations.exceptions.OtpValidationException;
+import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.payloads.SecuritySettingsDTO;
+import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.OtpRepository;
 import com.backoffice.operations.repository.SecuritySettingsRepository;
 import com.backoffice.operations.service.OtpService;
@@ -28,6 +34,9 @@ public class OtpServiceImpl implements OtpService {
 
 	@Autowired
 	private SecuritySettingsRepository securitySettingsRepository;
+	
+	@Autowired
+	private CivilIdRepository civilIdRepository;
 
 	// Maximum allowed attempts for OTP validation
 //    private static final int MAX_ATTEMPTS = 5;
@@ -36,14 +45,18 @@ public class OtpServiceImpl implements OtpService {
 //    private static final int COOLDOWN_PERIOD_MINUTES = 5;
 
 	@Override
-	public void validateOtp(String otp) throws OtpValidationException {
+	public void validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException {
+		Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
+		if (civilIdEntity.isPresent()) {
+			
+		}
 		OtpEntity otpEntity = new OtpEntity();
 		otpEntity.setOtp("1234");
-		if (otp == null) {
+		if (otpRequest.getOtp() == null) {
 			throw new OtpValidationException("Invalid OTP or OTP expired");
 		}
 
-		if (!otpEntity.getOtp().equals(otp)) {
+		if (!otpEntity.getOtp().equals(otpRequest.getOtp())) {
 			otpEntity.setAttempts(otpEntity.getAttempts() + 1);
 			otpEntity.setLastAttemptTime(LocalDateTime.now());
 			otpRepository.save(otpEntity);
@@ -70,13 +83,13 @@ public class OtpServiceImpl implements OtpService {
 	}
 
 	@Override
-	public void resendOtp(String uniqueKeyCivilId) throws MaxResendAttemptsException {
-		OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(uniqueKeyCivilId);
+	public String resendOtp(String uniqueKey) throws MaxResendAttemptsException {
+		OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(uniqueKey);
 		// TODO: return how many attempts
 		if (otpEntity == null) {
 			// First-time request, generate and save a new OTP
 			otpEntity = new OtpEntity();
-			otpEntity.setUniqueKeyCivilId(uniqueKeyCivilId);
+			otpEntity.setUniqueKeyCivilId(uniqueKey);
 			generateAndSaveOtp(otpEntity);
 		} else {
 			// Check cooldown period
@@ -89,6 +102,7 @@ public class OtpServiceImpl implements OtpService {
 			otpEntity.setAttempts(0);
 			generateAndSaveOtp(otpEntity);
 		}
+		return "1234";
 	}
 
 	@Override
@@ -108,8 +122,8 @@ public class OtpServiceImpl implements OtpService {
 	}
 
 	private void generateAndSaveOtp(OtpEntity otpEntity) {
-		String newOtp = CommonUtils.generateRandomOtp();
-		otpEntity.setOtp(newOtp);
+//		String newOtp = CommonUtils.generateRandomOtp();
+		otpEntity.setOtp("1234");
 		otpEntity.setLastAttemptTime(LocalDateTime.now());
 		otpRepository.save(otpEntity);
 		// Send the OTP to the user (e.g., via SMS, email, etc.)

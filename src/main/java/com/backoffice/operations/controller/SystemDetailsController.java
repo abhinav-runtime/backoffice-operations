@@ -56,40 +56,42 @@ public class SystemDetailsController {
     }
 
     // Helper method to map entity to DTO
-    private SystemDetailDTO mapToDTO(SystemDetail systemDetail) {
+    private SystemDetailDTO mapToDTO(SystemDetail entity) {
         SystemDetailDTO dto = new SystemDetailDTO();
-        // Map fields from entity to DTO
-        dto.setDeviceId(systemDetail.getDeviceId());
-        dto.setName(systemDetail.getName());
-        dto.setType(systemDetail.getType());
-        dto.setModel(systemDetail.getModel());
-        dto.setStatus(systemDetail.getStatus());
-        dto.setAppVersion(systemDetail.getAppVersion());
-        dto.setCarrier(systemDetail.getCarrier());
-        dto.setLocation(systemDetail.getLocation());
-        dto.setIpAddress(systemDetail.getIpAddress());
-        dto.setCreated(systemDetail.getCreated());
-        dto.setLastSeen(systemDetail.getLastSeen());
-        dto.setAction(systemDetail.getAction());
+        dto.setDeviceId(entity.getDeviceId());
+        dto.setName(entity.getName());
+        dto.setType(entity.getType());
+        dto.setModel(entity.getModel());
+        dto.setStatus(entity.getStatus());
+        dto.setOsVersion(entity.getOsVersion());
+        dto.setAppVersion(entity.getAppVersion());
+        dto.setCarrier(entity.getCarrier());
+        dto.setLocation(entity.getLocation());
+        dto.setIpAddress(entity.getIpAddress());
+        dto.setCreated(entity.getCreated());
+        dto.setLastSeen(entity.getLastSeen());
+        dto.setAction(entity.getAction());
+        dto.setUniqueKey(entity.getUniqueKey());
         return dto;
     }
 
     // Helper method to map DTO to entity
     private SystemDetail mapToEntity(SystemDetailDTO dto) {
-        SystemDetail systemDetail = new SystemDetail();
-        // Map fields from DTO to entity
-        systemDetail.setDeviceId(dto.getDeviceId());
-        systemDetail.setName(dto.getName());
-        systemDetail.setType(dto.getType());
-        systemDetail.setModel(dto.getModel());
-        systemDetail.setStatus(dto.getStatus());
-        systemDetail.setAppVersion(dto.getAppVersion());
-        systemDetail.setCarrier(dto.getCarrier());
-        systemDetail.setLocation(dto.getLocation());
-        systemDetail.setIpAddress(dto.getIpAddress());
-        systemDetail.setCreated(dto.getCreated());
-        systemDetail.setLastSeen(dto.getLastSeen());
-        systemDetail.setAction(dto.getAction());
-        return systemDetail;
+        SystemDetail entity = new SystemDetail();
+        entity.setDeviceId(dto.getDeviceId());
+        entity.setName(dto.getName());
+        entity.setType(dto.getType());
+        entity.setModel(dto.getModel());
+        entity.setStatus(dto.getStatus());
+        entity.setOsVersion(dto.getOsVersion());
+        entity.setAppVersion(dto.getAppVersion());
+        entity.setCarrier(dto.getCarrier());
+        entity.setLocation(dto.getLocation());
+        entity.setIpAddress(dto.getIpAddress());
+        entity.setCreated(dto.getCreated());
+        entity.setLastSeen(dto.getLastSeen());
+        entity.setAction(dto.getAction());
+        entity.setUniqueKey(dto.getUniqueKey());
+        return entity;
     }
 }

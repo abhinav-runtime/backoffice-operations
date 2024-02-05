@@ -1,5 +1,6 @@
 package com.backoffice.operations.payloads;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,15 +12,18 @@ import lombok.Setter;
 @AllArgsConstructor
 public class GetPinDTO {
 
-	private String uniqueKeyCivilId;
+	@NotBlank(message = "Pin cannot be blank")
 	private String pin;
 
-	public String getUniqueKeyCivilId() {
-		return uniqueKeyCivilId;
+	@NotBlank(message = "Unique Key cannot be blank")
+	private String uniqueKey;
+
+	public String getUniqueKey() {
+		return uniqueKey;
 	}
 
-	public void setUniqueKeyCivilId(String uniqueKeyCivilId) {
-		this.uniqueKeyCivilId = uniqueKeyCivilId;
+	public void setUniqueKey(String uniqueKey) {
+		this.uniqueKey = uniqueKey;
 	}
 
 	public String getPin() {

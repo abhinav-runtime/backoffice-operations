@@ -17,11 +17,11 @@ public class ValidationResultDTO {
 
 	public static class ValidationResult {
 		private String message;
-		private String civilID;
+		private String uniqueKey;
 
-		public ValidationResult(String message, String civilID) {
+		public ValidationResult(String message, String uniqueKey) {
 			this.message = message;
-			this.civilID = civilID;
+			this.uniqueKey = uniqueKey;
 		}
 
 		public String getMessage() {
@@ -32,12 +32,13 @@ public class ValidationResultDTO {
 			this.message = message;
 		}
 
-		public String getCivilID() {
-			return civilID;
+		public String getUniqueKey() {
+			return uniqueKey;
 		}
 
-		public void setCivilID(String civilID) {
-			this.civilID = civilID;
+		public void setUniqueKey(String uniqueKey) {
+			this.uniqueKey = uniqueKey;
 		}
+
 	}
 }

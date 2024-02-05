@@ -110,7 +110,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		try {
 			if (user.isPresent()) {
-				Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(entityIdDTO.getUniqueKeyCivilId());
+				Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(entityIdDTO.getUniqueKey());
 				if (civilIdEntity.isPresent()) {
 					String apiUrl = externalApiUrl + "/getCardList";
 					HttpHeaders headers = new HttpHeaders();
@@ -170,7 +170,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 
 	@Override
 	public Object fetchAllCustomerData(EntityIdDTO entityIdDTO, String token) {
-		Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(entityIdDTO.getUniqueKeyCivilId());
+		Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(entityIdDTO.getUniqueKey());
 		if (civilIdEntity.isPresent()) {
 			HttpHeaders headers = new HttpHeaders();
 			headers.add("TENANT", "ALIZZ_UAT");
