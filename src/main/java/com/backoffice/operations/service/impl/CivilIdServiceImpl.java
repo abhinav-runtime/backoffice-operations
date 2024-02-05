@@ -24,7 +24,6 @@ import com.backoffice.operations.entity.OtpEntity;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.enums.CardStatus;
 import com.backoffice.operations.payloads.BlockUnblockActionDTO;
-import com.backoffice.operations.payloads.CardListResponse;
 import com.backoffice.operations.payloads.CivilIdAPIResponse;
 import com.backoffice.operations.payloads.EntityIdDTO;
 import com.backoffice.operations.payloads.CivilIdAPIResponse.CustomerFull;
@@ -71,43 +70,59 @@ public class CivilIdServiceImpl implements CivilIdService {
 	public ValidationResultDTO validateCivilId(String entityId, String token) {
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
+		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+		CivilIdEntity civilIdEntity = new CivilIdEntity();
+		civilIdEntity.setEntityId(entityId);
+		civilIdEntity.setUserId(user.get().getId().toString());
+		try {
+			if (user.isPresent()) {
+				String apiUrl = civilIdExternalAPI + entityId;
+				ResponseEntity<CivilIdAPIResponse> responseEntity = restTemplate.getForEntity(apiUrl,
+						CivilIdAPIResponse.class);
+				CivilIdAPIResponse apiResponse = responseEntity.getBody();
 
-		if (user.isPresent()) {
-			String apiUrl = civilIdExternalAPI + entityId;
-			ResponseEntity<CivilIdAPIResponse> responseEntity = restTemplate.getForEntity(apiUrl,
-					CivilIdAPIResponse.class);
-			CivilIdAPIResponse apiResponse = responseEntity.getBody();
+				if (apiResponse != null && apiResponse.isSuccess()) {
+					CustomerFull customerFull = apiResponse.getResponse().getResult().getCustomerFull();
 
-			if (apiResponse != null && apiResponse.isSuccess()) {
-				CustomerFull customerFull = apiResponse.getResponse().getResult().getCustomerFull();
+					if (customerFull != null) {
+						civilIdEntity.setCivilId(customerFull.getCustNo());
+						civilIdRepository.save(civilIdEntity);
 
-				if (customerFull != null) {
-					CivilIdEntity civilIdEntity = new CivilIdEntity();
-					civilIdEntity.setCivilId(customerFull.getCustNo());
-					civilIdEntity.setEntityId(entityId);
-					civilIdEntity.setUserId(user.get().getId().toString());
-					civilIdRepository.save(civilIdEntity);
-
-					ValidationResultDTO.ValidationResult result = new ValidationResultDTO.ValidationResult("Success",
-							civilIdEntity.getId().toString());
-					return new ValidationResultDTO(result);
-				} else {
-					ValidationResultDTO.ValidationResult result = new ValidationResultDTO.ValidationResult("Failure",
-							null);
-					return new ValidationResultDTO(result);
+						validationResultDTO.setStatus("Success");
+						validationResultDTO.setMessage("Success");
+						data.setUniqueKey(civilIdEntity.getId().toString());
+						validationResultDTO.setData(data);
+						return validationResultDTO;
+					}
 				}
 			}
-		}
+			civilIdRepository.save(civilIdEntity);
 
-		ValidationResultDTO.ValidationResult result = new ValidationResultDTO.ValidationResult("Failure", null);
-		return new ValidationResultDTO(result);
+			validationResultDTO.setMessage("Failure");
+			validationResultDTO.setStatus("Something went wrong");
+			data.setUniqueKey(civilIdEntity.getId().toString());
+			validationResultDTO.setData(data);
+			return validationResultDTO;
+		} catch (Exception e) {
+			civilIdRepository.save(civilIdEntity);
+
+			logger.error("ERROR in class CivilIdServiceImpl method validateCivilId", e);
+			validationResultDTO.setStatus("Failure");
+			validationResultDTO.setMessage("Something went wrong");
+			data.setUniqueKey(civilIdEntity.getId().toString());
+			validationResultDTO.setData(data);
+			return validationResultDTO;
+		}
 	}
 
 	@Override
-	public CardListResponse verifyCard(EntityIdDTO entityIdDTO, String token) {
+	public ValidationResultDTO verifyCard(EntityIdDTO entityIdDTO, String token) {
 		logger.debug("In class CivilIdServiceImpl method getCardList");
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
+		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		try {
 			if (user.isPresent()) {
 				Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(entityIdDTO.getUniqueKey());
@@ -128,11 +143,21 @@ public class CivilIdServiceImpl implements CivilIdService {
 							if (entityIdDTO.getFirstFourDigitscardNo().equals(actualFirstFourDigits)
 									&& entityIdDTO.getLastFourDigitscardNo().equals(actualLastFourDigits)) {
 								if (card.getStatus().equalsIgnoreCase(CardStatus.LOCKED.name())) {
-									return new CardListResponse("Your card is locked", null);
+
+									validationResultDTO.setStatus("Success");
+									validationResultDTO.setMessage("Your card is locked");
+									data.setUniqueKey(entityIdDTO.getUniqueKey());
+									validationResultDTO.setData(data);
+									return validationResultDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.BLOCKED.name())) {
-									return new CardListResponse("Your card is permanently blocked", null);
+									validationResultDTO.setStatus("Failure");
+									validationResultDTO.setMessage("Your card is permanently blocked");
+									data.setUniqueKey(entityIdDTO.getUniqueKey());
+									validationResultDTO.setData(data);
+									return validationResultDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
-									OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(civilIdEntity.get().getId().toString());
+									OtpEntity otpEntity = otpRepository
+											.findByUniqueKeyCivilId(civilIdEntity.get().getId().toString());
 									otpEntity = new OtpEntity();
 									// Set uniqueid against civil id.
 									otpEntity.setUniqueKeyCivilId(civilIdEntity.get().getId().toString());
@@ -150,21 +175,41 @@ public class CivilIdServiceImpl implements CivilIdService {
 									cardEntity.setDobOfUser(responseEntity.getBody().getResult().getDob());
 									cardRepository.save(cardEntity);
 
-									return new CardListResponse("Success", newOtp);
+									validationResultDTO.setStatus("Success");
+									validationResultDTO.setMessage("Success");
+									data.setUniqueKey(entityIdDTO.getUniqueKey());
+									validationResultDTO.setData(data);
+									return validationResultDTO;
 								} else {
-									return new CardListResponse("Something went wrong", null);
+									validationResultDTO.setStatus("Failure");
+									validationResultDTO.setMessage("Something went wrong");
+									data.setUniqueKey(entityIdDTO.getUniqueKey());
+									validationResultDTO.setData(data);
+									return validationResultDTO;
 								}
 							}
 						}
 					}
 				} else {
-					return new CardListResponse("Something went wrong", null);
+					validationResultDTO.setStatus("Failure");
+					validationResultDTO.setMessage("Something went wrong");
+					data.setUniqueKey(entityIdDTO.getUniqueKey());
+					validationResultDTO.setData(data);
+					return validationResultDTO;
 				}
 			}
-			return new CardListResponse("Something went wrong", null);
+			validationResultDTO.setStatus("Failure");
+			validationResultDTO.setMessage("Something went wrong");
+			data.setUniqueKey(entityIdDTO.getUniqueKey());
+			validationResultDTO.setData(data);
+			return validationResultDTO;
 		} catch (Exception e) {
-			logger.error("ERROR in class CivilIdServiceImpl method getCardList", e);
-			return new CardListResponse("Something went wrong", null);
+			logger.error("ERROR in class CivilIdServiceImpl method verifyCard", e);
+			validationResultDTO.setStatus("Failure");
+			validationResultDTO.setMessage("Something went wrong");
+			data.setUniqueKey(entityIdDTO.getUniqueKey());
+			validationResultDTO.setData(data);
+			return validationResultDTO;
 		}
 	}
 

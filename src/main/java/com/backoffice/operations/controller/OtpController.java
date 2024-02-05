@@ -16,7 +16,6 @@ import org.springframework.http.HttpHeaders;
 import com.backoffice.operations.exceptions.MaxResendAttemptsException;
 import com.backoffice.operations.exceptions.OtpValidationException;
 import com.backoffice.operations.payloads.BlockUnblockActionDTO;
-import com.backoffice.operations.payloads.CardListResponse;
 import com.backoffice.operations.payloads.EntityIdDTO;
 import com.backoffice.operations.payloads.GetPinDTO;
 import com.backoffice.operations.payloads.OtpRequestDTO;
@@ -41,31 +40,35 @@ public class OtpController {
 	private JwtTokenProvider jwtTokenProvider;
 
 	@PostMapping("/validate")
-	public ResponseEntity<String> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
+	public ResponseEntity<ValidationResultDTO> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
+		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
 		try {
-			otpService.validateOtp(otpRequest);
-			return ResponseEntity.ok("OTP validation successful");
+			validationResultDTO = otpService.validateOtp(otpRequest);
+			return ResponseEntity.ok(validationResultDTO);
 		} catch (OtpValidationException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+			return ResponseEntity.ok(validationResultDTO);
 		}
 	}
 
 	@PostMapping("/resend")
-	public ResponseEntity<String> resendOtp(@RequestParam String uniqueKey,
+	public ResponseEntity<ValidationResultDTO> resendOtp(@RequestParam String uniqueKey,
+			@RequestParam String lang,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
 		try {
 			if (jwtTokenProvider.validateToken(token.substring("Bearer ".length()))) {
-				otpService.resendOtp(uniqueKey);
-				return ResponseEntity.ok("OTP resent successfully");
+				validationResultDTO = otpService.resendOtp(uniqueKey);
+				return ResponseEntity.ok(validationResultDTO);
 			}
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(HttpStatus.BAD_GATEWAY.name());
+			return ResponseEntity.ok(validationResultDTO);
 		} catch (MaxResendAttemptsException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+			return ResponseEntity.ok(validationResultDTO);
 		}
 	}
 
-	@GetMapping("/civil/{civilId}")
+	@GetMapping("/civil/{civilId}/{lang}")
 	public ResponseEntity<ValidationResultDTO> validateCivilId(@PathVariable @Validated String civilId,
+			@PathVariable String lang,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		ValidationResultDTO validationResultDTO = civilIdService.validateCivilId(civilId,
 				token.substring("Bearer ".length()));
@@ -73,21 +76,18 @@ public class OtpController {
 	}
 
 	@PostMapping("/card/verifyCard")
-	public ResponseEntity<CardListResponse> verifyCard(@RequestBody @Validated EntityIdDTO entityIdDTO,
+	public ResponseEntity<ValidationResultDTO> verifyCard(@RequestBody @Validated EntityIdDTO entityIdDTO,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		CardListResponse cardListResponse = civilIdService.verifyCard(entityIdDTO,
+		ValidationResultDTO validationResultDTO = civilIdService.verifyCard(entityIdDTO,
 				token.substring("Bearer ".length()));
-		return ResponseEntity.ok(cardListResponse);
+		return ResponseEntity.ok(validationResultDTO);
 	}
 
 	@PostMapping("/pin/storeAndSetPin")
-	public ResponseEntity<String> storeAndSetPin(@RequestBody GetPinDTO pinRequestDTO,
+	public ResponseEntity<ValidationResultDTO> storeAndSetPin(@RequestBody GetPinDTO pinRequestDTO,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		if (pinService.storeAndSetPin(pinRequestDTO, token.substring("Bearer ".length()))) {
-			return ResponseEntity.ok("Pin stored and set successfully");
-		} else {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error storing or setting pin");
-		}
+		ValidationResultDTO validationResultDTO = pinService.storeAndSetPin(pinRequestDTO, token.substring("Bearer ".length()));
+		return ResponseEntity.ok(validationResultDTO);
 	}
 
 	@PostMapping("/card/fetchAllCustomerData")

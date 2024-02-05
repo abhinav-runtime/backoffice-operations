@@ -1,35 +1,55 @@
 package com.backoffice.operations.payloads;
 
 public class ValidationResultDTO {
-	private ValidationResult result;
+	private String status;
+	private Data data;
+	private String message;
 
-	public ValidationResultDTO(ValidationResult result) {
-		this.result = result;
+	public ValidationResultDTO() {
+
 	}
 
-	public ValidationResult getResult() {
-		return result;
+	public ValidationResultDTO(String status, Data data, String message) {
+		super();
+		this.status = status;
+		this.data = data;
+		this.message = message;
 	}
 
-	public void setResult(ValidationResult result) {
-		this.result = result;
+	public String getStatus() {
+		return status;
 	}
 
-	public static class ValidationResult {
-		private String message;
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public Data getData() {
+		return data;
+	}
+
+	public void setData(Data data) {
+		this.data = data;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public static class Data {
 		private String uniqueKey;
 
-		public ValidationResult(String message, String uniqueKey) {
-			this.message = message;
+		public Data() {
+
+		}
+
+		public Data(String uniqueKey) {
+			super();
 			this.uniqueKey = uniqueKey;
-		}
-
-		public String getMessage() {
-			return message;
-		}
-
-		public void setMessage(String message) {
-			this.message = message;
 		}
 
 		public String getUniqueKey() {
@@ -39,6 +59,5 @@ public class ValidationResultDTO {
 		public void setUniqueKey(String uniqueKey) {
 			this.uniqueKey = uniqueKey;
 		}
-
 	}
 }

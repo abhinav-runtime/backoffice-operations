@@ -15,6 +15,7 @@ import com.backoffice.operations.exceptions.MaxResendAttemptsException;
 import com.backoffice.operations.exceptions.OtpValidationException;
 import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.payloads.SecuritySettingsDTO;
+import com.backoffice.operations.payloads.ValidationResultDTO;
 import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.OtpRepository;
 import com.backoffice.operations.repository.SecuritySettingsRepository;
@@ -34,7 +35,7 @@ public class OtpServiceImpl implements OtpService {
 
 	@Autowired
 	private SecuritySettingsRepository securitySettingsRepository;
-	
+
 	@Autowired
 	private CivilIdRepository civilIdRepository;
 
@@ -45,46 +46,73 @@ public class OtpServiceImpl implements OtpService {
 //    private static final int COOLDOWN_PERIOD_MINUTES = 5;
 
 	@Override
-	public void validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException {
+	public ValidationResultDTO validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException {
 		Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
+		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		if (civilIdEntity.isPresent()) {
-			
-		}
-		OtpEntity otpEntity = new OtpEntity();
-		otpEntity.setOtp("1234");
-		if (otpRequest.getOtp() == null) {
-			throw new OtpValidationException("Invalid OTP or OTP expired");
-		}
+			OtpEntity otpEntity = new OtpEntity();
+			otpEntity.setOtp("1234");
+			if (otpRequest.getOtp() == null) {
 
-		if (!otpEntity.getOtp().equals(otpRequest.getOtp())) {
-			otpEntity.setAttempts(otpEntity.getAttempts() + 1);
+				validationResultDTO.setStatus("Failure");
+				validationResultDTO.setMessage("Invalid OTP or OTP expired");
+				data.setUniqueKey(civilIdEntity.get().getId().toString());
+				validationResultDTO.setData(data);
+				return validationResultDTO;
+			}
+
+			if (!otpEntity.getOtp().equals(otpRequest.getOtp())) {
+				otpEntity.setAttempts(otpEntity.getAttempts() + 1);
+				otpEntity.setLastAttemptTime(LocalDateTime.now());
+				otpRepository.save(otpEntity);
+
+				if (otpEntity.getAttempts() >= otpMaxAttempts) {
+					validationResultDTO.setStatus("Failure");
+					validationResultDTO.setMessage("Maximum attempts reached. Please try again later.");
+					data.setUniqueKey(civilIdEntity.get().getId().toString());
+					validationResultDTO.setData(data);
+					return validationResultDTO;
+				} else {
+					validationResultDTO.setStatus("Failure");
+					validationResultDTO
+							.setMessage("Invalid OTP. Attempts left: " + (otpMaxAttempts - otpEntity.getAttempts()));
+					data.setUniqueKey(civilIdEntity.get().getId().toString());
+					validationResultDTO.setData(data);
+					return validationResultDTO;
+				}
+			}
+
+			// Check expiration time (e.g., within the last 10 minutes)
+			LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(10);
+			if (Objects.nonNull(otpEntity.getLastAttemptTime())
+					&& otpEntity.getLastAttemptTime().isBefore(expirationTime)) {
+				validationResultDTO.setStatus("Failure");
+				validationResultDTO.setMessage("OTP expired. Please request a new OTP.");
+				data.setUniqueKey(civilIdEntity.get().getId().toString());
+				validationResultDTO.setData(data);
+				return validationResultDTO;
+			}
+
+			// OTP validation successful, reset attempts
+			otpEntity.setAttempts(0);
 			otpEntity.setLastAttemptTime(LocalDateTime.now());
 			otpRepository.save(otpEntity);
 
-			if (otpEntity.getAttempts() >= otpMaxAttempts) {
-				throw new OtpValidationException("Maximum attempts reached. Please try again later.");
-			} else {
-				throw new OtpValidationException(
-						"Invalid OTP. Attempts left: " + (otpMaxAttempts - otpEntity.getAttempts()));
-			}
+			validationResultDTO.setStatus("Success");
+			validationResultDTO.setMessage("Success");
+			data.setUniqueKey(civilIdEntity.get().getId().toString());
+			validationResultDTO.setData(data);
+			return validationResultDTO;
 		}
-
-		// Check expiration time (e.g., within the last 10 minutes)
-		LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(10);
-		if (Objects.nonNull(otpEntity.getLastAttemptTime())
-				&& otpEntity.getLastAttemptTime().isBefore(expirationTime)) {
-			throw new OtpValidationException("OTP expired. Please request a new OTP.");
-		}
-
-		// OTP validation successful, reset attempts
-		otpEntity.setAttempts(0);
-		otpEntity.setLastAttemptTime(LocalDateTime.now());
-		otpRepository.save(otpEntity);
+		return null;
 	}
 
 	@Override
-	public String resendOtp(String uniqueKey) throws MaxResendAttemptsException {
+	public ValidationResultDTO resendOtp(String uniqueKey) throws MaxResendAttemptsException {
 		OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(uniqueKey);
+		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		// TODO: return how many attempts
 		if (otpEntity == null) {
 			// First-time request, generate and save a new OTP
@@ -95,14 +123,23 @@ public class OtpServiceImpl implements OtpService {
 			// Check cooldown period
 			LocalDateTime cooldownEndTime = otpEntity.getLastAttemptTime().plusMinutes(cooldownPeriodMinutes);
 			if (LocalDateTime.now().isBefore(cooldownEndTime)) {
-				throw new MaxResendAttemptsException("Resend attempts exceeded. Please try again later.");
+				validationResultDTO.setStatus("Failure");
+				validationResultDTO.setMessage("Resend attempts exceeded. Please try again later.");
+				data.setUniqueKey(uniqueKey);
+				validationResultDTO.setData(data);
+				return validationResultDTO;
 			}
 
 			// Reset attempts and generate a new OTP
 			otpEntity.setAttempts(0);
 			generateAndSaveOtp(otpEntity);
 		}
-		return "1234";
+
+		validationResultDTO.setStatus("Success");
+		validationResultDTO.setMessage("Success");
+		data.setUniqueKey(uniqueKey);
+		validationResultDTO.setData(data);
+		return validationResultDTO;
 	}
 
 	@Override
@@ -111,8 +148,8 @@ public class OtpServiceImpl implements OtpService {
 		if (Objects.nonNull(securitySettingsDTO)) {
 			if (Objects.nonNull(securitySettingsDTO.isBiometricEnabled()))
 				securitySettings.setBiometricEnabled(securitySettingsDTO.isBiometricEnabled());
-			if (Objects.nonNull(securitySettingsDTO.isTouchIdEnabled()))
-				securitySettings.setTouchIdEnabled(securitySettingsDTO.isTouchIdEnabled());
+			if (Objects.nonNull(securitySettingsDTO.isFaceIdEnabled()))
+				securitySettings.setFaceIdEnabled(securitySettingsDTO.isFaceIdEnabled());
 			if (Objects.nonNull(securitySettingsDTO.isPasscodeEnabled()))
 				securitySettings.setPasscodeEnabled(securitySettingsDTO.isPasscodeEnabled());
 			if (Objects.nonNull(securitySettingsDTO.isPinEnabled()))

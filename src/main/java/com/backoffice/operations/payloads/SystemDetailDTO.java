@@ -1,7 +1,5 @@
 package com.backoffice.operations.payloads;
 
-import java.util.Date;
-
 import jakarta.validation.constraints.NotBlank;
 
 public class SystemDetailDTO {
@@ -18,12 +16,18 @@ public class SystemDetailDTO {
 	private String location;
 	@NotBlank(message = "Ip Address cannot be blank")
 	private String ipAddress;
-	private Date created;
-	private Date lastSeen;
-	private String action;
 	@NotBlank(message = "Unique Key cannot be blank")
 	private String uniqueKey;
+	private String lang;
 
+	public String getLang() {
+		return lang;
+	}
+
+	public void setLang(String lang) {
+		this.lang = lang;
+	}
+	
 	public String getUniqueKey() {
 		return uniqueKey;
 	}
@@ -110,30 +114,6 @@ public class SystemDetailDTO {
 
 	public void setIpAddress(String ipAddress) {
 		this.ipAddress = ipAddress;
-	}
-
-	public Date getCreated() {
-		return created;
-	}
-
-	public void setCreated(Date created) {
-		this.created = created;
-	}
-
-	public Date getLastSeen() {
-		return lastSeen;
-	}
-
-	public void setLastSeen(Date lastSeen) {
-		this.lastSeen = lastSeen;
-	}
-
-	public String getAction() {
-		return action;
-	}
-
-	public void setAction(String action) {
-		this.action = action;
 	}
 
 }

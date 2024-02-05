@@ -36,9 +36,6 @@ public class SystemDetail {
     private String carrier;
     private String location;
     private String ipAddress;
-    private Date created;
-    private Date lastSeen;
-    private String action;
    	private String uniqueKey;
 
 	public String getUniqueKey() {
@@ -135,30 +132,6 @@ public class SystemDetail {
 
 	public void setIpAddress(String ipAddress) {
 		this.ipAddress = ipAddress;
-	}
-
-	public Date getCreated() {
-		return created;
-	}
-
-	public void setCreated(Date created) {
-		this.created = created;
-	}
-
-	public Date getLastSeen() {
-		return lastSeen;
-	}
-
-	public void setLastSeen(Date lastSeen) {
-		this.lastSeen = lastSeen;
-	}
-
-	public String getAction() {
-		return action;
-	}
-
-	public void setAction(String action) {
-		this.action = action;
 	}
 
 }

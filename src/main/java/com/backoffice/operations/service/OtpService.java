@@ -4,12 +4,13 @@ import com.backoffice.operations.exceptions.MaxResendAttemptsException;
 import com.backoffice.operations.exceptions.OtpValidationException;
 import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.payloads.SecuritySettingsDTO;
+import com.backoffice.operations.payloads.ValidationResultDTO;
 
 public interface OtpService {
 	
-	void validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException;
+	ValidationResultDTO validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException;
 	
-    String resendOtp(String uniqueKeyCivilId) throws MaxResendAttemptsException;
+	ValidationResultDTO resendOtp(String uniqueKeyCivilId) throws MaxResendAttemptsException;
     
     void saveSecuritySettings(SecuritySettingsDTO securitySettingsDTO);
 

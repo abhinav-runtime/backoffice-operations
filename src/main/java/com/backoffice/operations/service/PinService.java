@@ -1,9 +1,10 @@
 package com.backoffice.operations.service;
 
 import com.backoffice.operations.payloads.GetPinDTO;
+import com.backoffice.operations.payloads.ValidationResultDTO;
 
 public interface PinService {
 	
-	public boolean storeAndSetPin(GetPinDTO pinRequestDTO, String token);
+	ValidationResultDTO storeAndSetPin(GetPinDTO pinRequestDTO, String token);
 
 }
