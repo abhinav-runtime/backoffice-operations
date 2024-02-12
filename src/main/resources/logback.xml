@@ -7,11 +7,11 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-       <file>/opt/logs/logfile.log</file>
+       <file>logfile.log</file>
        <!--  <file>/home/ubuntu/backoffice-operations/logs/logfile.log</file> -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>/opt/logs/logfile.%d{yyyy-MM-dd}.log</fileNamePattern>  
+            <fileNamePattern>logfile.%d{yyyy-MM-dd}.log</fileNamePattern>  
 			<!-- <fileNamePattern>/home/ubuntu/backoffice-operations/logs/logfile.%d{yyyy-MM-dd}.log</fileNamePattern> -->      
 		</rollingPolicy>
         <encoder>
