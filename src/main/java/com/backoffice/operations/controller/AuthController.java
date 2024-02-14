@@ -1,5 +1,7 @@
 package com.backoffice.operations.controller;
 
+import com.backoffice.operations.entity.User;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,8 +37,9 @@ public class AuthController {
 
 	// Build Register REST API
 	@PostMapping(value = { "/register", "/signup" })
-	public ResponseEntity<String> register(@RequestBody RegisterDto registerDto) {
-		String response = authService.register(registerDto);
-		return new ResponseEntity<>(response, HttpStatus.CREATED);
+	public GenericResponseDTO<User> register(@RequestBody RegisterDto registerDto) {
+		GenericResponseDTO<User> genericResult = authService.register(registerDto);
+		//return new ResponseEntity<>(response, HttpStatus.CREATED);
+		return genericResult;
 	}
 }
