@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class OperationsApplication {
+
 	
 	@Bean
 	public ModelMapper modelMapper(){
