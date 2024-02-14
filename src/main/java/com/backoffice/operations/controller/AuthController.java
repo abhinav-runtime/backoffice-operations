@@ -18,6 +18,8 @@ import com.backoffice.operations.service.AuthService;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
+
+	
 	private AuthService authService;
 
 	public AuthController(AuthService authService) {
