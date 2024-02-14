@@ -1,5 +1,6 @@
 package com.backoffice.operations.service.impl;
 
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -57,16 +58,25 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String register(RegisterDto registerDto) {
+    public GenericResponseDTO<User> register(RegisterDto registerDto) {
 
+        GenericResponseDTO<User> genericResult = new GenericResponseDTO<>();
+        genericResult.setStatus("Success");
+
+        Boolean isUserNamePresent = userRepository.existsByUsername(registerDto.getEmail());
         // add check for username exists in database
-        if(userRepository.existsByUsername(registerDto.getEmail())){
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Username is already exists!.");
+        if(isUserNamePresent) {
+            genericResult.setStatus("Error");
+            genericResult.setMessage("Username is already exists!.");
+            //throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Username is already exists!.");
         }
 
+        Boolean isEmailPresent = userRepository.existsByEmail(registerDto.getEmail());
         // add check for email exists in database
-        if(userRepository.existsByEmail(registerDto.getEmail())){
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Email is already exists!.");
+        if(isEmailPresent){
+            genericResult.setStatus("Error");
+            genericResult.setMessage("Email is already exists!.");
+            //throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Email is already exists!.");
         }
 
         User user = new User();
@@ -80,8 +90,16 @@ public class AuthServiceImpl implements AuthService {
         roles.add(userRole);
         user.setRoles(roles);
 
-        userRepository.save(user);
-
-        return "User registered successfully!.";
+        try {
+            userRepository.save(user);
+            genericResult.setData(user);
+            genericResult.setMessage("User registered successfully!.");
+        } catch (Exception ex) {
+            genericResult.setStatus("Error");
+            //genericResult.setMessage(ex.getMessage());
+            genericResult.setMessage("Something went wrong");
+        }
+        //return "User registered successfully!.";
+        return genericResult;
     }
 }

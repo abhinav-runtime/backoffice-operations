@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,27 +25,31 @@ import com.backoffice.operations.utils.PinGenerationUtil;
 @RestController
 @RequestMapping("/api/v1/dashboard")
 public class DashboardController {
-	
-	private final WebClient.Builder webClientBuilder;
+
+    private final WebClient.Builder webClientBuilder;
 
     public DashboardController(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
     }
 
     @GetMapping("/urls")
-    public List<UrlResponse> getUrls() {
-        List<String> urls = Arrays.asList(
+    public GenericResponseDTO<List<String>> getUrls() {
+        List<String> urlList = Arrays.asList(
                 "http://182.18.138.199/Alizz/1.png",
                 "http://182.18.138.199/Alizz/3.png",
                 "http://182.18.138.199/Alizz/2.png"
         );
 
+        GenericResponseDTO<List<String>> genericUrlList = new GenericResponseDTO<>();
+        genericUrlList.setStatus("Success");
+        genericUrlList.setMessage("Success");
+        genericUrlList.setData(urlList);
+
         // Convert the list of URLs to a list of UrlResponse objects
-        return urls.stream()
-                .map(UrlResponse::new)
-                .collect(Collectors.toList());
+        // return urlList.stream().map(UrlResponse::new).collect(Collectors.toList());
+        return genericUrlList;
     }
-    
+
     @PostMapping("/encrypt")
     public String encryptPin(@RequestBody CardDTO pinRequestDTO) throws Exception {
         String setPinKey = pinRequestDTO.getSetPinKey();
@@ -57,10 +62,10 @@ public class DashboardController {
 
         return encryptedPin;
     }
-	
-	@GetMapping(value = "/image", produces = MediaType.IMAGE_PNG_VALUE)
+
+    @GetMapping(value = "/image", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> getImage() throws IOException {
-		List<String> urls = Arrays.asList(
+        List<String> urls = Arrays.asList(
                 "http://182.18.138.199/Alizz/1.png",
                 "http://182.18.138.199/Alizz/3.png",
                 "http://182.18.138.199/Alizz/2.png"
@@ -96,5 +101,5 @@ public class DashboardController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-	
+
 }
