@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.payloads.common.InnerData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -46,20 +48,22 @@ public class OtpServiceImpl implements OtpService {
 //    private static final int COOLDOWN_PERIOD_MINUTES = 5;
 
 	@Override
-	public ValidationResultDTO validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException {
+	public GenericResponseDTO<InnerData> validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException {
 		Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+		GenericResponseDTO<InnerData> genericResult = new GenericResponseDTO<>();
+		//ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		//ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		if (civilIdEntity.isPresent()) {
 			OtpEntity otpEntity = new OtpEntity();
 			otpEntity.setOtp("1234");
-			if (otpRequest.getOtp() == null) {
 
-				validationResultDTO.setStatus("Failure");
-				validationResultDTO.setMessage("Invalid OTP or OTP expired");
-				data.setUniqueKey(civilIdEntity.get().getId().toString());
-				validationResultDTO.setData(data);
-				return validationResultDTO;
+			if (otpRequest.getOtp() == null) {
+				genericResult.setStatus("Failure");
+				genericResult.setMessage("Invalid OTP or OTP expired");
+				//data.setUniqueKey(civilIdEntity.get().getId().toString());
+				String uniqueKey = civilIdEntity.get().getId().toString();
+				genericResult.setData(new InnerData(uniqueKey));
+				return genericResult;
 			}
 
 			if (!otpEntity.getOtp().equals(otpRequest.getOtp())) {
@@ -68,18 +72,19 @@ public class OtpServiceImpl implements OtpService {
 				otpRepository.save(otpEntity);
 
 				if (otpEntity.getAttempts() >= otpMaxAttempts) {
-					validationResultDTO.setStatus("Failure");
-					validationResultDTO.setMessage("Maximum attempts reached. Please try again later.");
-					data.setUniqueKey(civilIdEntity.get().getId().toString());
-					validationResultDTO.setData(data);
-					return validationResultDTO;
+					genericResult.setStatus("Failure");
+					genericResult.setMessage("Maximum attempts reached. Please try again later.");
+					//data.setUniqueKey(civilIdEntity.get().getId().toString());
+					String uniqueKey = civilIdEntity.get().getId().toString();
+					genericResult.setData(new InnerData(uniqueKey));
+					return genericResult;
 				} else {
-					validationResultDTO.setStatus("Failure");
-					validationResultDTO
-							.setMessage("Invalid OTP. Attempts left: " + (otpMaxAttempts - otpEntity.getAttempts()));
-					data.setUniqueKey(civilIdEntity.get().getId().toString());
-					validationResultDTO.setData(data);
-					return validationResultDTO;
+					genericResult.setStatus("Failure");
+					genericResult.setMessage("Invalid OTP. Attempts left: " + (otpMaxAttempts - otpEntity.getAttempts()));
+					//data.setUniqueKey(civilIdEntity.get().getId().toString());
+					String uniqueKey = civilIdEntity.get().getId().toString();
+					genericResult.setData(new InnerData(uniqueKey));
+					return genericResult;
 				}
 			}
 
@@ -87,11 +92,12 @@ public class OtpServiceImpl implements OtpService {
 			LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(10);
 			if (Objects.nonNull(otpEntity.getLastAttemptTime())
 					&& otpEntity.getLastAttemptTime().isBefore(expirationTime)) {
-				validationResultDTO.setStatus("Failure");
-				validationResultDTO.setMessage("OTP expired. Please request a new OTP.");
-				data.setUniqueKey(civilIdEntity.get().getId().toString());
-				validationResultDTO.setData(data);
-				return validationResultDTO;
+				genericResult.setStatus("Failure");
+				genericResult.setMessage("OTP expired. Please request a new OTP.");
+				//data.setUniqueKey(civilIdEntity.get().getId().toString());
+				String uniqueKey = civilIdEntity.get().getId().toString();
+				genericResult.setData(new InnerData(uniqueKey));
+				return genericResult;
 			}
 
 			// OTP validation successful, reset attempts
@@ -99,13 +105,16 @@ public class OtpServiceImpl implements OtpService {
 			otpEntity.setLastAttemptTime(LocalDateTime.now());
 			otpRepository.save(otpEntity);
 
-			validationResultDTO.setStatus("Success");
-			validationResultDTO.setMessage("Success");
-			data.setUniqueKey(civilIdEntity.get().getId().toString());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			genericResult.setStatus("Success");
+			genericResult.setMessage("Success");
+			//data.setUniqueKey(civilIdEntity.get().getId().toString());
+			String uniqueKey = civilIdEntity.get().getId().toString();
+			genericResult.setData(new InnerData(uniqueKey));
+			return genericResult;
 		}
-		return null;
+		genericResult.setStatus("Failure");
+		genericResult.setMessage("Something went wrong");
+		return genericResult;
 	}
 
 	@Override
@@ -143,7 +152,8 @@ public class OtpServiceImpl implements OtpService {
 	}
 
 	@Override
-	public void saveSecuritySettings(SecuritySettingsDTO securitySettingsDTO) {
+	public GenericResponseDTO<SecuritySettings> saveSecuritySettings(SecuritySettingsDTO securitySettingsDTO) {
+		GenericResponseDTO<SecuritySettings> genericResult = new GenericResponseDTO();
 		SecuritySettings securitySettings = new SecuritySettings();
 		if (Objects.nonNull(securitySettingsDTO)) {
 			if (Objects.nonNull(securitySettingsDTO.isBiometricEnabled()))
@@ -154,8 +164,17 @@ public class OtpServiceImpl implements OtpService {
 				securitySettings.setPasscodeEnabled(securitySettingsDTO.isPasscodeEnabled());
 			if (Objects.nonNull(securitySettingsDTO.isPinEnabled()))
 				securitySettings.setPinEnabled(securitySettingsDTO.isPinEnabled());
+			System.out.println("securitySettings id >> " + securitySettings.getId());
 			securitySettingsRepository.save(securitySettings);
+			System.out.println("securitySettings id >> " + securitySettings.getId());
+			genericResult.setStatus("Success");
+			genericResult.setMessage("Security settings updated successfully");
+			genericResult.setData(securitySettings);
+		} else {
+			genericResult.setStatus("Error");
+			genericResult.setMessage("Security settings not updated");
 		}
+		return genericResult;
 	}
 
 	private void generateAndSaveOtp(OtpEntity otpEntity) {

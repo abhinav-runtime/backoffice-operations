@@ -1,5 +1,8 @@
 package com.backoffice.operations.controller;
 
+import com.backoffice.operations.entity.SecuritySettings;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.payloads.common.InnerData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,13 +43,13 @@ public class OtpController {
 	private JwtTokenProvider jwtTokenProvider;
 
 	@PostMapping("/validate")
-	public ResponseEntity<ValidationResultDTO> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+	public ResponseEntity<GenericResponseDTO<InnerData>> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
+		GenericResponseDTO<InnerData> genericResult = new GenericResponseDTO<>();
 		try {
-			validationResultDTO = otpService.validateOtp(otpRequest);
-			return ResponseEntity.ok(validationResultDTO);
+			genericResult = otpService.validateOtp(otpRequest);
+			return ResponseEntity.ok(genericResult);
 		} catch (OtpValidationException e) {
-			return ResponseEntity.ok(validationResultDTO);
+			return ResponseEntity.ok(genericResult);
 		}
 	}
 
@@ -104,9 +107,9 @@ public class OtpController {
 	}
 
 	@PostMapping("/saveSettings")
-	public ResponseEntity<String> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
-		otpService.saveSecuritySettings(securitySettingsDTO);
-		return new ResponseEntity<>("Security settings updated successfully", HttpStatus.OK);
+	public ResponseEntity<GenericResponseDTO<SecuritySettings>> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
+		GenericResponseDTO<SecuritySettings> genericResult = otpService.saveSecuritySettings(securitySettingsDTO);
+		return new ResponseEntity<>(genericResult, HttpStatus.OK);
 	}
 
 }
