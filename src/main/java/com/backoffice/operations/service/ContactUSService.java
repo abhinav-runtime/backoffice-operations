@@ -27,7 +27,7 @@ public class ContactUSService {
         return contactUSRepository.save(contact);
     }
 
-    public Optional<ContactUSEntity> getContactById(Long id) {
+    public Optional<ContactUSEntity> getContactById(String id) {
         return contactUSRepository.findById(id);
     }
 }

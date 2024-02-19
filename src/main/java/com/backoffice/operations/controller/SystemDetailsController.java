@@ -30,7 +30,7 @@ public class SystemDetailsController {
 	}
 
 	@GetMapping("/{id}")
-	public SystemDetailDTO getSystemDetailById(@PathVariable Long id) {
+	public SystemDetailDTO getSystemDetailById(@PathVariable String id) {
 		SystemDetail systemDetail = systemDetailRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("System detail not found with id: " + id));
 		return mapToDTO(systemDetail);
@@ -67,7 +67,7 @@ public class SystemDetailsController {
 	}
 
 	@PutMapping("/{id}")
-	public ValidationResultDTO updateSystemDetail(@PathVariable Long id,
+	public ValidationResultDTO updateSystemDetail(@PathVariable String id,
 			@RequestBody SystemDetailDTO updatedSystemDetailDTO) {
 		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
 		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
@@ -101,7 +101,7 @@ public class SystemDetailsController {
 	}
 
 	@DeleteMapping("/{id}")
-	public void deleteSystemDetail(@PathVariable Long id) {
+	public void deleteSystemDetail(@PathVariable String id) {
 		systemDetailRepository.deleteById(id);
 	}
 
