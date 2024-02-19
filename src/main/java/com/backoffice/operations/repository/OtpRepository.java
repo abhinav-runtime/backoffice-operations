@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.backoffice.operations.entity.OtpEntity;
 
-public interface OtpRepository extends JpaRepository<OtpEntity, String> {
+public interface OtpRepository extends JpaRepository<OtpEntity, Long> {
 
 	OtpEntity findByUniqueKeyCivilId(String uniqueKeyCivilId);
 

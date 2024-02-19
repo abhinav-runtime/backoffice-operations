@@ -27,7 +27,7 @@ public class WebsiteService {
         return websiteRepository.save(website);
     }
 
-    public Optional<WebsiteEntity> getWebsiteById(String id) {
+    public Optional<WebsiteEntity> getWebsiteById(Long id) {
         return websiteRepository.findById(id);
     }
 }
