@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.backoffice.operations.entity.SecuritySettings;
 
-public interface SecuritySettingsRepository extends JpaRepository<SecuritySettings, Long> {
+public interface SecuritySettingsRepository extends JpaRepository<SecuritySettings, String> {
 
 }
