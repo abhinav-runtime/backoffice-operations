@@ -1,6 +1,5 @@
 package com.backoffice.operations.repository;
 
-import com.backoffice.operations.entity.DashboardEntity;
 import com.backoffice.operations.entity.DashboardInfoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
