@@ -60,4 +60,7 @@ public class ValidationResultDTO {
 			this.uniqueKey = uniqueKey;
 		}
 	}
+	
+	
+    
 }

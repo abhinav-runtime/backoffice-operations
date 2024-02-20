@@ -53,6 +53,9 @@ public class JwtTokenProvider {
 
 	// validate Jwt token
 	public boolean validateToken(String token) {
+		
+//		System.err.println(getExpirationDateFromToken(token));
+		
 		try {
 			Jwts.parserBuilder().setSigningKey(key()).build().parse(token);
 			return true;
