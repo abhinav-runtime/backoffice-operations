@@ -27,7 +27,6 @@ import com.backoffice.operations.service.CivilIdService;
 import com.backoffice.operations.service.LoginHistoryService;
 import com.backoffice.operations.service.OtpService;
 import com.backoffice.operations.service.PinService;
-import com.backoffice.operations.service.impl.LoginHistoryServiceImpl;
 
 @RestController
 @RequestMapping("/api/otp")
@@ -71,13 +70,12 @@ public class OtpController {
 		}
 	}
 
-	@GetMapping("/civil/{civilId}/{uniqueId}/{lang}")
+	@GetMapping("/civil/{civilId}/{lang}")
 	public ResponseEntity<ValidationResultDTO> validateCivilId(@PathVariable @Validated String civilId,
-			@PathVariable String uniqueId,
 			@PathVariable String lang,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		ValidationResultDTO validationResultDTO = civilIdService.validateCivilId(civilId,
-				token.substring("Bearer ".length()), uniqueId);
+				token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
 
