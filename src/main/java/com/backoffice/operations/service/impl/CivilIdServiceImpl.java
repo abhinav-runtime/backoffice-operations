@@ -1,6 +1,7 @@
 package com.backoffice.operations.service.impl;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,11 +68,47 @@ public class CivilIdServiceImpl implements CivilIdService {
 	private CardRepository cardRepository;
 
 	@Override
-	public ValidationResultDTO validateCivilId(String entityId, String token) {
+	public ValidationResultDTO validateCivilId(String entityId, String token, String uniqueId) {
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
 		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+		
+		Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findById(uniqueId);
+		if(civilIdEntityDB.isPresent()) {
+			int allowedAttempts = 3;
+	        int timeoutSeconds = 180;
+
+	        if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
+	            // Valid attempt, update the entity
+	        	civilIdEntityDB.get().setAttempts(civilIdEntityDB.get().getAttempts() + 1);
+	        	civilIdEntityDB.get().setLastAttemptTime(LocalDateTime.now());
+
+	        	civilIdRepository.save(civilIdEntityDB.get());
+	        } else if (ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(), LocalDateTime.now()) < timeoutSeconds){
+	        	logger.error("Session Is Blocked");
+				validationResultDTO.setStatus("Failure");
+				validationResultDTO.setMessage("Session Is Blocked");
+				data.setUniqueKey(civilIdEntityDB.get().getId().toString());
+				validationResultDTO.setData(data);
+				return validationResultDTO;
+	        } else if (civilIdEntityDB.get().getAttempts() < allowedAttempts){
+	        	logger.error("Civil Id Blocked, Too many attempts or timeout exceeded");
+				validationResultDTO.setStatus("Failure");
+				validationResultDTO.setMessage("Civil Id Blocked");
+				data.setUniqueKey(civilIdEntityDB.get().getId().toString());
+				validationResultDTO.setData(data);
+				return validationResultDTO;
+	        } else {
+	        	logger.error("Device Blocked");
+				validationResultDTO.setStatus("Failure");
+				validationResultDTO.setMessage("Device Blocked");
+				data.setUniqueKey(civilIdEntityDB.get().getId().toString());
+				validationResultDTO.setData(data);
+				return validationResultDTO;
+	        }
+		}
+		
 		CivilIdEntity civilIdEntity = new CivilIdEntity();
 		civilIdEntity.setEntityId(entityId);
 		civilIdEntity.setUserId(user.get().getId().toString());

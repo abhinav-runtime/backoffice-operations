@@ -1,5 +1,7 @@
 package com.backoffice.operations.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.Column;
@@ -28,6 +30,24 @@ public class CivilIdEntity {
 	private String userId;
     private String civilId;
     private String entityId;
+    private int attempts;
+    private LocalDateTime lastAttemptTime;
+
+	public int getAttempts() {
+		return attempts;
+	}
+
+	public void setAttempts(int attempts) {
+		this.attempts = attempts;
+	}
+
+	public LocalDateTime getLastAttemptTime() {
+		return lastAttemptTime;
+	}
+
+	public void setLastAttemptTime(LocalDateTime lastAttemptTime) {
+		this.lastAttemptTime = lastAttemptTime;
+	}
 
 	public String getUserId() {
 		return userId;
