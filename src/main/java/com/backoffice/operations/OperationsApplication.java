@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class OperationsApplication {
 
-	
 	@Bean
 	public ModelMapper modelMapper(){
 		return new ModelMapper();
@@ -17,5 +16,4 @@ public class OperationsApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(OperationsApplication.class, args);
 	}
-
 }

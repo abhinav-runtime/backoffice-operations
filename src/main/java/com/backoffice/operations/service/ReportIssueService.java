@@ -25,27 +25,20 @@ public class ReportIssueService {
 	private ReportIssueRepository reportIssueRepository;
 	
     private final List<String> ALLOWED_FILE_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png");
-    private final List<String> Types_Of_Issue = Arrays.asList("Transaction Issue", "Payment processing outages", "Long Waiting Times");
-    private final long MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1MB
+    private final long MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 1MB
 	
 	
 	public String postReportIssue(ReportAnIssueDto reportAnIssueDto, String path, MultipartFile file) throws IOException{
 		
 		//file size validation
     	if (file.getSize() > MAX_FILE_SIZE_BYTES) {
-    		throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Size exceeds maximum range!.");
+    		throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File size should be below 2MB!.");
         }
     	
     	//file extension validation
     	String fileExtension = getFileExtension(file.getOriginalFilename());
         if (!ALLOWED_FILE_EXTENSIONS.contains(fileExtension.toLowerCase())) {
-        	throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File extension is Invalid!.");
-        }
-    	
-        //Types of Issue validation
-        String type_of_issue = reportAnIssueDto.getTypeOfIssue();
-        if (!Types_Of_Issue.contains(type_of_issue)) {
-        	throw new BlogAPIException(HttpStatus.BAD_REQUEST, "Only selective issues applied!.");
+        	throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File type Should be 'jpg', 'jpeg', 'png'.");
         }
 		
 		//FullPath
@@ -86,7 +79,7 @@ public class ReportIssueService {
         int lastDotIndex = filename.lastIndexOf('.');
         if (lastDotIndex == -1) {
         	// No extension found
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File must contain extensions like 'jpg', 'jpeg', 'png'.");
+            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File type Should be 'jpg', 'jpeg', 'png'.");
         }
         return filename.substring(lastDotIndex + 1);
     }	

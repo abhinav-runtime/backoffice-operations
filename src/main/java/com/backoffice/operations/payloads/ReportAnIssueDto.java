@@ -3,7 +3,7 @@ package com.backoffice.operations.payloads;
 public class ReportAnIssueDto {
 	
 	private String id;
-    private String TypeOfIssue;
+    private String typeOfIssue;
     private String message;
     private String name;
     private String type;
@@ -17,10 +17,10 @@ public class ReportAnIssueDto {
 		this.id = id;
 	}
 	public String getTypeOfIssue() {
-		return TypeOfIssue;
+		return typeOfIssue;
 	}
 	public void setTypeOfIssue(String typeOfIssue) {
-		TypeOfIssue = typeOfIssue;
+		this.typeOfIssue = typeOfIssue;
 	}
 	public String getMessage() {
 		return message;
@@ -52,5 +52,4 @@ public class ReportAnIssueDto {
 	public void setLang(String lang) {
 		this.lang = lang;
 	}	
-    
 }
