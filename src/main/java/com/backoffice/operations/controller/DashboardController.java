@@ -4,22 +4,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import com.backoffice.operations.payloads.DashboardDto;
+import com.backoffice.operations.payloads.DashboardInfoDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.service.DashboardService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.backoffice.operations.payloads.CardDTO;
-import com.backoffice.operations.payloads.UrlResponse;
 import com.backoffice.operations.utils.PinGenerationUtil;
 
 @RestController
@@ -28,8 +25,11 @@ public class DashboardController {
 
     private final WebClient.Builder webClientBuilder;
 
-    public DashboardController(WebClient.Builder webClientBuilder) {
+    private final DashboardService dashboardService;
+
+    public DashboardController(WebClient.Builder webClientBuilder, DashboardService dashboardService) {
         this.webClientBuilder = webClientBuilder;
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping("/urls")
@@ -102,4 +102,13 @@ public class DashboardController {
         }
     }
 
+    @PostMapping()
+    public ResponseEntity<DashboardDto> getDashboardDetails(@RequestParam String uniqueKey){
+        return ResponseEntity.ok(dashboardService.getDashboardDetails(uniqueKey));
+    }
+
+    @PostMapping("/info")
+    public ResponseEntity<DashboardInfoDto> getDashboardInfo(@RequestParam String accountNumber){
+        return ResponseEntity.ok(dashboardService.getDashboardInfo(accountNumber));
+    }
 }
