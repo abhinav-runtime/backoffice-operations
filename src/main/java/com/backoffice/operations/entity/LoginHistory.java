@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "login_history")
+@Table(name = "az_login_history_bk")
 public class LoginHistory {
 	
 	@Id

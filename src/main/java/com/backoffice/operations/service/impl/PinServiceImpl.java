@@ -88,6 +88,11 @@ public class PinServiceImpl implements PinService {
 					validationResultDTO.setStatus("Success");
 					validationResultDTO.setMessage("Success");
 					data.setUniqueKey(cardEntity.getUniqueKeyCivilId());
+					data.setDob(pinRequest.getDob());
+					data.setEntityId(pinRequest.getEntityId());
+					data.setExpiryDate(pinRequest.getExpiryDate());
+					data.setKitNo(pinRequest.getKitNo());
+					
 					validationResultDTO.setData(data);
 					return validationResultDTO;
 				} else {

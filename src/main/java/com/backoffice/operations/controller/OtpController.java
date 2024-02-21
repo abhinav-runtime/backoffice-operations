@@ -27,7 +27,6 @@ import com.backoffice.operations.service.CivilIdService;
 import com.backoffice.operations.service.LoginHistoryService;
 import com.backoffice.operations.service.OtpService;
 import com.backoffice.operations.service.PinService;
-import com.backoffice.operations.service.impl.LoginHistoryServiceImpl;
 
 @RestController
 @RequestMapping("/api/otp")
@@ -71,13 +70,12 @@ public class OtpController {
 		}
 	}
 
-	@GetMapping("/civil/{civilId}/{uniqueId}/{lang}")
+	@GetMapping("/civil/{civilId}/{lang}")
 	public ResponseEntity<ValidationResultDTO> validateCivilId(@PathVariable @Validated String civilId,
-			@PathVariable String uniqueId,
 			@PathVariable String lang,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		ValidationResultDTO validationResultDTO = civilIdService.validateCivilId(civilId,
-				token.substring("Bearer ".length()), uniqueId);
+				token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
 
@@ -110,9 +108,15 @@ public class OtpController {
 	}
 
 	@PostMapping("/saveSettings")
-	public ResponseEntity<String> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
+	public ResponseEntity<ValidationResultDTO> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
 		otpService.saveSecuritySettings(securitySettingsDTO);
-		return new ResponseEntity<>("Security settings updated successfully", HttpStatus.OK);
+		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+		validationResultDTO.setStatus("Success");
+		validationResultDTO.setMessage("Security settings updated successfully");
+		data.setUniqueKey(securitySettingsDTO.getUniqueKey());
+		validationResultDTO.setData(data);
+		return ResponseEntity.ok(validationResultDTO);
 	}
 	
 	@PostMapping("/signIn")
