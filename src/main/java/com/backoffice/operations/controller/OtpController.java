@@ -108,9 +108,15 @@ public class OtpController {
 	}
 
 	@PostMapping("/saveSettings")
-	public ResponseEntity<String> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
+	public ResponseEntity<ValidationResultDTO> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
 		otpService.saveSecuritySettings(securitySettingsDTO);
-		return new ResponseEntity<>("Security settings updated successfully", HttpStatus.OK);
+		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+		validationResultDTO.setStatus("Success");
+		validationResultDTO.setMessage("Security settings updated successfully");
+		data.setUniqueKey(securitySettingsDTO.getUniqueKey());
+		validationResultDTO.setData(data);
+		return ResponseEntity.ok(validationResultDTO);
 	}
 	
 	@PostMapping("/signIn")
