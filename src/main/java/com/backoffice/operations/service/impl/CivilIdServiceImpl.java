@@ -87,99 +87,110 @@ public class CivilIdServiceImpl implements CivilIdService {
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
 		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-
-		// GET Access token from M2P and save it into the DB.
-		String requestUrl = tokenApiUrl + "?grant_type=client_credentials&scope=openid profile email&client_id="
-				+ clientId + "&client_secret=" + clientSecret;
-		ResponseEntity<AccessTokenResponse> response = restTemplate.postForEntity(requestUrl, null,
-				AccessTokenResponse.class);
 		AccessToken accessToken = null;
-		if (response != null) {
-			accessToken = saveAccessToken(response.getBody());
-		}
-
-		Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findByEntityId(entityId);
-		if (civilIdEntityDB.isPresent()) {
-			int allowedAttempts = 3;
-			int timeoutSeconds = 180;
-
-			if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
-				// Valid attempt, update the entity
-				civilIdEntityDB.get().setAttempts(civilIdEntityDB.get().getAttempts() + 1);
-				civilIdEntityDB.get().setLastAttemptTime(LocalDateTime.now());
-
-				civilIdRepository.save(civilIdEntityDB.get());
-			} else if (ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
-					LocalDateTime.now()) < timeoutSeconds) {
-				logger.error("Session Is Blocked");
-				validationResultDTO.setStatus("Failure");
-				validationResultDTO.setMessage("Session Is Blocked");
-				data.setUniqueKey(civilIdEntityDB.get().getId().toString());
-				validationResultDTO.setData(data);
-				return validationResultDTO;
-			} else if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
-				logger.error("Civil Id Blocked, Too many attempts or timeout exceeded");
-				validationResultDTO.setStatus("Failure");
-				validationResultDTO.setMessage("Civil Id Blocked");
-				data.setUniqueKey(civilIdEntityDB.get().getId().toString());
-				validationResultDTO.setData(data);
-				return validationResultDTO;
-			} else {
-				logger.error("Device Blocked");
-				validationResultDTO.setStatus("Failure");
-				validationResultDTO.setMessage("Device Blocked");
-				data.setUniqueKey(civilIdEntityDB.get().getId().toString());
-				validationResultDTO.setData(data);
-				return validationResultDTO;
-			}
-		}
-
-		CivilIdEntity civilIdEntity = new CivilIdEntity();
-		civilIdEntity.setEntityId(entityId);
-		civilIdEntity.setUserId(user.get().getId().toString());
 		try {
-			if (user.isPresent()) {
-				String apiUrl = civilIdExternalAPI + entityId;
-				ResponseEntity<CivilIdAPIResponse> responseEntity = null;
-				if (Objects.nonNull(accessToken)) {
-					HttpHeaders headers = new HttpHeaders();
-					headers.setBearerAuth(accessToken.getAccessToken());
-					HttpEntity<String> entity = new HttpEntity<>(headers);
+			// GET Access token from M2P and save it into the DB.
+			String requestUrl = tokenApiUrl + "?grant_type=client_credentials&scope=openid profile email&client_id="
+					+ clientId + "&client_secret=" + clientSecret;
+			logger.info("requestUrl: ", requestUrl);
+			ResponseEntity<AccessTokenResponse> response = restTemplate.postForEntity(requestUrl, null,
+					AccessTokenResponse.class);
+			logger.info("response: ", response.getBody());
+			if (response != null) {
+				accessToken = saveAccessToken(response.getBody());
+			}
 
-					responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, CivilIdAPIResponse.class);
+			Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findByEntityId(entityId);
+			if (civilIdEntityDB.isPresent()) {
+				int allowedAttempts = 3;
+				int timeoutSeconds = 180;
+
+				if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
+					// Valid attempt, update the entity
+					civilIdEntityDB.get().setAttempts(civilIdEntityDB.get().getAttempts() + 1);
+					civilIdEntityDB.get().setLastAttemptTime(LocalDateTime.now());
+
+					civilIdRepository.save(civilIdEntityDB.get());
+				} else if (ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
+						LocalDateTime.now()) < timeoutSeconds) {
+					logger.error("Session Is Blocked");
+					validationResultDTO.setStatus("Failure");
+					validationResultDTO.setMessage("Session Is Blocked");
+					data.setUniqueKey(civilIdEntityDB.get().getId().toString());
+					validationResultDTO.setData(data);
+					return validationResultDTO;
+				} else if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
+					logger.error("Civil Id Blocked, Too many attempts or timeout exceeded");
+					validationResultDTO.setStatus("Failure");
+					validationResultDTO.setMessage("Civil Id Blocked");
+					data.setUniqueKey(civilIdEntityDB.get().getId().toString());
+					validationResultDTO.setData(data);
+					return validationResultDTO;
 				} else {
-					responseEntity = restTemplate.getForEntity(apiUrl, CivilIdAPIResponse.class);
+					logger.error("Device Blocked");
+					validationResultDTO.setStatus("Failure");
+					validationResultDTO.setMessage("Device Blocked");
+					data.setUniqueKey(civilIdEntityDB.get().getId().toString());
+					validationResultDTO.setData(data);
+					return validationResultDTO;
 				}
-				CivilIdAPIResponse apiResponse = responseEntity.getBody();
-				if (apiResponse != null && apiResponse.isSuccess()) {
-					CustomerFull customerFull = apiResponse.getResponse().getResult().getCustomerFull();
+			}
 
-					if (customerFull != null) {
-						civilIdEntity.setCivilId(customerFull.getCustNo());
-						civilIdRepository.save(civilIdEntity);
+			CivilIdEntity civilIdEntity = new CivilIdEntity();
+			civilIdEntity.setEntityId(entityId);
+			civilIdEntity.setUserId(user.get().getId().toString());
+			try {
+				if (user.isPresent()) {
+					String apiUrl = civilIdExternalAPI + entityId;
+					ResponseEntity<CivilIdAPIResponse> responseEntity = null;
+					if (Objects.nonNull(accessToken)) {
+						HttpHeaders headers = new HttpHeaders();
+						headers.setBearerAuth(accessToken.getAccessToken());
+						HttpEntity<String> entity = new HttpEntity<>(headers);
 
-						validationResultDTO.setStatus("Success");
-						validationResultDTO.setMessage("Success");
-						data.setUniqueKey(civilIdEntity.getId().toString());
-						validationResultDTO.setData(data);
-						return validationResultDTO;
+						responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, entity,
+								CivilIdAPIResponse.class);
+					} else {
+						responseEntity = restTemplate.getForEntity(apiUrl, CivilIdAPIResponse.class);
+					}
+					CivilIdAPIResponse apiResponse = responseEntity.getBody();
+					if (apiResponse != null && apiResponse.isSuccess()) {
+						CustomerFull customerFull = apiResponse.getResponse().getResult().getCustomerFull();
+
+						if (customerFull != null) {
+							civilIdEntity.setCivilId(customerFull.getCustNo());
+							civilIdRepository.save(civilIdEntity);
+
+							validationResultDTO.setStatus("Success");
+							validationResultDTO.setMessage("Success");
+							data.setUniqueKey(civilIdEntity.getId().toString());
+							validationResultDTO.setData(data);
+							return validationResultDTO;
+						}
 					}
 				}
+				civilIdRepository.save(civilIdEntity);
+
+				validationResultDTO.setMessage("Failure");
+				validationResultDTO.setStatus("Something went wrong");
+				data.setUniqueKey(civilIdEntity.getId().toString());
+				validationResultDTO.setData(data);
+				return validationResultDTO;
+
+			} catch (Exception e) {
+				civilIdRepository.save(civilIdEntity);
+
+				logger.error("ERROR in class CivilIdServiceImpl method validateCivilId", e);
+				validationResultDTO.setStatus("Failure");
+				validationResultDTO.setMessage("Something went wrong");
+				data.setUniqueKey(civilIdEntity.getId().toString());
+				validationResultDTO.setData(data);
+				return validationResultDTO;
 			}
-			civilIdRepository.save(civilIdEntity);
-
-			validationResultDTO.setMessage("Failure");
-			validationResultDTO.setStatus("Something went wrong");
-			data.setUniqueKey(civilIdEntity.getId().toString());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
 		} catch (Exception e) {
-			civilIdRepository.save(civilIdEntity);
-
-			logger.error("ERROR in class CivilIdServiceImpl method validateCivilId", e);
+			logger.error("Error in calling token API : ", e);
 			validationResultDTO.setStatus("Failure");
 			validationResultDTO.setMessage("Something went wrong");
-			data.setUniqueKey(civilIdEntity.getId().toString());
 			validationResultDTO.setData(data);
 			return validationResultDTO;
 		}
