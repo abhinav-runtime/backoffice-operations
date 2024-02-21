@@ -24,11 +24,9 @@ public class EntityIdDTO {
 	@NotBlank(message = "Unique Key cannot be blank")
 	private String uniqueKey;
 	
-	@NotBlank(message = "Card Pin cannot be blank")
 	@Pattern(regexp = "\\d{4}", message = "Card Pin must be 4 digits")
 	private String cardPin;
 	
-	@NotBlank(message = "System Unique Key cannot be blank")
 	private String uniqueKeySystem;
 	
 	private String lang;
