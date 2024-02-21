@@ -1,5 +1,12 @@
 package com.backoffice.operations.payloads;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
+
+@Getter
+@Setter
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ValidationResultDTO {
 	private String status;
 	private Data data;
@@ -40,12 +47,20 @@ public class ValidationResultDTO {
 		this.message = message;
 	}
 
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public static class Data {
 		private String uniqueKey;
 		private String entityId;
 	    private String kitNo;
 	    private String expiryDate;
 	    private String dob;
+		private String accountNumber;
+		private String currency;
+		private Double accountBalance;
+		private String accountName;
+		private Double outstandingBalance;
+		private Double availableBalance;
+
 
 		public Data() {
 
@@ -89,6 +104,54 @@ public class ValidationResultDTO {
 
 		public void setUniqueKey(String uniqueKey) {
 			this.uniqueKey = uniqueKey;
+		}
+
+		public String getAccountNumber() {
+			return accountNumber;
+		}
+
+		public void setAccountNumber(String accountNumber) {
+			this.accountNumber = accountNumber;
+		}
+
+		public String getCurrency() {
+			return currency;
+		}
+
+		public void setCurrency(String currency) {
+			this.currency = currency;
+		}
+
+		public Double getAccountBalance() {
+			return accountBalance;
+		}
+
+		public void setAccountBalance(Double accountBalance) {
+			this.accountBalance = accountBalance;
+		}
+
+		public String getAccountName() {
+			return accountName;
+		}
+
+		public void setAccountName(String accountName) {
+			this.accountName = accountName;
+		}
+
+		public Double getOutstandingBalance() {
+			return outstandingBalance;
+		}
+
+		public void setOutstandingBalance(Double outstandingBalance) {
+			this.outstandingBalance = outstandingBalance;
+		}
+
+		public Double getAvailableBalance() {
+			return availableBalance;
+		}
+
+		public void setAvailableBalance(Double availableBalance) {
+			this.availableBalance = availableBalance;
 		}
 	}
 }

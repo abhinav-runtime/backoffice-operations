@@ -3,10 +3,7 @@ package com.backoffice.operations.service.impl;
 import com.backoffice.operations.entity.CivilIdEntity;
 import com.backoffice.operations.entity.DashboardEntity;
 import com.backoffice.operations.entity.DashboardInfoEntity;
-import com.backoffice.operations.payloads.AccountBalanceResponse;
-import com.backoffice.operations.payloads.AccountDetails;
-import com.backoffice.operations.payloads.DashboardDto;
-import com.backoffice.operations.payloads.DashboardInfoDto;
+import com.backoffice.operations.payloads.*;
 import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.DashboardInfoRepository;
 import com.backoffice.operations.repository.DashboardRepository;
@@ -44,7 +41,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public DashboardDto getDashboardDetails(String uniqueKey) {
+    public ValidationResultDTO getDashboardDetails(String uniqueKey) {
 
         Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
 
@@ -61,16 +58,22 @@ public class DashboardServiceImpl implements DashboardService {
                 DashboardEntity dashboardEntity = DashboardEntity.builder().id(uniqueKey).accountNumber(islamicAccount.getAcc())
                         .availableBalance(islamicAccount.getAcyavlbal()).currency(islamicAccount.getCcy()).build();
                 DashboardEntity dashboardEntityObject = dashboardRepository.save(dashboardEntity);
-                return DashboardDto.builder().accountBalance(dashboardEntityObject.getAvailableBalance())
-                        .accountNumber(dashboardEntityObject.getAccountNumber())
-                        .currency(dashboardEntityObject.getCurrency()).build();
+                ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+                data.setAccountBalance(dashboardEntityObject.getAvailableBalance());
+                data.setCurrency(dashboardEntityObject.getCurrency());
+                data.setAccountNumber(dashboardEntityObject.getAccountNumber());
+                data.setUniqueKey(dashboardEntityObject.getId());
+                return ValidationResultDTO.builder().status("Success").message("Success")
+                        .data(data).build();
             }
         }
-        return  DashboardDto.builder().build();
+        ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+        data.setUniqueKey(uniqueKey);
+        return  ValidationResultDTO.builder().status("Failure").message("No Entry Found").data(data).build();
     }
 
     @Override
-    public DashboardInfoDto getDashboardInfo(String accountNumber) {
+    public ValidationResultDTO getDashboardInfo(String accountNumber, String uniqueKey) {
         String apiUrl = accountBalanceExternalAPI + accountNumber;
         ResponseEntity<AccountBalanceResponse> responseEntity = restTemplate.getForEntity(apiUrl,
                 AccountBalanceResponse.class);
@@ -81,10 +84,18 @@ public class DashboardServiceImpl implements DashboardService {
             DashboardInfoEntity dashboardInfoEntity = DashboardInfoEntity.builder().customerNumber(accBal.getCustacno())
                     .outstandingBal(accBal.getCurbal()).availableBal(accBal.getAvlbal()).build();
             DashboardInfoEntity dashboardInfoEntityObj = dashboardInfoRepository.save(dashboardInfoEntity);
-            return DashboardInfoDto.builder().availableBalance(dashboardInfoEntityObj.getAvailableBal())
-                    .outstandingBalance(dashboardInfoEntityObj.getOutstandingBal())
-                    .accountNumber(dashboardInfoEntityObj.getCustomerNumber()).build();
+
+            ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+            data.setAvailableBalance(dashboardInfoEntityObj.getAvailableBal());
+            data.setOutstandingBalance(dashboardInfoEntityObj.getOutstandingBal());
+            data.setAccountNumber(dashboardInfoEntityObj.getCustomerNumber());
+            data.setUniqueKey(dashboardInfoEntityObj.getId());
+
+            return ValidationResultDTO.builder().status("Success").message("Success")
+                    .data(data).build();
         }
-        return DashboardInfoDto.builder().build();
+        ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+        data.setUniqueKey(uniqueKey);
+        return ValidationResultDTO.builder().status("Success").message("Success").data(data).build();
     }
 }
