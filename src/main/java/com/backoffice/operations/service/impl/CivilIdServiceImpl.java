@@ -91,17 +91,17 @@ public class CivilIdServiceImpl implements CivilIdService {
 		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
 		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		AccessToken accessToken = null;
-//		try {
+		try {
 			// GET Access token from M2P and save it into the DB.
-//			String requestUrl = tokenApiUrl + "?grant_type=client_credentials&scope=openid profile email&client_id="
-//					+ clientId + "&client_secret=" + clientSecret;
-//			logger.info("requestUrl: ", requestUrl);
-//			ResponseEntity<AccessTokenResponse> response = restTemplate.postForEntity(requestUrl, null,
-//					AccessTokenResponse.class);
-//			logger.info("response: ", response.getBody());
-//			if (response != null) {
-//				accessToken = saveAccessToken(response.getBody());
-//			}
+			String requestUrl = tokenApiUrl + "?grant_type=client_credentials&scope=openid profile email&client_id="
+					+ clientId + "&client_secret=" + clientSecret;
+			logger.info("requestUrl: ", requestUrl);
+			ResponseEntity<AccessTokenResponse> response = restTemplate.postForEntity(requestUrl, null,
+					AccessTokenResponse.class);
+			logger.info("response: ", response.getBody());
+			if (response != null) {
+				accessToken = saveAccessToken(response.getBody());
+			}
 
 			Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findByEntityId(entityId);
 			if (civilIdEntityDB.isPresent()) {
@@ -204,15 +204,13 @@ public class CivilIdServiceImpl implements CivilIdService {
 					return validationResultDTO;
 				}
 			}
-
-			
-//		} catch (Exception e) {
-//			logger.error("Error in calling token API : ", e);
-//			validationResultDTO.setStatus("Failure");
-//			validationResultDTO.setMessage("Something went wrong");
-//			validationResultDTO.setData(data);
-//			return validationResultDTO;
-//		}
+		} catch (Exception e) {
+			logger.error("Error in calling token API : ", e);
+			validationResultDTO.setStatus("Failure");
+			validationResultDTO.setMessage("Something went wrong");
+			validationResultDTO.setData(data);
+			return validationResultDTO;
+		}
 	}
 
 	@Transactional
