@@ -18,17 +18,22 @@ import com.backoffice.operations.exceptions.OtpValidationException;
 import com.backoffice.operations.payloads.BlockUnblockActionDTO;
 import com.backoffice.operations.payloads.EntityIdDTO;
 import com.backoffice.operations.payloads.GetPinDTO;
+import com.backoffice.operations.payloads.LoginFlagDTO;
 import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.payloads.SecuritySettingsDTO;
 import com.backoffice.operations.payloads.ValidationResultDTO;
 import com.backoffice.operations.security.JwtTokenProvider;
+import com.backoffice.operations.service.CardPinVerifyService;
 import com.backoffice.operations.service.CivilIdService;
+import com.backoffice.operations.service.LoginHistoryService;
 import com.backoffice.operations.service.OtpService;
 import com.backoffice.operations.service.PinService;
+import com.backoffice.operations.service.impl.LoginHistoryServiceImpl;
 
 @RestController
 @RequestMapping("/api/otp")
 public class OtpController {
+	
 
 	@Autowired
 	private OtpService otpService;
@@ -38,6 +43,8 @@ public class OtpController {
 	private PinService pinService;
 	@Autowired
 	private JwtTokenProvider jwtTokenProvider;
+	@Autowired
+	private LoginHistoryService loginHistoryService;
 
 	@PostMapping("/validate")
 	public ResponseEntity<ValidationResultDTO> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
@@ -66,12 +73,13 @@ public class OtpController {
 		}
 	}
 
-	@GetMapping("/civil/{civilId}/{lang}")
+	@GetMapping("/civil/{civilId}/{uniqueId}/{lang}")
 	public ResponseEntity<ValidationResultDTO> validateCivilId(@PathVariable @Validated String civilId,
+			@PathVariable String uniqueId,
 			@PathVariable String lang,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		ValidationResultDTO validationResultDTO = civilIdService.validateCivilId(civilId,
-				token.substring("Bearer ".length()));
+				token.substring("Bearer ".length()), uniqueId);
 		return ResponseEntity.ok(validationResultDTO);
 	}
 
@@ -108,5 +116,10 @@ public class OtpController {
 		otpService.saveSecuritySettings(securitySettingsDTO);
 		return new ResponseEntity<>("Security settings updated successfully", HttpStatus.OK);
 	}
-
+	
+	@PostMapping("/signIn")
+	public ResponseEntity<ValidationResultDTO> signIn(@RequestBody LoginFlagDTO loginFlagDTO) {
+		ValidationResultDTO validationResultDTO = loginHistoryService.saveLoginFlag(loginFlagDTO);
+		return ResponseEntity.ok(validationResultDTO);
+	}
 }

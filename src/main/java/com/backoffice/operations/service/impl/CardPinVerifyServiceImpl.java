@@ -11,10 +11,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.backoffice.operations.entity.CardEntity;
+import com.backoffice.operations.entity.CardPinParameter;
 import com.backoffice.operations.entity.SystemDetail;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.payloads.EntityIdDTO;
 import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.repository.CardPinParameterRepository;
 import com.backoffice.operations.repository.CardRepository;
 import com.backoffice.operations.repository.SystemDetailRepository;
 import com.backoffice.operations.repository.UserRepository;
@@ -23,12 +25,6 @@ import com.backoffice.operations.service.CardPinVerifyService;
 
 @Service
 public class CardPinVerifyServiceImpl implements CardPinVerifyService {
-
-	@Value("${cardPin.maxAttempts}")
-	private int cardPinMaxAttempts;
-	
-	@Value("${cardPin.cooldownPeriodSeconds}")
-	private int cardPinCooldownPeriodSeconds;
 	
 	private Map<String, Integer> attemptsMap = new HashMap<>();
 	private Map<String, LocalDateTime> cooldownMap = new HashMap<>();
@@ -45,8 +41,17 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 	@Autowired
 	private CardRepository cardRepository;
 	
+	@Autowired
+	private CardPinParameterRepository cardPinParameterRepository;
+	
+	
 	@Override
 	public ValidationResultDTO verifyCardPin(EntityIdDTO entityIdDTO, String token) {
+		long id = 1;
+		CardPinParameter cardPinParameter = cardPinParameterRepository.findById(id).orElse(null);
+		int cardPinMaxAttempts = cardPinParameter.getCardPinMaximumAttempts();
+		int cardPinCooldownPeriodSeconds = cardPinParameter.getCardPinCooldownInSec();
+
 		int attempts = attemptsMap.getOrDefault(entityIdDTO.getUniqueKeySystem(), 0);
 		
 		String userEmail = jwtTokenProvider.getUsername(token);
@@ -65,7 +70,7 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 			if(Objects.nonNull(cardEntity) && Objects.nonNull(systemDetail))
 			{
 				//User is on cooldown
-				 if (isUserOnCooldown(entityIdDTO.getUniqueKeySystem())) {
+				 if (isUserOnCooldown(entityIdDTO.getUniqueKeySystem(),cardPinCooldownPeriodSeconds)) {
 					 validationResultDTO.setStatus("Failure");
 						validationResultDTO.setMessage("Maximum attempts reached. Please try again later.");
 						data.setUniqueKey(null);
@@ -117,7 +122,7 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 		return null;
 	}
 	
-	private boolean isUserOnCooldown(String uniqueKey) {
+	private boolean isUserOnCooldown(String uniqueKey, int cardPinCooldownPeriodSeconds) {
         LocalDateTime lastAttemptTime = cooldownMap.get(uniqueKey);
         if (lastAttemptTime == null) {
             return false; // User is not on cooldown
