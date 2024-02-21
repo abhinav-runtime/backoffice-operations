@@ -121,8 +121,8 @@ public class CivilIdServiceImpl implements CivilIdService {
 
 					civilIdRepository.save(civilIdEntityDB.get());
 					
-					validationResultDTO.setStatus("Success");
-					validationResultDTO.setMessage("Success");
+					validationResultDTO.setStatus("Failure");
+					validationResultDTO.setMessage("Something went wrong");
 					data.setUniqueKey(civilIdEntityDB.get().getId().toString());
 					validationResultDTO.setData(data);
 					return validationResultDTO;
