@@ -206,7 +206,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 					data.put("uniqueKey", entityIdDTO.getUniqueKey());
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Something went wrong");
-					responseDTO.setData(entityIdDTO.getUniqueKey());
+					responseDTO.setData(data);
 					return responseDTO;
 				}
 			}
@@ -214,7 +214,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 			data.put("uniqueKey", entityIdDTO.getUniqueKey());
 			responseDTO.setStatus("Failure");
 			responseDTO.setMessage("Something went wrong");
-			responseDTO.setData(entityIdDTO.getUniqueKey());
+			responseDTO.setData(data);
 			return responseDTO;
 		} catch (Exception e) {
 			logger.error("ERROR in class CivilIdServiceImpl method verifyCard", e);
@@ -222,7 +222,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 			data.put("uniqueKey", entityIdDTO.getUniqueKey());
 			responseDTO.setStatus("Failure");
 			responseDTO.setMessage("Something went wrong");
-			responseDTO.setData(entityIdDTO.getUniqueKey());
+			responseDTO.setData(data);
 			return responseDTO;
 		}
 	}
