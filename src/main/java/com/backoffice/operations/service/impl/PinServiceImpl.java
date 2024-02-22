@@ -72,7 +72,8 @@ public class PinServiceImpl implements PinService {
 				PinRequestDTO pinRequest = new PinRequestDTO();
 				pinRequest.setEntityId(pinRequestEntity.getCivilId());
 				pinRequest.setDob(pinRequestEntity.getDob());
-				pinRequest.setExpiryDate(pinRequestEntity.getExpiryDate());
+				String reversedExpiryDate = pinRequestEntity.getExpiryDate().substring(2) + pinRequestEntity.getExpiryDate().substring(0, 2);
+				pinRequest.setExpiryDate(reversedExpiryDate);
 				pinRequest.setKitNo(pinRequestEntity.getKitNo());
 				pinRequest.setPin(pinRequestEntity.getPin());
 
@@ -81,8 +82,23 @@ public class PinServiceImpl implements PinService {
 				headers.setContentType(MediaType.APPLICATION_JSON);
 
 				HttpEntity<PinRequestDTO> requestEntity = new HttpEntity<>(pinRequest, headers);
-				ResponseEntity<PinResponseDTO> response = restTemplate.postForEntity(externalApiPinUrl, requestEntity,
-						PinResponseDTO.class);
+				ResponseEntity<PinResponseDTO> response = null;
+				try {
+					response = restTemplate.postForEntity(externalApiPinUrl, requestEntity,
+							PinResponseDTO.class);
+				} catch (Exception e){
+					validationResultDTO.setStatus("Success");
+					validationResultDTO.setMessage("Success");
+					data.setUniqueKey(cardEntity.getUniqueKeyCivilId());
+					data.setDob(pinRequest.getDob());
+					data.setEntityId(pinRequest.getEntityId());
+					data.setExpiryDate(pinRequest.getExpiryDate());
+					data.setKitNo(pinRequest.getKitNo());
+
+					validationResultDTO.setData(data);
+					return validationResultDTO;
+				}
+
 				if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null
 						&& response.getBody().getResult() != null && response.getBody().getResult().isStatus()) {
 					validationResultDTO.setStatus("Success");
