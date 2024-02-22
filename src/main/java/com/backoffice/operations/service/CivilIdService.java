@@ -6,7 +6,7 @@ import com.backoffice.operations.payloads.ValidationResultDTO;
 
 public interface CivilIdService {
 		
-	ValidationResultDTO validateCivilId(String entityId, String token);
+	ValidationResultDTO validateCivilId(String entityId, String token, String uniqueId);
 
 	ValidationResultDTO verifyCard(EntityIdDTO entityIdDTO, String token);
 
