@@ -21,6 +21,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 	public ValidationResultDTO saveLoginFlag(LoginFlagDTO loginFlagDTO) {
 		
 		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		LoginHistory loginHistory = new LoginHistory();
         loginHistory.setFlag(loginFlagDTO.isFlag());
         loginHistory.setLoginTimestamp(LocalDateTime.now());
@@ -29,6 +30,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
         loginHistoryRepository.save(loginHistory);
         
         validationResultDTO.setStatus("Success");
+		validationResultDTO.setData(data);
 		validationResultDTO.setMessage("Success");
         return validationResultDTO;
 	}
