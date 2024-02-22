@@ -76,6 +76,8 @@ public class ReportIssueService {
 	        return reportIssueRepository.findById(id);
 	}
 	
+	
+	
 	private String getFileExtension(String filename) {
         int lastDotIndex = filename.lastIndexOf('.');
         if (lastDotIndex == -1) {
