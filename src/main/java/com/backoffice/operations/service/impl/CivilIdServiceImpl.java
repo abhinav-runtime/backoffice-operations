@@ -21,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import com.backoffice.operations.entity.BlockUnblockAction;
 import com.backoffice.operations.entity.CardEntity;
 import com.backoffice.operations.entity.CivilIdEntity;
+import com.backoffice.operations.entity.CivilIdParameter;
 import com.backoffice.operations.entity.OtpEntity;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.enums.CardStatus;
@@ -33,6 +34,7 @@ import com.backoffice.operations.payloads.ExternalApiResponseDTO.Result.Card;
 import com.backoffice.operations.payloads.ValidationResultDTO;
 import com.backoffice.operations.repository.BlockUnblockActionRepository;
 import com.backoffice.operations.repository.CardRepository;
+import com.backoffice.operations.repository.CivilIdParameterRepository;
 import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.OtpRepository;
 import com.backoffice.operations.repository.UserRepository;
@@ -66,9 +68,17 @@ public class CivilIdServiceImpl implements CivilIdService {
 	private OtpRepository otpRepository;
 	@Autowired
 	private CardRepository cardRepository;
+	@Autowired
+	private CivilIdParameterRepository civilIdParameterRepository;
 
 	@Override
 	public ValidationResultDTO validateCivilId(String entityId, String token, String uniqueId) {
+		
+		long id = 1;
+		CivilIdParameter civilIdParameter = civilIdParameterRepository.findById(id).orElse(null);
+		int allowedAttempts = civilIdParameter.getCivilIdMaxAttempts();
+		int timeoutSeconds = civilIdParameter.getCivilIdCooldownInSec();
+		
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
@@ -76,8 +86,6 @@ public class CivilIdServiceImpl implements CivilIdService {
 		
 		Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findById(uniqueId);
 		if(civilIdEntityDB.isPresent()) {
-			int allowedAttempts = 3;
-	        int timeoutSeconds = 180;
 
 	        if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
 	            // Valid attempt, update the entity

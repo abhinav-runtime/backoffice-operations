@@ -53,6 +53,7 @@ public class ReportIssueService {
     	
     	//file copy
     	Files.copy(file.getInputStream(), Paths.get(filePath));
+    	
         
     	ReportAnIssue reportAnIssue = new ReportAnIssue();
     	reportAnIssue.setName(file.getOriginalFilename());
