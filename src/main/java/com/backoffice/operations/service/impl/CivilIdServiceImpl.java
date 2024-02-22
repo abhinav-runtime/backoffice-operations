@@ -24,6 +24,7 @@ import com.backoffice.operations.entity.AccessToken;
 import com.backoffice.operations.entity.BlockUnblockAction;
 import com.backoffice.operations.entity.CardEntity;
 import com.backoffice.operations.entity.CivilIdEntity;
+import com.backoffice.operations.entity.CivilIdParameter;
 import com.backoffice.operations.entity.OtpEntity;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.enums.CardStatus;
@@ -38,6 +39,7 @@ import com.backoffice.operations.payloads.ValidationResultDTO;
 import com.backoffice.operations.repository.AccessTokenRepository;
 import com.backoffice.operations.repository.BlockUnblockActionRepository;
 import com.backoffice.operations.repository.CardRepository;
+import com.backoffice.operations.repository.CivilIdParameterRepository;
 import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.OtpRepository;
 import com.backoffice.operations.repository.UserRepository;
@@ -82,10 +84,19 @@ public class CivilIdServiceImpl implements CivilIdService {
 	@Autowired
 	private CardRepository cardRepository;
 	@Autowired
+	private CivilIdParameterRepository civilIdParameterRepository;
+	@Autowired
 	private AccessTokenRepository accessTokenRepository;
 
 	@Override
 	public ValidationResultDTO validateCivilId(String entityId, String token) {
+	public ValidationResultDTO validateCivilId(String entityId, String token, String uniqueId) {
+
+		long id = 1;
+		CivilIdParameter civilIdParameter = civilIdParameterRepository.findById(id).orElse(null);
+		int allowedAttempts = civilIdParameter.getCivilIdMaxAttempts();
+		int timeoutSeconds = civilIdParameter.getCivilIdCooldownInSec();
+
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
@@ -108,6 +119,9 @@ public class CivilIdServiceImpl implements CivilIdService {
 				int allowedAttempts = 3;
 				int timeoutSeconds = 180;
 
+		Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findById(uniqueId);
+		if(civilIdEntityDB.isPresent()) {
+
 				if(StringUtils.hasLength(civilIdEntityDB.get().getCivilId())) {
 					validationResultDTO.setStatus("Success");
 					validationResultDTO.setMessage("Success");
@@ -120,13 +134,13 @@ public class CivilIdServiceImpl implements CivilIdService {
 					civilIdEntityDB.get().setLastAttemptTime(LocalDateTime.now());
 
 					civilIdRepository.save(civilIdEntityDB.get());
-					
+
 					validationResultDTO.setStatus("Failure");
 					validationResultDTO.setMessage("Something went wrong");
 					data.setUniqueKey(civilIdEntityDB.get().getId().toString());
 					validationResultDTO.setData(data);
 					return validationResultDTO;
-					
+
 				} else if (ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
 						LocalDateTime.now()) < timeoutSeconds) {
 					logger.error("Session Is Blocked");
@@ -156,7 +170,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 				civilIdEntity.setUserId(user.get().getId().toString());
 				try {
 					if (user.isPresent()) {
-						
+
 						ResponseEntity<CivilIdAPIResponse> responseEntity = null;
 						if (Objects.nonNull(accessToken)) {
 							HttpHeaders headers = new HttpHeaders();
