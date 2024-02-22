@@ -1,7 +1,9 @@
 package com.backoffice.operations.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -29,7 +31,7 @@ import com.backoffice.operations.payloads.EntityIdDTO;
 import com.backoffice.operations.payloads.CivilIdAPIResponse.CustomerFull;
 import com.backoffice.operations.payloads.ExternalApiResponseDTO;
 import com.backoffice.operations.payloads.ExternalApiResponseDTO.Result.Card;
-import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.BlockUnblockActionRepository;
 import com.backoffice.operations.repository.CardRepository;
 import com.backoffice.operations.repository.CivilIdRepository;
@@ -67,11 +69,11 @@ public class CivilIdServiceImpl implements CivilIdService {
 	private CardRepository cardRepository;
 
 	@Override
-	public ValidationResultDTO validateCivilId(String entityId, String token) {
+	public GenericResponseDTO<Object> validateCivilId(String entityId, String token) {
+		
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		CivilIdEntity civilIdEntity = new CivilIdEntity();
 		civilIdEntity.setEntityId(entityId);
 		civilIdEntity.setUserId(user.get().getId().toString());
@@ -88,41 +90,47 @@ public class CivilIdServiceImpl implements CivilIdService {
 					if (customerFull != null) {
 						civilIdEntity.setCivilId(customerFull.getCustNo());
 						civilIdRepository.save(civilIdEntity);
-
-						validationResultDTO.setStatus("Success");
-						validationResultDTO.setMessage("Success");
-						data.setUniqueKey(civilIdEntity.getId().toString());
-						validationResultDTO.setData(data);
-						return validationResultDTO;
+						
+						Map<String, String> data = new HashMap<>();
+						data.put("uniqueKey", civilIdEntity.getId().toString());
+						
+						responseDTO.setStatus("Success");
+						responseDTO.setMessage("Success");
+						responseDTO.setData(data);
+						return responseDTO;
 					}
 				}
 			}
 			civilIdRepository.save(civilIdEntity);
-
-			validationResultDTO.setMessage("Failure");
-			validationResultDTO.setStatus("Something went wrong");
-			data.setUniqueKey(civilIdEntity.getId().toString());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			
+			Map<String, String> data = new HashMap<>();
+			data.put("uniqueKey", civilIdEntity.getId().toString());
+			
+			responseDTO.setMessage("Failure");
+			responseDTO.setStatus("Something went wrong");
+			responseDTO.setData(data);
+			return responseDTO;
 		} catch (Exception e) {
 			civilIdRepository.save(civilIdEntity);
 
 			logger.error("ERROR in class CivilIdServiceImpl method validateCivilId", e);
-			validationResultDTO.setStatus("Failure");
-			validationResultDTO.setMessage("Something went wrong");
-			data.setUniqueKey(civilIdEntity.getId().toString());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			Map<String, String> data = new HashMap<>();
+			data.put("uniqueKey", civilIdEntity.getId().toString());
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			responseDTO.setData(data);
+			return responseDTO;
 		}
 	}
 
 	@Override
-	public ValidationResultDTO verifyCard(EntityIdDTO entityIdDTO, String token) {
+	public GenericResponseDTO<Object> verifyCard(EntityIdDTO entityIdDTO, String token) {
 		logger.debug("In class CivilIdServiceImpl method getCardList");
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		
+//		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		try {
 			if (user.isPresent()) {
 				Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(entityIdDTO.getUniqueKey());
@@ -143,18 +151,20 @@ public class CivilIdServiceImpl implements CivilIdService {
 							if (entityIdDTO.getFirstFourDigitscardNo().equals(actualFirstFourDigits)
 									&& entityIdDTO.getLastFourDigitscardNo().equals(actualLastFourDigits)) {
 								if (card.getStatus().equalsIgnoreCase(CardStatus.LOCKED.name())) {
-
-									validationResultDTO.setStatus("Success");
-									validationResultDTO.setMessage("Your card is locked");
-									data.setUniqueKey(entityIdDTO.getUniqueKey());
-									validationResultDTO.setData(data);
-									return validationResultDTO;
+									
+									Map<String, String> data = new HashMap<>();
+									data.put("uniqueKey", entityIdDTO.getUniqueKey());
+									responseDTO.setStatus("Success");
+									responseDTO.setMessage("Your card is locked");
+									responseDTO.setData(data);
+									return responseDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.BLOCKED.name())) {
-									validationResultDTO.setStatus("Failure");
-									validationResultDTO.setMessage("Your card is permanently blocked");
-									data.setUniqueKey(entityIdDTO.getUniqueKey());
-									validationResultDTO.setData(data);
-									return validationResultDTO;
+									Map<String, String> data = new HashMap<>();
+									data.put("uniqueKey", entityIdDTO.getUniqueKey());
+									responseDTO.setStatus("Failure");
+									responseDTO.setMessage("Your card is permanently blocked");
+									responseDTO.setData(data);
+									return responseDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
 									OtpEntity otpEntity = otpRepository
 											.findByUniqueKeyCivilId(civilIdEntity.get().getId().toString());
@@ -174,42 +184,46 @@ public class CivilIdServiceImpl implements CivilIdService {
 									cardEntity.setExpiry(card.getExpiryDate());
 									cardEntity.setDobOfUser(responseEntity.getBody().getResult().getDob());
 									cardRepository.save(cardEntity);
-
-									validationResultDTO.setStatus("Success");
-									validationResultDTO.setMessage("Success");
-									data.setUniqueKey(entityIdDTO.getUniqueKey());
-									validationResultDTO.setData(data);
-									return validationResultDTO;
+									Map<String, String> data = new HashMap<>();
+									data.put("uniqueKey", entityIdDTO.getUniqueKey());
+									responseDTO.setStatus("Success");
+									responseDTO.setMessage("Success");
+									responseDTO.setData(data);
+									return responseDTO;
 								} else {
-									validationResultDTO.setStatus("Failure");
-									validationResultDTO.setMessage("Something went wrong");
-									data.setUniqueKey(entityIdDTO.getUniqueKey());
-									validationResultDTO.setData(data);
-									return validationResultDTO;
+									Map<String, String> data = new HashMap<>();
+									data.put("uniqueKey", entityIdDTO.getUniqueKey());
+									responseDTO.setStatus("Failure");
+									responseDTO.setMessage("Something went wrong");
+									responseDTO.setData(data);
+									return responseDTO;
 								}
 							}
 						}
 					}
 				} else {
-					validationResultDTO.setStatus("Failure");
-					validationResultDTO.setMessage("Something went wrong");
-					data.setUniqueKey(entityIdDTO.getUniqueKey());
-					validationResultDTO.setData(data);
-					return validationResultDTO;
+					Map<String, String> data = new HashMap<>();
+					data.put("uniqueKey", entityIdDTO.getUniqueKey());
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Something went wrong");
+					responseDTO.setData(entityIdDTO.getUniqueKey());
+					return responseDTO;
 				}
 			}
-			validationResultDTO.setStatus("Failure");
-			validationResultDTO.setMessage("Something went wrong");
-			data.setUniqueKey(entityIdDTO.getUniqueKey());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			Map<String, String> data = new HashMap<>();
+			data.put("uniqueKey", entityIdDTO.getUniqueKey());
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			responseDTO.setData(entityIdDTO.getUniqueKey());
+			return responseDTO;
 		} catch (Exception e) {
 			logger.error("ERROR in class CivilIdServiceImpl method verifyCard", e);
-			validationResultDTO.setStatus("Failure");
-			validationResultDTO.setMessage("Something went wrong");
-			data.setUniqueKey(entityIdDTO.getUniqueKey());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			Map<String, String> data = new HashMap<>();
+			data.put("uniqueKey", entityIdDTO.getUniqueKey());
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			responseDTO.setData(entityIdDTO.getUniqueKey());
+			return responseDTO;
 		}
 	}
 
@@ -247,7 +261,6 @@ public class CivilIdServiceImpl implements CivilIdService {
 		if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
 			return response.getBody();
 		} else {
-			// TODO: log proper exception and map it accordingly.
 			return response.getBody();
 		}
 	}
