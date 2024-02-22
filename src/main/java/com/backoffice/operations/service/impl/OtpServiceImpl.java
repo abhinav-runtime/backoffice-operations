@@ -1,6 +1,7 @@
 package com.backoffice.operations.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -8,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.backoffice.operations.entity.CardPinParameter;
 import com.backoffice.operations.entity.CivilIdEntity;
 import com.backoffice.operations.entity.OtpEntity;
+import com.backoffice.operations.entity.OtpParameter;
 import com.backoffice.operations.entity.SecuritySettings;
 import com.backoffice.operations.exceptions.MaxResendAttemptsException;
 import com.backoffice.operations.exceptions.OtpValidationException;
@@ -17,6 +20,7 @@ import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.payloads.SecuritySettingsDTO;
 import com.backoffice.operations.payloads.ValidationResultDTO;
 import com.backoffice.operations.repository.CivilIdRepository;
+import com.backoffice.operations.repository.OtpParameterRepository;
 import com.backoffice.operations.repository.OtpRepository;
 import com.backoffice.operations.repository.SecuritySettingsRepository;
 import com.backoffice.operations.service.OtpService;
@@ -27,32 +31,31 @@ public class OtpServiceImpl implements OtpService {
 	@Autowired
 	private OtpRepository otpRepository;
 
-	@Value("${otp.maxAttempts}")
-	private int otpMaxAttempts;
-
-	@Value("${otp.cooldownPeriodMinutes}")
-	private int cooldownPeriodMinutes;
-
 	@Autowired
 	private SecuritySettingsRepository securitySettingsRepository;
 
 	@Autowired
 	private CivilIdRepository civilIdRepository;
-
-	// Maximum allowed attempts for OTP validation
-//    private static final int MAX_ATTEMPTS = 5;
-
-	// Cooldown period in minutes before allowing another OTP resend
-//    private static final int COOLDOWN_PERIOD_MINUTES = 5;
+	
+	@Autowired
+	private OtpParameterRepository otpParameterRepository;
+	
 
 	@Override
 	public ValidationResultDTO validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException {
+		
+		long id = 1;
+		OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
+		int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
+
+		
 		Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
 		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
 		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		if (civilIdEntity.isPresent()) {
 			OtpEntity otpEntity = new OtpEntity();
 			otpEntity.setOtp("1234");
+				
 			if (otpRequest.getOtp() == null) {
 
 				validationResultDTO.setStatus("Failure");
@@ -73,14 +76,14 @@ public class OtpServiceImpl implements OtpService {
 					data.setUniqueKey(civilIdEntity.get().getId().toString());
 					validationResultDTO.setData(data);
 					return validationResultDTO;
-				} else {
+				} 	
 					validationResultDTO.setStatus("Failure");
 					validationResultDTO
 							.setMessage("Invalid OTP. Attempts left: " + (otpMaxAttempts - otpEntity.getAttempts()));
 					data.setUniqueKey(civilIdEntity.get().getId().toString());
 					validationResultDTO.setData(data);
 					return validationResultDTO;
-				}
+				
 			}
 
 			// Check expiration time (e.g., within the last 10 minutes)
@@ -105,11 +108,17 @@ public class OtpServiceImpl implements OtpService {
 			validationResultDTO.setData(data);
 			return validationResultDTO;
 		}
+		 
 		return null;
 	}
 
 	@Override
 	public ValidationResultDTO resendOtp(String uniqueKey) throws MaxResendAttemptsException {
+		
+		long id = 1;
+		OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
+		int cooldownPeriodMinutes = otpParameter.getOtpCooldownInMin();
+		
 		OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(uniqueKey);
 		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
 		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
@@ -129,12 +138,13 @@ public class OtpServiceImpl implements OtpService {
 				validationResultDTO.setData(data);
 				return validationResultDTO;
 			}
-
+				
 			// Reset attempts and generate a new OTP
 			otpEntity.setAttempts(0);
 			generateAndSaveOtp(otpEntity);
 		}
-
+		
+		
 		validationResultDTO.setStatus("Success");
 		validationResultDTO.setMessage("Success");
 		data.setUniqueKey(uniqueKey);
