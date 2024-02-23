@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backoffice.operations.payloads.EntityIdDTO;
-import com.backoffice.operations.payloads.ValidationResultDTO;
+//import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.CardPinVerifyService;
 
 
@@ -23,9 +24,9 @@ public class CardPinVerifyController {
 	private CardPinVerifyService cardPinVerifyService;
 	
 	@PostMapping("/verifyCardPin")
-	public ResponseEntity<ValidationResultDTO> verifyCardPin(@RequestBody @Validated EntityIdDTO entityIdDTO,
+	public ResponseEntity<GenericResponseDTO<Object>> verifyCardPin(@RequestBody @Validated EntityIdDTO entityIdDTO,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		ValidationResultDTO validationResultDTO = cardPinVerifyService.verifyCardPin(entityIdDTO,
+		GenericResponseDTO<Object> validationResultDTO = cardPinVerifyService.verifyCardPin(entityIdDTO,
 				token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
