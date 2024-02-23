@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -26,8 +27,8 @@ public class DashboardServiceImpl implements DashboardService {
     @Value("${external.api.accounts}")
     private String accountIdExternalAPI;
 
-    @Value("${external.api.accounts.balance}")
-    private String accountBalanceExternalAPI;
+    @Value("${external.api.customer.fetchDue}")
+    private String creditCardFetchDue;
 
     @Value("${external.api.url}")
     private String externalApiUrl;
@@ -89,14 +90,10 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public GenericResponseDTO<Object> getDashboardInfo(String accountNumber, String uniqueKey) {
-        String apiUrl = accountBalanceExternalAPI + accountNumber;
-        ResponseEntity<AccountBalanceResponse> responseEntity = restTemplate.getForEntity(apiUrl,
-                AccountBalanceResponse.class);
-        AccountBalanceResponse apiResponse = responseEntity.getBody();
+    public GenericResponseDTO<Object> getDashboardInfo(String uniqueKey) {
 
         Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
-        if(civilIdEntity.isPresent()) {
+        if (civilIdEntity.isPresent()) {
 
             String cardListUrl = externalApiUrl + "/getCardList";
             HttpHeaders headers = new HttpHeaders();
@@ -107,41 +104,75 @@ public class DashboardServiceImpl implements DashboardService {
             ResponseEntity<ExternalApiResponseDTO> cardListresponseEntity = restTemplate.exchange(cardListUrl,
                     HttpMethod.POST, requestEntity, ExternalApiResponseDTO.class);
 
-            if (apiResponse != null && apiResponse.isSuccess()) {
-                AccountBalanceResponse.Response.Payload.AccBalance.AccBal accBal = apiResponse.getResponse().getPayload().getAccbalance().getAccbal().get(0);
-                DashboardInfoEntity dashboardInfoEntity = DashboardInfoEntity.builder().customerNumber(accBal.getCustacno())
-                        .outstandingBal(accBal.getCurbal()).availableBal(accBal.getAvlbal()).build();
-                DashboardInfoEntity dashboardInfoEntityObj = dashboardInfoRepository.save(dashboardInfoEntity);
+            if (Objects.nonNull(cardListresponseEntity.getBody()) && Objects.nonNull(cardListresponseEntity.getBody().getResult()) && !cardListresponseEntity.getBody().getResult().getCardList().isEmpty()) {
+                String customerName = cardListresponseEntity.getBody().getResult().getName();
+                List<ExternalApiResponseDTO.Result.Card> cardList = cardListresponseEntity.getBody().getResult().getCardList();
                 List<CreditCardDetailsResponseDTO> creditCardDetailsResponseList = new ArrayList<>();
-                if (cardListresponseEntity != null && cardListresponseEntity.getBody().getResult() != null) {
-                    String customerName = cardListresponseEntity.getBody().getResult().getName();
-                    List<ExternalApiResponseDTO.Result.Card> cardList = cardListresponseEntity.getBody().getResult().getCardList();
-                    for (ExternalApiResponseDTO.Result.Card card : cardList) {
-                        String actualFirstFourDigits = card.getCardNo().substring(0, 4);
-                        String actualLastFourDigits = card.getCardNo().substring(card.getCardNo().length() - 4);
-                        CreditCardDetailsResponseDTO creditCardDetailsResponseDTO = new CreditCardDetailsResponseDTO();
-                        creditCardDetailsResponseDTO.setAvailableBalance(dashboardInfoEntityObj.getAvailableBal());
-                        creditCardDetailsResponseDTO.setOutstandingBalance(dashboardInfoEntityObj.getOutstandingBal());
-                        creditCardDetailsResponseDTO.setCustomerName(customerName);
-                        creditCardDetailsResponseDTO.setCreditCardNumber(actualFirstFourDigits + "********" + actualLastFourDigits);
-                        creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
+
+
+                String entityRequestBody = "{ \"entityId\": \"" + civilIdEntity.get().getCivilId() + "\" }";
+                HttpEntity<String> fetchDueRequestEntity = new HttpEntity<>(entityRequestBody, headers);
+                ResponseEntity<ExternalApiFetchDueResponseDTO> fetchDueResponseEntity = restTemplate.exchange(creditCardFetchDue,
+                        HttpMethod.POST, fetchDueRequestEntity, ExternalApiFetchDueResponseDTO.class);
+
+                ResponseEntity<ExternalApiFetchBalanceResponseDTO> fetchBalanceResponseEntity = restTemplate.exchange(externalApiUrl + "/fetchLimit",
+                        HttpMethod.POST, fetchDueRequestEntity, ExternalApiFetchBalanceResponseDTO.class);
+
+                if (Objects.nonNull(fetchDueResponseEntity.getBody()) && Objects.nonNull(fetchDueResponseEntity.getBody().getResult())) {
+                    if (Objects.nonNull(fetchBalanceResponseEntity.getBody()) && Objects.nonNull(fetchBalanceResponseEntity.getBody().getResult())) {
+
+                        ExternalApiFetchDueResponseDTO.Result fetchDueResult = fetchDueResponseEntity.getBody().getResult();
+                        cardList.forEach(card -> {
+                            String actualFirstFourDigits = card.getCardNo().substring(0, 4);
+                            String actualLastFourDigits = card.getCardNo().substring(card.getCardNo().length() - 4);
+                            String creditCardNumber = actualFirstFourDigits + "********" + actualLastFourDigits;
+                            Double outStandingAmount = Double.parseDouble(fetchDueResult.getTotalOutStandingAmount());
+                            Double availableAmount = Double.parseDouble(fetchBalanceResponseEntity.getBody().getResult().getLimitAvailable());
+                            CreditCardDetailsResponseDTO creditCardDetailsResponseDTO = new CreditCardDetailsResponseDTO();
+                            creditCardDetailsResponseDTO.setAvailableBalance(availableAmount);
+                            creditCardDetailsResponseDTO.setOutstandingBalance(outStandingAmount);
+                            creditCardDetailsResponseDTO.setCustomerName(customerName);
+                            creditCardDetailsResponseDTO.setCreditCardNumber(creditCardNumber);
+                            creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
+
+                            DashboardInfoEntity dashboardInfoEntity = DashboardInfoEntity.builder().creditCardNumber(creditCardNumber)
+                                    .customerName(customerName).outstandingBal(outStandingAmount).availableBal(availableAmount).build();
+                            dashboardInfoRepository.save(dashboardInfoEntity);
+                        });
+                    } else {
+                        return getErrorResponseObject(uniqueKey);
                     }
+                } else {
+                    return getErrorResponseObject(uniqueKey);
                 }
-                
-               GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+
+                GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
                 Map<String, Object> data = new HashMap<>();
                 data.put("creditCardDetails",creditCardDetailsResponseList);
-                data.put("uniqueKey",dashboardInfoEntityObj.getId());
+                data.put("uniqueKey",uniqueKey);
                 responseDTO.setStatus("Success");
                 responseDTO.setMessage("Success");
                 responseDTO.setData(data);
                 return responseDTO;
-             }
-
+            } else {
+                return getErrorResponseObject(uniqueKey);
+            }
         }
+        return getErrorResponseObject(uniqueKey);
+    }
+
+    private static GenericResponseDTO<Object> getErrorResponseObject(String uniqueKey) {
+        CreditCardDetailsResponseDTO creditCardDetailsResponseDTO = new CreditCardDetailsResponseDTO();
+        creditCardDetailsResponseDTO.setAvailableBalance(0.0);
+        creditCardDetailsResponseDTO.setOutstandingBalance(0.0);
+        creditCardDetailsResponseDTO.setCustomerName("");
+        creditCardDetailsResponseDTO.setCreditCardNumber("");
+        List<CreditCardDetailsResponseDTO> creditCardDetailsResponseList = new ArrayList<>();
+        creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         Map<String, Object> data = new HashMap<>();
-        data.put("uniqueKey",uniqueKey);
+        data.put("creditCardDetails",creditCardDetailsResponseList);
+        data.put("uniqueKey", uniqueKey);
         responseDTO.setStatus("Success");
         responseDTO.setMessage("Success");
         responseDTO.setData(data);

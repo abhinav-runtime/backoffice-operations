@@ -106,7 +106,7 @@ public class DashboardController {
     }
 
     @GetMapping("/info")
-    public ResponseEntity<GenericResponseDTO<Object>> getDashboardInfo(@RequestParam String accountNumber, @RequestParam String uniqueKey){
-        return ResponseEntity.ok(dashboardService.getDashboardInfo(accountNumber, uniqueKey));
+    public ResponseEntity<GenericResponseDTO<Object>> getDashboardInfo(@RequestParam String uniqueKey){
+        return ResponseEntity.ok(dashboardService.getDashboardInfo(uniqueKey));
     }
 }
