@@ -3,6 +3,8 @@ package com.backoffice.operations.payloads;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -54,13 +56,8 @@ public class ValidationResultDTO {
 	    private String kitNo;
 	    private String expiryDate;
 	    private String dob;
-		private String accountNumber;
-		private String currency;
-		private Double accountBalance;
-		private String accountName;
-		private Double outstandingBalance;
-		private Double availableBalance;
-
+		private List<AccountsDetailsResponseDTO> accountDetails;
+		private List<CreditCardDetailsResponseDTO> creditCardDetails;
 
 		public Data() {
 
@@ -106,52 +103,20 @@ public class ValidationResultDTO {
 			this.uniqueKey = uniqueKey;
 		}
 
-		public String getAccountNumber() {
-			return accountNumber;
+		public List<AccountsDetailsResponseDTO> getAccountDetails() {
+			return accountDetails;
 		}
 
-		public void setAccountNumber(String accountNumber) {
-			this.accountNumber = accountNumber;
+		public void setAccountDetails(List<AccountsDetailsResponseDTO> accountDetails) {
+			this.accountDetails = accountDetails;
 		}
 
-		public String getCurrency() {
-			return currency;
+		public List<CreditCardDetailsResponseDTO> getCreditCardDetails() {
+			return creditCardDetails;
 		}
 
-		public void setCurrency(String currency) {
-			this.currency = currency;
-		}
-
-		public Double getAccountBalance() {
-			return accountBalance;
-		}
-
-		public void setAccountBalance(Double accountBalance) {
-			this.accountBalance = accountBalance;
-		}
-
-		public String getAccountName() {
-			return accountName;
-		}
-
-		public void setAccountName(String accountName) {
-			this.accountName = accountName;
-		}
-
-		public Double getOutstandingBalance() {
-			return outstandingBalance;
-		}
-
-		public void setOutstandingBalance(Double outstandingBalance) {
-			this.outstandingBalance = outstandingBalance;
-		}
-
-		public Double getAvailableBalance() {
-			return availableBalance;
-		}
-
-		public void setAvailableBalance(Double availableBalance) {
-			this.availableBalance = availableBalance;
+		public void setCreditCardDetails(List<CreditCardDetailsResponseDTO> creditCardDetails) {
+			this.creditCardDetails = creditCardDetails;
 		}
 	}
 }
