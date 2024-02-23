@@ -7,5 +7,5 @@ import org.springframework.stereotype.Service;
 public interface DashboardService {
     ValidationResultDTO getDashboardDetails(String uniqueKey);
 
-    ValidationResultDTO getDashboardInfo(String accountNumber, String uniqueKey);
+    ValidationResultDTO getDashboardInfo(String uniqueKey);
 }

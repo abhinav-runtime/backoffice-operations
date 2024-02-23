@@ -107,7 +107,7 @@ public class DashboardController {
     }
 
     @GetMapping("/info")
-    public ResponseEntity<ValidationResultDTO> getDashboardInfo(@RequestParam String accountNumber, @RequestParam String uniqueKey){
-        return ResponseEntity.ok(dashboardService.getDashboardInfo(accountNumber, uniqueKey));
+    public ResponseEntity<ValidationResultDTO> getDashboardInfo(@RequestParam String uniqueKey){
+        return ResponseEntity.ok(dashboardService.getDashboardInfo(uniqueKey));
     }
 }

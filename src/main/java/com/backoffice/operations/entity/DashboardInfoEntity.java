@@ -21,7 +21,7 @@ public class DashboardInfoEntity {
 
     private String customerName;
 
-    private String customerNumber;
+    private String creditCardNumber;
 
     private Double outstandingBal;
 
