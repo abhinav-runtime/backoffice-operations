@@ -25,5 +25,6 @@ public class Profile {
     private String emailId;
     private String fullName;
     private String mobNum;
+    private int mobisdno;
 
 }

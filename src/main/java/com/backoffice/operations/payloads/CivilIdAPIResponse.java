@@ -126,6 +126,8 @@ public class CivilIdAPIResponse {
 		private String emailid;
 		@JsonProperty("mobnum")
 		private String mobnum;
+		@JsonProperty("mobisdno")
+		private int mobisdno;
 	}
 
     

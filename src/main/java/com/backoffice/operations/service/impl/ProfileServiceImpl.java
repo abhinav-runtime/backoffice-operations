@@ -57,9 +57,11 @@ public class ProfileServiceImpl implements ProfileService {
                             profile.setEmailId(custPersonalDTO.getEmailid());
                             profile.setMobNum(custPersonalDTO.getMobnum());
                             profile.setNId(nId);
+                            profile.setMobisdno(custPersonalDTO.getMobisdno());
 
                             data.put("emailId", custPersonalDTO.getEmailid());
                             data.put("mobNum", custPersonalDTO.getMobnum());
+                            data.put("mobIsdNo", custPersonalDTO.getMobisdno());
                         }
                         profile.setUniqueKeyCivilId(uniqueKey);
                         profile.setFullName(customerFull.getFullname());
