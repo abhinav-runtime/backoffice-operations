@@ -28,7 +28,7 @@ public class EmailController {
     }
 
     @GetMapping("/{id}")
-    public Optional<EmailEntity> getEmailById(@PathVariable Long id) {
+    public Optional<EmailEntity> getEmailById(@PathVariable String id) {
         return emailService.getEmailById(id);
     }
 }

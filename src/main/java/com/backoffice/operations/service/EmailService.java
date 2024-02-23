@@ -27,7 +27,7 @@ public class EmailService {
         return emailRepository.save(email);
     }
 
-    public Optional<EmailEntity> getEmailById(Long id) {
+    public Optional<EmailEntity> getEmailById(String id) {
         return emailRepository.findById(id);
     }
 }

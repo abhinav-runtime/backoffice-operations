@@ -24,6 +24,11 @@ public class EntityIdDTO {
 	@NotBlank(message = "Unique Key cannot be blank")
 	private String uniqueKey;
 	
+	@Pattern(regexp = "\\d{4}", message = "Card Pin must be 4 digits")
+	private String cardPin;
+	
+	private String uniqueKeySystem;
+	
 	private String lang;
 
 	public String getLang() {
@@ -58,4 +63,42 @@ public class EntityIdDTO {
 		this.lastFourDigitscardNo = lastFourDigitscardNo;
 	}
 
+	public String getCardPin() {
+		return cardPin;
+	}
+
+	public void setCardPin(String cardPin) {
+		this.cardPin = cardPin;
+	}
+
+	public String getUniqueKeySystem() {
+		return uniqueKeySystem;
+	}
+
+	public void setUniqueKeySystem(String uniqueKeySystem) {
+		this.uniqueKeySystem = uniqueKeySystem;
+	}
+	
+	//Sub Class for stored pin
+	public static class StoredCardPin {
+		
+		private String storedCardPin;
+
+		public StoredCardPin() {
+			super();
+		}
+
+		public StoredCardPin(String storedCardPin) {
+			super();
+			this.storedCardPin = storedCardPin;
+		}
+
+		public String getStoredCardPin() {
+			return storedCardPin;
+		}
+
+		public void setStoredCardPin(String storedCardPin) {
+			this.storedCardPin = storedCardPin;
+		}
+	}
 }

@@ -3,6 +3,7 @@ package com.backoffice.operations.service.impl;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -10,8 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.backoffice.operations.entity.CardPinParameter;
 import com.backoffice.operations.entity.CivilIdEntity;
 import com.backoffice.operations.entity.OtpEntity;
+import com.backoffice.operations.entity.OtpParameter;
 import com.backoffice.operations.entity.SecuritySettings;
 import com.backoffice.operations.exceptions.MaxResendAttemptsException;
 import com.backoffice.operations.exceptions.OtpValidationException;
@@ -19,6 +22,7 @@ import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.payloads.SecuritySettingsDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.CivilIdRepository;
+import com.backoffice.operations.repository.OtpParameterRepository;
 import com.backoffice.operations.repository.OtpRepository;
 import com.backoffice.operations.repository.SecuritySettingsRepository;
 import com.backoffice.operations.service.OtpService;
@@ -28,26 +32,22 @@ public class OtpServiceImpl implements OtpService {
 	@Autowired
 	private OtpRepository otpRepository;
 
-	@Value("${otp.maxAttempts}")
-	private int otpMaxAttempts;
-
-	@Value("${otp.cooldownPeriodMinutes}")
-	private int cooldownPeriodMinutes;
-
 	@Autowired
 	private SecuritySettingsRepository securitySettingsRepository;
 
 	@Autowired
 	private CivilIdRepository civilIdRepository;
-
-	// Maximum allowed attempts for OTP validation
-//    private static final int MAX_ATTEMPTS = 5;
-
-	// Cooldown period in minutes before allowing another OTP resend
-//    private static final int COOLDOWN_PERIOD_MINUTES = 5;
+	
+	@Autowired
+	private OtpParameterRepository otpParameterRepository;
+	
 
 	@Override
-	public GenericResponseDTO<Object> validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException {
+	public GenericResponseDTO<Object> validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException {		
+		long id = 1;
+		OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
+		int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
+
 		Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 //		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
@@ -55,6 +55,7 @@ public class OtpServiceImpl implements OtpService {
 		if (civilIdEntity.isPresent()) {
 			OtpEntity otpEntity = new OtpEntity();
 			otpEntity.setOtp("1234");
+				
 			if (otpRequest.getOtp() == null) {
 				Map<String, String> data = new HashMap<>();
 				data.put("uniqueKey", civilIdEntity.get().getId().toString());
@@ -70,7 +71,7 @@ public class OtpServiceImpl implements OtpService {
 				otpRepository.save(otpEntity);
 
 				if (otpEntity.getAttempts() >= otpMaxAttempts) {
-                    Map<String, String> data = new HashMap<>();
+           Map<String, String> data = new HashMap<>();
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Maximum attempts reached. Please try again later.");
 					data.put("uniqueKey",civilIdEntity.get().getId().toString());
@@ -109,11 +110,15 @@ public class OtpServiceImpl implements OtpService {
 			responseDTO.setData(data);
 			return responseDTO;
 		}
+		 
 		return null;
 	}
 
 	@Override
 	public GenericResponseDTO<Object> resendOtp(String uniqueKey) throws MaxResendAttemptsException {
+		long id = 1;
+		OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
+		int cooldownPeriodMinutes = otpParameter.getOtpCooldownInMin();
 		OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(uniqueKey);
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 //		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
@@ -135,17 +140,19 @@ public class OtpServiceImpl implements OtpService {
 				responseDTO.setData(data);
 				return responseDTO;
 			}
-
+				
 			// Reset attempts and generate a new OTP
 			otpEntity.setAttempts(0);
 			generateAndSaveOtp(otpEntity);
 		}
+    
 		Map<String, String> data = new HashMap<>();
 		responseDTO.setStatus("Success");
 		responseDTO.setMessage("Success");
 		data.put("uniqueKey", uniqueKey);
 		responseDTO.setData(data);
 		return responseDTO;
+
 	}
 
 	@Override

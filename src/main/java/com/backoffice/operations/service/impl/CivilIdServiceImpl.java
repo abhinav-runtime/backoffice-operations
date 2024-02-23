@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -17,14 +19,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.backoffice.operations.entity.AccessToken;
 import com.backoffice.operations.entity.BlockUnblockAction;
 import com.backoffice.operations.entity.CardEntity;
 import com.backoffice.operations.entity.CivilIdEntity;
+import com.backoffice.operations.entity.CivilIdParameter;
 import com.backoffice.operations.entity.OtpEntity;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.enums.CardStatus;
+import com.backoffice.operations.payloads.AccessTokenResponse;
 import com.backoffice.operations.payloads.BlockUnblockActionDTO;
 import com.backoffice.operations.payloads.CivilIdAPIResponse;
 import com.backoffice.operations.payloads.EntityIdDTO;
@@ -32,17 +38,21 @@ import com.backoffice.operations.payloads.CivilIdAPIResponse.CustomerFull;
 import com.backoffice.operations.payloads.ExternalApiResponseDTO;
 import com.backoffice.operations.payloads.ExternalApiResponseDTO.Result.Card;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
+// import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.repository.AccessTokenRepository;
 import com.backoffice.operations.repository.BlockUnblockActionRepository;
 import com.backoffice.operations.repository.CardRepository;
+import com.backoffice.operations.repository.CivilIdParameterRepository;
 import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.OtpRepository;
 import com.backoffice.operations.repository.UserRepository;
 import com.backoffice.operations.security.JwtTokenProvider;
 import com.backoffice.operations.service.CivilIdService;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class CivilIdServiceImpl implements CivilIdService {
-
 	private static final Logger logger = LoggerFactory.getLogger(CivilIdServiceImpl.class);
 
 	@Autowired
@@ -53,10 +63,18 @@ public class CivilIdServiceImpl implements CivilIdService {
 	private String fetchAllCustomers;
 	@Value("${external.api.blockUnblockCard}")
 	private String blockUnblockURL;
+	@Value("${external.api.m2p.token}")
+	private String tokenApiUrl;
+	@Value("${external.api.m2p.client.id}")
+	private String clientId;
+	@Value("${external.api.m2p.client.secret}")
+	private String clientSecret;
 	@Autowired
 	private RestTemplate restTemplate;
-	@Value("${external.api.civilId}")
+	@Value("${external.api.m2p.civilId}")
 	private String civilIdExternalAPI;
+	@Value("${external.api.civilId}")
+	private String civilId;
 	@Autowired
 	private BlockUnblockActionRepository blockUnblockActionRepository;
 	@Autowired
@@ -67,60 +85,156 @@ public class CivilIdServiceImpl implements CivilIdService {
 	private OtpRepository otpRepository;
 	@Autowired
 	private CardRepository cardRepository;
+	@Autowired
+	private CivilIdParameterRepository civilIdParameterRepository;
+	@Autowired
+	private AccessTokenRepository accessTokenRepository;
 
 	@Override
 	public GenericResponseDTO<Object> validateCivilId(String entityId, String token) {
-		
+		long id = 1;
+		CivilIdParameter civilIdParameter = civilIdParameterRepository.findById(id).orElse(null);
+		int allowedAttempts = civilIdParameter.getCivilIdMaxAttempts();
+		int timeoutSeconds = civilIdParameter.getCivilIdCooldownInSec();
+
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		CivilIdEntity civilIdEntity = new CivilIdEntity();
-		civilIdEntity.setEntityId(entityId);
-		civilIdEntity.setUserId(user.get().getId().toString());
+		AccessToken accessToken = null;
 		try {
-			if (user.isPresent()) {
-				String apiUrl = civilIdExternalAPI + entityId;
-				ResponseEntity<CivilIdAPIResponse> responseEntity = restTemplate.getForEntity(apiUrl,
-						CivilIdAPIResponse.class);
-				CivilIdAPIResponse apiResponse = responseEntity.getBody();
+			// GET Access token from M2P and save it into the DB.
+//			String requestUrl = tokenApiUrl + "?grant_type=client_credentials&scope=openid profile email&client_id="
+//					+ clientId + "&client_secret=" + clientSecret;
+//			logger.info("requestUrl: {}", requestUrl);
+//			ResponseEntity<AccessTokenResponse> response = restTemplate.postForEntity(requestUrl, null,
+//					AccessTokenResponse.class);
+//			logger.info("response: {}", response.getBody());
+//			if (response != null) {
+//				accessToken = saveAccessToken(response.getBody());
+//			}
 
-				if (apiResponse != null && apiResponse.isSuccess()) {
-					CustomerFull customerFull = apiResponse.getResponse().getResult().getCustomerFull();
+			Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findByEntityId(entityId);
+			if (civilIdEntityDB.isPresent()) {
+				if (StringUtils.hasLength(civilIdEntityDB.get().getCivilId())) {
+					Map<String, String> data = new HashMap<>();
+					responseDTO.setStatus("Success");
+					responseDTO.setMessage("Success");
+					data.put("uniqueKey", civilIdEntityDB.get().getId().toString());
+					responseDTO.setData(data);
+					return responseDTO;
+				} else if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
+					// Valid attempt, update the entity
+					civilIdEntityDB.get().setAttempts(civilIdEntityDB.get().getAttempts() + 1);
+					civilIdEntityDB.get().setLastAttemptTime(LocalDateTime.now());
 
-					if (customerFull != null) {
-						civilIdEntity.setCivilId(customerFull.getCustNo());
-						civilIdRepository.save(civilIdEntity);
-						
-						Map<String, String> data = new HashMap<>();
-						data.put("uniqueKey", civilIdEntity.getId().toString());
-						
-						responseDTO.setStatus("Success");
-						responseDTO.setMessage("Success");
-						responseDTO.setData(data);
-						return responseDTO;
+					civilIdRepository.save(civilIdEntityDB.get());
+					Map<String, String> data = new HashMap<>();
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Something went wrong");
+					data.put("uniqueKey", civilIdEntityDB.get().getId().toString());
+					responseDTO.setData(data);
+					return responseDTO;
+
+				} else if (ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
+						LocalDateTime.now()) < timeoutSeconds) {
+					logger.error("Session Is Blocked");
+					Map<String, String> data = new HashMap<>();
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Session Is Blocked");
+					data.put("uniqueKey",civilIdEntityDB.get().getId().toString());
+					responseDTO.setData(data);
+					return responseDTO;
+				} else if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
+					logger.error("Civil Id Blocked, Too many attempts or timeout exceeded");
+					Map<String, String> data = new HashMap<>();
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Civil Id Blocked");
+					data.put("uniqueKey",civilIdEntityDB.get().getId().toString());
+					responseDTO.setData(data);
+					return responseDTO;
+				} else {
+					logger.error("Device Blocked");
+					Map<String, String> data = new HashMap<>();
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Device Blocked");
+					data.put("uniqueKey",civilIdEntityDB.get().getId().toString());
+					responseDTO.setData(data);
+					return responseDTO;
+				}
+			} else {
+				CivilIdEntity civilIdEntity = new CivilIdEntity();
+				civilIdEntity.setEntityId(entityId);
+				civilIdEntity.setUserId(user.get().getId().toString());
+				try {
+					if (user.isPresent()) {
+
+						ResponseEntity<CivilIdAPIResponse> responseEntity = null;
+						if (Objects.nonNull(accessToken)) {
+							HttpHeaders headers = new HttpHeaders();
+							headers.setBearerAuth(accessToken.getAccessToken());
+							HttpEntity<String> entity = new HttpEntity<>(headers);
+							String apiUrl = civilIdExternalAPI + entityId;
+							responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, entity,
+									CivilIdAPIResponse.class);
+						} else {
+							String apiUrl = civilId + entityId;
+							responseEntity = restTemplate.getForEntity(apiUrl, CivilIdAPIResponse.class);
+						}
+						CivilIdAPIResponse apiResponse = responseEntity.getBody();
+						if (apiResponse != null && apiResponse.isSuccess()) {
+							CustomerFull customerFull = apiResponse.getResponse().getResult().getCustomerFull();
+
+							if (customerFull != null) {
+								civilIdEntity.setCivilId(customerFull.getCustNo());
+								civilIdRepository.save(civilIdEntity);
+								Map<String, String> data = new HashMap<>();
+								responseDTO.setStatus("Success");
+								responseDTO.setMessage("Success");
+								data.put("uniqueKey",civilIdEntity.getId().toString());
+								responseDTO.setData(data);
+								return responseDTO;
+							}
+						}
 					}
+					civilIdRepository.save(civilIdEntity);
+					Map<String, String> data = new HashMap<>();
+					responseDTO.setMessage("Failure");
+					responseDTO.setStatus("Something went wrong");
+					data.put("uniqueKey",civilIdEntity.getId().toString());
+					responseDTO.setData(data);
+					return responseDTO;
+
+				} catch (Exception e) {
+					civilIdRepository.save(civilIdEntity);
+
+					logger.error("ERROR in class CivilIdServiceImpl method validateCivilId", e);
+					Map<String, String> data = new HashMap<>();
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Something went wrong");
+					data.put("uniqueKey",civilIdEntity.getId().toString());
+					responseDTO.setData(data);
+					return responseDTO;
 				}
 			}
-			civilIdRepository.save(civilIdEntity);
-			
-			Map<String, String> data = new HashMap<>();
-			data.put("uniqueKey", civilIdEntity.getId().toString());
-			
-			responseDTO.setMessage("Failure");
-			responseDTO.setStatus("Something went wrong");
-			responseDTO.setData(data);
-			return responseDTO;
 		} catch (Exception e) {
-			civilIdRepository.save(civilIdEntity);
-
-			logger.error("ERROR in class CivilIdServiceImpl method validateCivilId", e);
+			logger.error("Error in calling token API : ", e);
 			Map<String, String> data = new HashMap<>();
-			data.put("uniqueKey", civilIdEntity.getId().toString());
+			data.put("uniqueKey", null);
 			responseDTO.setStatus("Failure");
 			responseDTO.setMessage("Something went wrong");
 			responseDTO.setData(data);
 			return responseDTO;
 		}
+	}
+
+	@Transactional
+	public AccessToken saveAccessToken(AccessTokenResponse accessTokenResponse) {
+		AccessToken accessToken = new AccessToken();
+		accessToken.setAccessToken(accessTokenResponse.getAccessToken());
+		accessToken.setExpiresIn(accessTokenResponse.getExpiresIn());
+		accessToken.setCreatedAt(LocalDateTime.now());
+		accessTokenRepository.save(accessToken);
+		return accessToken;
 	}
 
 	@Override
@@ -129,8 +243,6 @@ public class CivilIdServiceImpl implements CivilIdService {
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		
-//		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		try {
 			if (user.isPresent()) {
 				Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(entityIdDTO.getUniqueKey());
@@ -151,80 +263,94 @@ public class CivilIdServiceImpl implements CivilIdService {
 							if (entityIdDTO.getFirstFourDigitscardNo().equals(actualFirstFourDigits)
 									&& entityIdDTO.getLastFourDigitscardNo().equals(actualLastFourDigits)) {
 								if (card.getStatus().equalsIgnoreCase(CardStatus.LOCKED.name())) {
-									
 									Map<String, String> data = new HashMap<>();
-									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setStatus("Success");
 									responseDTO.setMessage("Your card is locked");
+									data.put("uniqueKey",entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
 									return responseDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.BLOCKED.name())) {
 									Map<String, String> data = new HashMap<>();
-									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setStatus("Failure");
 									responseDTO.setMessage("Your card is permanently blocked");
+									data.put("uniqueKey",entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
 									return responseDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
 									OtpEntity otpEntity = otpRepository
 											.findByUniqueKeyCivilId(civilIdEntity.get().getId().toString());
-									otpEntity = new OtpEntity();
-									// Set uniqueid against civil id.
-									otpEntity.setUniqueKeyCivilId(civilIdEntity.get().getId().toString());
+									if (Objects.isNull(otpEntity)) {
+										otpEntity = new OtpEntity();
+										// Set uniqueid against civil id.
+										otpEntity.setUniqueKeyCivilId(civilIdEntity.get().getId().toString());
 //									String newOtp = CommonUtils.generateRandomOtp();
-									String newOtp = "1234";
-									otpEntity.setOtp(newOtp);
-									otpEntity.setLastAttemptTime(LocalDateTime.now());
-									otpRepository.save(otpEntity);
+										String newOtp = "1234";
+										otpEntity.setOtp(newOtp);
+										otpEntity.setLastAttemptTime(LocalDateTime.now());
+										otpRepository.save(otpEntity);
 
-									CardEntity cardEntity = new CardEntity();
-									cardEntity.setUniqueKeyCivilId(civilIdEntity.get().getId().toString());
-									cardEntity.setCivilId(civilIdEntity.get().getCivilId());
-									cardEntity.setCardKitNo(card.getKitNo());
-									cardEntity.setExpiry(card.getExpiryDate());
-									cardEntity.setDobOfUser(responseEntity.getBody().getResult().getDob());
-									cardRepository.save(cardEntity);
+										CardEntity cardEntity = getCardEntity(card, civilIdEntity, responseEntity);
+										cardRepository.save(cardEntity);
+									}
 									Map<String, String> data = new HashMap<>();
-									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setStatus("Success");
 									responseDTO.setMessage("Success");
+									data.put("uniqueKey",entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
 									return responseDTO;
 								} else {
 									Map<String, String> data = new HashMap<>();
-									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setStatus("Failure");
 									responseDTO.setMessage("Something went wrong");
+									data.put("uniqueKey",entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
 									return responseDTO;
 								}
+							} else {
+								Map<String, String> data = new HashMap<>();
+								responseDTO.setStatus("Failure");
+								responseDTO.setMessage("Please verify card first/last four digits.");
+								data.put("uniqueKey",entityIdDTO.getUniqueKey());
+								responseDTO.setData(data);
+								return responseDTO;
 							}
 						}
 					}
 				} else {
 					Map<String, String> data = new HashMap<>();
-					data.put("uniqueKey", entityIdDTO.getUniqueKey());
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Something went wrong");
+					data.put("uniqueKey",entityIdDTO.getUniqueKey());
 					responseDTO.setData(data);
 					return responseDTO;
 				}
 			}
 			Map<String, String> data = new HashMap<>();
-			data.put("uniqueKey", entityIdDTO.getUniqueKey());
 			responseDTO.setStatus("Failure");
 			responseDTO.setMessage("Something went wrong");
+			data.put("uniqueKey",entityIdDTO.getUniqueKey());
 			responseDTO.setData(data);
 			return responseDTO;
 		} catch (Exception e) {
 			logger.error("ERROR in class CivilIdServiceImpl method verifyCard", e);
 			Map<String, String> data = new HashMap<>();
-			data.put("uniqueKey", entityIdDTO.getUniqueKey());
 			responseDTO.setStatus("Failure");
 			responseDTO.setMessage("Something went wrong");
+			data.put("uniqueKey",entityIdDTO.getUniqueKey());
 			responseDTO.setData(data);
 			return responseDTO;
 		}
+	}
+
+	private static CardEntity getCardEntity(Card card, Optional<CivilIdEntity> civilIdEntity,
+			ResponseEntity<ExternalApiResponseDTO> responseEntity) {
+		CardEntity cardEntity = new CardEntity();
+		cardEntity.setUniqueKeyCivilId(civilIdEntity.get().getId().toString());
+		cardEntity.setCivilId(civilIdEntity.get().getCivilId());
+		cardEntity.setCardKitNo(card.getKitNo());
+		cardEntity.setExpiry(card.getExpiryDate());
+		cardEntity.setDobOfUser(responseEntity.getBody().getResult().getDob());
+		return cardEntity;
 	}
 
 	@Override
@@ -244,25 +370,25 @@ public class CivilIdServiceImpl implements CivilIdService {
 	}
 
 	@Override
-	public Object blockUnblockCard(BlockUnblockActionDTO blockUnblockActionDTO) {
-		BlockUnblockAction blockUnblockAction = new BlockUnblockAction();
-		blockUnblockAction.setEntityId(blockUnblockActionDTO.getEntityId());
-		blockUnblockAction.setKitNo(blockUnblockActionDTO.getKitNo());
-		blockUnblockAction.setFlag(blockUnblockActionDTO.getFlag());
-		blockUnblockAction.setReason(blockUnblockActionDTO.getReason());
-		blockUnblockActionRepository.save(blockUnblockAction);
+    public Object blockUnblockCard(BlockUnblockActionDTO blockUnblockActionDTO) {
+        BlockUnblockAction blockUnblockAction = new BlockUnblockAction();
+        blockUnblockAction.setEntityId(blockUnblockActionDTO.getEntityId());
+        blockUnblockAction.setKitNo(blockUnblockActionDTO.getKitNo());
+        blockUnblockAction.setFlag(blockUnblockActionDTO.getFlag());
+        blockUnblockAction.setReason(blockUnblockActionDTO.getReason());
+        blockUnblockActionRepository.save(blockUnblockAction);
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("TENANT", "ALIZZ_UAT");
-		headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("TENANT", "ALIZZ_UAT");
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-		HttpEntity<BlockUnblockActionDTO> requestEntity = new HttpEntity<>(blockUnblockActionDTO, headers);
-		ResponseEntity<Object> response = restTemplate.postForEntity(blockUnblockURL, requestEntity, Object.class);
-		if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-			return response.getBody();
-		} else {
-			return response.getBody();
-		}
-	}
-
+        HttpEntity<BlockUnblockActionDTO> requestEntity = new HttpEntity<>(blockUnblockActionDTO, headers);
+        ResponseEntity<Object> response = restTemplate.postForEntity(blockUnblockURL, requestEntity, Object.class);
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            return response.getBody();
+        } else {
+            // TODO: log proper exception and map it accordingly.
+            return response.getBody();
+        }
+    }
 }

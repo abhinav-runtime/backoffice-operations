@@ -32,7 +32,7 @@ public class SystemDetailsController {
 	}
 
 	@GetMapping("/{id}")
-	public SystemDetailDTO getSystemDetailById(@PathVariable Long id) {
+	public SystemDetailDTO getSystemDetailById(@PathVariable String id) {
 		SystemDetail systemDetail = systemDetailRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("System detail not found with id: " + id));
 		return mapToDTO(systemDetail);
@@ -107,7 +107,7 @@ public class SystemDetailsController {
 	}
 
 	@DeleteMapping("/{id}")
-	public void deleteSystemDetail(@PathVariable Long id) {
+	public void deleteSystemDetail(@PathVariable String id) {
 		systemDetailRepository.deleteById(id);
 	}
 
