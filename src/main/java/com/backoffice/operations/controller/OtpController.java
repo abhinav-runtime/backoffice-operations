@@ -23,6 +23,7 @@ import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.payloads.SecuritySettingsDTO;
 import com.backoffice.operations.payloads.ValidationResultDTO;
 import com.backoffice.operations.security.JwtTokenProvider;
+import com.backoffice.operations.service.CardPinVerifyService;
 import com.backoffice.operations.service.CivilIdService;
 import com.backoffice.operations.service.LoginHistoryService;
 import com.backoffice.operations.service.OtpService;
@@ -31,6 +32,7 @@ import com.backoffice.operations.service.PinService;
 @RestController
 @RequestMapping("/api/otp")
 public class OtpController {
+	
 
 	@Autowired
 	private OtpService otpService;
@@ -124,5 +126,4 @@ public class OtpController {
 		ValidationResultDTO validationResultDTO = loginHistoryService.saveLoginFlag(loginFlagDTO);
 		return ResponseEntity.ok(validationResultDTO);
 	}
-
 }
