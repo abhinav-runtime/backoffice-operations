@@ -8,5 +8,5 @@ import org.springframework.stereotype.Service;
 public interface DashboardService {
 	GenericResponseDTO<Object> getDashboardDetails(String uniqueKey);
 
-	GenericResponseDTO<Object> getDashboardInfo(String accountNumber, String uniqueKey);
+	GenericResponseDTO<Object> getDashboardInfo(String uniqueKey);
 }

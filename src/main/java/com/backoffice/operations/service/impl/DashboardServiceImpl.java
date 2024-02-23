@@ -90,11 +90,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public GenericResponseDTO<Object> getDashboardInfo(String accountNumber, String uniqueKey) {
-        String apiUrl = accountBalanceExternalAPI + accountNumber;
-        ResponseEntity<AccountBalanceResponse> responseEntity = restTemplate.getForEntity(apiUrl,
-                AccountBalanceResponse.class);
-        AccountBalanceResponse apiResponse = responseEntity.getBody();
+    public GenericResponseDTO<Object> getDashboardInfo(String uniqueKey) {
 
         Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
         if (civilIdEntity.isPresent()) {
@@ -144,33 +140,42 @@ public class DashboardServiceImpl implements DashboardService {
                             dashboardInfoRepository.save(dashboardInfoEntity);
                         });
                     } else {
-                        ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-                        data.setUniqueKey(uniqueKey);
-                        data.setCreditCardDetails(new ArrayList<>());
-                        return ValidationResultDTO.builder().status("Success").message("Success").data(data).build();
+                        return getErrorResponseObject(uniqueKey);
                     }
                 } else {
-                    ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-                    data.setUniqueKey(uniqueKey);
-                    data.setCreditCardDetails(new ArrayList<>());
-                    return ValidationResultDTO.builder().status("Success").message("Success").data(data).build();
+                    return getErrorResponseObject(uniqueKey);
                 }
 
-                ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-                data.setUniqueKey(uniqueKey);
-                data.setCreditCardDetails(creditCardDetailsResponseList);
-                return ValidationResultDTO.builder().status("Success").message("Success")
-                        .data(data).build();
+                GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+                Map<String, Object> data = new HashMap<>();
+                data.put("creditCardDetails",creditCardDetailsResponseList);
+                data.put("uniqueKey",uniqueKey);
+                responseDTO.setStatus("Success");
+                responseDTO.setMessage("Success");
+                responseDTO.setData(data);
+                return responseDTO;
             } else {
-                ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-                data.setUniqueKey(uniqueKey);
-                data.setCreditCardDetails(new ArrayList<>());
-                return ValidationResultDTO.builder().status("Success").message("Success").data(data).build();
+                return getErrorResponseObject(uniqueKey);
             }
         }
-        ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-        data.setUniqueKey(uniqueKey);
-        data.setCreditCardDetails(new ArrayList<>());
-        return ValidationResultDTO.builder().status("Success").message("Success").data(data).build();
+        return getErrorResponseObject(uniqueKey);
+    }
+
+    private static GenericResponseDTO<Object> getErrorResponseObject(String uniqueKey) {
+        CreditCardDetailsResponseDTO creditCardDetailsResponseDTO = new CreditCardDetailsResponseDTO();
+        creditCardDetailsResponseDTO.setAvailableBalance(0.0);
+        creditCardDetailsResponseDTO.setOutstandingBalance(0.0);
+        creditCardDetailsResponseDTO.setCustomerName("");
+        creditCardDetailsResponseDTO.setCreditCardNumber("");
+        List<CreditCardDetailsResponseDTO> creditCardDetailsResponseList = new ArrayList<>();
+        creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        Map<String, Object> data = new HashMap<>();
+        data.put("creditCardDetails",creditCardDetailsResponseList);
+        data.put("uniqueKey", uniqueKey);
+        responseDTO.setStatus("Success");
+        responseDTO.setMessage("Success");
+        responseDTO.setData(data);
+        return responseDTO;
     }
 }
