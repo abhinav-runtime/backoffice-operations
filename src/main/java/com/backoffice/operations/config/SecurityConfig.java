@@ -69,7 +69,7 @@ public class SecurityConfig {
                         authorize.requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                         		.requestMatchers("/actuator/**").permitAll()
                         		.requestMatchers("/api/v1/auth/**").permitAll()
-                                .requestMatchers("/bo/v1/auth/**").permitAll()
+                                .requestMatchers("/bo/v1/**").permitAll()
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()
                                 .anyRequest().authenticated()

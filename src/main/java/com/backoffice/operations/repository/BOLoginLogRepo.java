@@ -7,5 +7,5 @@ import com.backoffice.operations.entity.BOLoginLog;
 
 @Repository
 public interface BOLoginLogRepo extends JpaRepository<BOLoginLog, String> {
-
+	BOLoginLog findByUserToken(String userToken);
 }

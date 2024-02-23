@@ -11,7 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backoffice.operations.payloads.CustomerRequestDTO;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.security.BOUserToken;
+//import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.BOCustomerService;
+import com.backoffice.operations.service.impl.BoAccessHelper;
 
 @RestController
 @RequestMapping("/bo/v1/customers")
@@ -19,20 +23,66 @@ public class BOCustomerController {
 
 	@Autowired
 	private BOCustomerService customerService;
+	@Autowired
+	private BOUserToken boUserToken;
+	@Autowired
+	private BoAccessHelper accessHelper;
 
 	@GetMapping("/all")
 	public ResponseEntity<Object> getAllCustomers() {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		try {
 
-		return new ResponseEntity<>(customerService.getAllCustomers(), HttpStatus.OK);
-
+			if (boUserToken.getRolesFromToken() == "") {
+				response.setMessage("Token not found or expired");
+				response.setStatus("UNAUTHORIZED");
+				response.setData(null);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+			if (accessHelper.isAccessible("CUSTOMERS_INDIVIDUAL", "VIEW")||accessHelper.isAccessible("CUSTOMERS_INDIVIDUAL", "EDIT")) {
+				return new ResponseEntity<>(customerService.getAllCustomers(), HttpStatus.OK);
+			}else {
+				
+			}
+			response.setMessage("User not have permission to operate this action");
+			response.setStatus("Failure");
+			response.setData(null);
+		} catch (Exception e) {
+			response.setMessage("Something went wrong");
+			response.setStatus("Failure");
+			response.setData(null);
+		}
+	
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping("/edit/{custId}")
 	public ResponseEntity<Object> editCustomer(@PathVariable String custId, @RequestBody CustomerRequestDTO custoemr) {
-		if (customerService.editCustomer(custId, custoemr) == null) {
-			return new ResponseEntity<>("Customer not found", HttpStatus.NOT_FOUND);
-		} else {
-			return new ResponseEntity<>(customerService.editCustomer(custId, custoemr), HttpStatus.OK);
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		try {
+
+			if (boUserToken.getRolesFromToken() == "") {
+				response.setMessage("Token not found or expired");
+				response.setStatus("UNAUTHORIZED");
+				response.setData(null);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+			if (accessHelper.isAccessible("CUSTOMERS_INDIVIDUAL", "EDIT")) {
+				return new ResponseEntity<>(customerService.editCustomer(custId, custoemr), HttpStatus.OK);
+			}else {
+				
+			}
+			response.setMessage("User not have permission to operate this action");
+			response.setStatus("Failure");
+			response.setData(null);
+		} catch (Exception e) {
+			response.setMessage("Something went wrong");
+			response.setStatus("Failure");
+			response.setData(null);
 		}
+	
+		return new ResponseEntity<>(response, HttpStatus.OK);
+		
+		
 	}
 }
