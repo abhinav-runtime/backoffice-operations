@@ -9,4 +9,6 @@ public interface DashboardService {
 	GenericResponseDTO<Object> getDashboardDetails(String uniqueKey);
 
 	GenericResponseDTO<Object> getDashboardInfo(String uniqueKey);
+
+	GenericResponseDTO<Object> getAccountTransactions(String accountNumber, String fromDate, String toDate,String uniqueKey);
 }
