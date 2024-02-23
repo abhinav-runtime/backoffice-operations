@@ -1,6 +1,7 @@
 package com.backoffice.operations.payloads;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
 public class CivilIdAPIResponse {
 	
@@ -55,6 +56,10 @@ public class CivilIdAPIResponse {
         // getters and setters
     }
 
+	@Getter
+	@Setter
+	@AllArgsConstructor
+	@Builder
     public static class MyResult {
 
     	@JsonProperty("customerIO")
@@ -85,11 +90,20 @@ public class CivilIdAPIResponse {
 		
     }
 
+	@Getter
+	@Setter
+	@AllArgsConstructor
+	@Builder
     public static class CustomerFull {
 
         @JsonProperty("custno")
         private String custNo;
 
+		@JsonProperty("fullname")
+		private String fullname;
+
+		@JsonProperty("custpersonal")
+		private CustPersonalDTO custpersonal;
         public CustomerFull() {
             // Default constructor for Jackson
         }
@@ -102,6 +116,17 @@ public class CivilIdAPIResponse {
             this.custNo = custNo;
         }
     }
+
+	@Getter
+	@Setter
+	@AllArgsConstructor
+	@Builder
+	public static class CustPersonalDTO {
+		@JsonProperty("emailid")
+		private String emailid;
+		@JsonProperty("mobnum")
+		private String mobnum;
+	}
 
     
     public static class CustomerIO {
