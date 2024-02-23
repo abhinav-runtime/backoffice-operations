@@ -1,7 +1,6 @@
 package com.backoffice.operations.repository;
 
 import com.backoffice.operations.entity.AccountTransactionsEntity;
-import com.backoffice.operations.entity.DashboardInfoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
