@@ -9,10 +9,11 @@ import com.backoffice.operations.repository.DashboardInfoRepository;
 import com.backoffice.operations.repository.DashboardRepository;
 import com.backoffice.operations.service.DashboardService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +25,9 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Value("${external.api.accounts.balance}")
     private String accountBalanceExternalAPI;
+
+    @Value("${external.api.url}")
+    private String externalApiUrl;
 
     private final RestTemplate restTemplate;
 
@@ -58,11 +62,15 @@ public class DashboardServiceImpl implements DashboardService {
                 DashboardEntity dashboardEntity = DashboardEntity.builder().id(uniqueKey).accountNumber(islamicAccount.getAcc())
                         .availableBalance(islamicAccount.getAcyavlbal()).currency(islamicAccount.getCcy()).build();
                 DashboardEntity dashboardEntityObject = dashboardRepository.save(dashboardEntity);
+
                 ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-                data.setAccountBalance(dashboardEntityObject.getAvailableBalance());
-                data.setCurrency(dashboardEntityObject.getCurrency());
-                data.setAccountNumber(dashboardEntityObject.getAccountNumber());
+                AccountsDetailsResponseDTO accountsDetailsResponseDTO = new AccountsDetailsResponseDTO();
+                accountsDetailsResponseDTO.setAccountNumber(dashboardEntityObject.getAccountNumber());
+                accountsDetailsResponseDTO.setAccountBalance(dashboardEntityObject.getAvailableBalance());
+                accountsDetailsResponseDTO.setCurrency(dashboardEntityObject.getCurrency());
                 data.setUniqueKey(dashboardEntityObject.getId());
+                data.setAccountDetails(List.of(accountsDetailsResponseDTO));
+
                 return ValidationResultDTO.builder().status("Success").message("Success")
                         .data(data).build();
             }
@@ -79,20 +87,45 @@ public class DashboardServiceImpl implements DashboardService {
                 AccountBalanceResponse.class);
         AccountBalanceResponse apiResponse = responseEntity.getBody();
 
-        if (apiResponse != null && apiResponse.isSuccess()) {
-            AccountBalanceResponse.Response.Payload.AccBalance.AccBal accBal = apiResponse.getResponse().getPayload().getAccbalance().getAccbal().get(0);
-            DashboardInfoEntity dashboardInfoEntity = DashboardInfoEntity.builder().customerNumber(accBal.getCustacno())
-                    .outstandingBal(accBal.getCurbal()).availableBal(accBal.getAvlbal()).build();
-            DashboardInfoEntity dashboardInfoEntityObj = dashboardInfoRepository.save(dashboardInfoEntity);
+        Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
+        if(civilIdEntity.isPresent()) {
 
-            ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-            data.setAvailableBalance(dashboardInfoEntityObj.getAvailableBal());
-            data.setOutstandingBalance(dashboardInfoEntityObj.getOutstandingBal());
-            data.setAccountNumber(dashboardInfoEntityObj.getCustomerNumber());
-            data.setUniqueKey(dashboardInfoEntityObj.getId());
+            String cardListUrl = externalApiUrl + "/getCardList";
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("TENANT", "ALIZZ_UAT");
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String requestBody = "{ \"customerId\": \"" + civilIdEntity.get().getCivilId() + "\" }";
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+            ResponseEntity<ExternalApiResponseDTO> cardListresponseEntity = restTemplate.exchange(cardListUrl,
+                    HttpMethod.POST, requestEntity, ExternalApiResponseDTO.class);
 
-            return ValidationResultDTO.builder().status("Success").message("Success")
-                    .data(data).build();
+            if (apiResponse != null && apiResponse.isSuccess()) {
+                AccountBalanceResponse.Response.Payload.AccBalance.AccBal accBal = apiResponse.getResponse().getPayload().getAccbalance().getAccbal().get(0);
+                DashboardInfoEntity dashboardInfoEntity = DashboardInfoEntity.builder().customerNumber(accBal.getCustacno())
+                        .outstandingBal(accBal.getCurbal()).availableBal(accBal.getAvlbal()).build();
+                DashboardInfoEntity dashboardInfoEntityObj = dashboardInfoRepository.save(dashboardInfoEntity);
+                List<CreditCardDetailsResponseDTO> creditCardDetailsResponseList = new ArrayList<>();
+                if (cardListresponseEntity != null && cardListresponseEntity.getBody().getResult() != null) {
+                    String customerName = cardListresponseEntity.getBody().getResult().getName();
+                    List<ExternalApiResponseDTO.Result.Card> cardList = cardListresponseEntity.getBody().getResult().getCardList();
+                    for (ExternalApiResponseDTO.Result.Card card : cardList) {
+                        String actualFirstFourDigits = card.getCardNo().substring(0, 4);
+                        String actualLastFourDigits = card.getCardNo().substring(card.getCardNo().length() - 4);
+                        CreditCardDetailsResponseDTO creditCardDetailsResponseDTO = new CreditCardDetailsResponseDTO();
+                        creditCardDetailsResponseDTO.setAvailableBalance(dashboardInfoEntityObj.getAvailableBal());
+                        creditCardDetailsResponseDTO.setOutstandingBalance(dashboardInfoEntityObj.getOutstandingBal());
+                        creditCardDetailsResponseDTO.setCustomerName(customerName);
+                        creditCardDetailsResponseDTO.setCreditCardNumber(actualFirstFourDigits + "********" + actualLastFourDigits);
+                        creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
+                    }
+                }
+
+                ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+                data.setUniqueKey(dashboardInfoEntityObj.getId());
+                data.setCreditCardDetails(creditCardDetailsResponseList);
+                return ValidationResultDTO.builder().status("Success").message("Success")
+                        .data(data).build();
+            }
         }
         ValidationResultDTO.Data data = new ValidationResultDTO.Data();
         data.setUniqueKey(uniqueKey);
