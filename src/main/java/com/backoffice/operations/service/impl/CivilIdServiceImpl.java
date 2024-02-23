@@ -19,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -103,17 +105,17 @@ public class CivilIdServiceImpl implements CivilIdService {
 		AccessToken accessToken = null;
 		try {
 			// GET Access token from M2P and save it into the DB.
-//			String requestUrl = tokenApiUrl + "?grant_type=client_credentials&scope=openid profile email&client_id="
-//					+ clientId + "&client_secret=" + clientSecret;
+//			String requestUrl = tokenApiUrl + "?grant_type=client_credentials&scope=openid%20profile%20email&client_id=" + clientId + "&client_secret=" + clientSecret;
 //			logger.info("requestUrl: {}", requestUrl);
 //			ResponseEntity<AccessTokenResponse> response = restTemplate.postForEntity(requestUrl, null,
 //					AccessTokenResponse.class);
-//			logger.info("response: {}", response.getBody());
-//			if (response != null) {
-//				accessToken = saveAccessToken(response.getBody());
-//			}
+			ResponseEntity<AccessTokenResponse>  response = getToken();
+			logger.info("response: {}", response.getBody());
 
-			Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findByEntityId(entityId);
+            accessToken = saveAccessToken(Objects.requireNonNull(response.getBody()));
+			logger.info("accessToken: {}", accessToken);
+
+            Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findByEntityId(entityId);
 			if (civilIdEntityDB.isPresent()) {
 				if (StringUtils.hasLength(civilIdEntityDB.get().getCivilId())) {
 					Map<String, String> data = new HashMap<>();
@@ -225,6 +227,28 @@ public class CivilIdServiceImpl implements CivilIdService {
 			responseDTO.setData(data);
 			return responseDTO;
 		}
+	}
+
+	public ResponseEntity<AccessTokenResponse> getToken() {
+		// Set headers
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+		// Set request body parameters
+		MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+		requestBody.add("grant_type", "client_credentials");
+		requestBody.add("scope", "openid profile email");
+		requestBody.add("client_id", "mpp-digital-app");
+		requestBody.add("client_secret", "gh2KpMeNlwuSZJBQqCyhRbnRh0BHQwCW");
+
+		HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+		RestTemplate restTemplate = new RestTemplate();
+
+		logger.info("requestUrl: {}", tokenApiUrl);
+		logger.info("requestEntity: {}", requestEntity);
+		ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(tokenApiUrl, HttpMethod.POST, requestEntity, AccessTokenResponse.class);
+		logger.info("response: {}", response);
+		return response;
 	}
 
 	@Transactional
