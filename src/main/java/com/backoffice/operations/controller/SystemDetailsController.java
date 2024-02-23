@@ -7,10 +7,12 @@ import org.springframework.web.bind.annotation.*;
 
 import com.backoffice.operations.entity.SystemDetail;
 import com.backoffice.operations.payloads.SystemDetailDTO;
-import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.SystemDetailRepository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -30,47 +32,48 @@ public class SystemDetailsController {
 	}
 
 	@GetMapping("/{id}")
-	public SystemDetailDTO getSystemDetailById(@PathVariable Long id) {
+	public SystemDetailDTO getSystemDetailById(@PathVariable String id) {
 		SystemDetail systemDetail = systemDetailRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("System detail not found with id: " + id));
 		return mapToDTO(systemDetail);
 	}
 
 	@PostMapping
-	public ValidationResultDTO createSystemDetail(@RequestBody SystemDetailDTO systemDetailDTO) {
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+	public GenericResponseDTO<Object> createSystemDetail(@RequestBody SystemDetailDTO systemDetailDTO) {
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		try {
 			SystemDetail systemDetail = mapToEntity(systemDetailDTO);
 			SystemDetail savedSystemDetail = systemDetailRepository.save(systemDetail);
 			if (Objects.nonNull(savedSystemDetail)) {
-				validationResultDTO.setStatus("Success");
-				validationResultDTO.setMessage("Success");
-				data.setUniqueKey(savedSystemDetail.getUniqueKey());
-				validationResultDTO.setData(data);
-				return validationResultDTO;
+				Map<String, Object> data = new HashMap<>();
+				responseDTO.setStatus("Success");
+				responseDTO.setMessage("Success");
+				data.put("uniqueKey", savedSystemDetail.getUniqueKey());
+				responseDTO.setData(data);
+				return responseDTO;
 			}
-			validationResultDTO.setStatus("Failure");
-			validationResultDTO.setMessage("Something went wrong");
-			data.setUniqueKey(systemDetailDTO.getUniqueKey());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			Map<String, Object> data = new HashMap<>();
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			data.put("uniqueKey",systemDetailDTO.getUniqueKey());
+			responseDTO.setData(data);
+			return responseDTO;
 		} catch (Exception e) {
 			logger.error("ERROR in class SystemDetailsController method createSystemDetail", e);
-			validationResultDTO.setStatus("Failure");
-			validationResultDTO.setMessage("Something went wrong");
-			data.setUniqueKey(systemDetailDTO.getUniqueKey());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			Map<String, Object> data = new HashMap<>();
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			data.put("uniqueKey",systemDetailDTO.getUniqueKey());
+			responseDTO.setData(data);
+			return responseDTO;
 		}
 
 	}
 
 	@PutMapping("/{id}")
-	public ValidationResultDTO updateSystemDetail(@PathVariable Long id,
+	public GenericResponseDTO<Object> updateSystemDetail(@PathVariable String id,
 			@RequestBody SystemDetailDTO updatedSystemDetailDTO) {
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		try {
 			SystemDetail existingSystemDetail = systemDetailRepository.findById(id)
 					.orElseThrow(() -> new RuntimeException("System detail not found with id: " + id));
@@ -79,29 +82,32 @@ public class SystemDetailsController {
 			existingSystemDetail.setStatus(updatedSystemDetailDTO.getStatus());
 			SystemDetail updatedSystemDetail = systemDetailRepository.save(existingSystemDetail);
 			if (Objects.nonNull(updatedSystemDetail)) {
-				validationResultDTO.setStatus("Success");
-				validationResultDTO.setMessage("Success");
-				data.setUniqueKey(updatedSystemDetail.getUniqueKey());
-				validationResultDTO.setData(data);
-				return validationResultDTO;
+				Map<String, Object> data = new HashMap<>();
+				responseDTO.setStatus("Success");
+				responseDTO.setMessage("Success");
+				data.put("uniqueKey",updatedSystemDetail.getUniqueKey());
+				responseDTO.setData(data);
+				return responseDTO;
 			}
-			validationResultDTO.setStatus("Failure");
-			validationResultDTO.setMessage("Something went wrong");
-			data.setUniqueKey(updatedSystemDetailDTO.getUniqueKey());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			Map<String, Object> data = new HashMap<>();
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			data.put("uniqueKey",updatedSystemDetailDTO.getUniqueKey());
+			responseDTO.setData(data);
+			return responseDTO;
 		} catch (Exception e) {
 			logger.error("ERROR in class SystemDetailsController method updateSystemDetail", e);
-			validationResultDTO.setStatus("Failure");
-			validationResultDTO.setMessage("Something went wrong");
-			data.setUniqueKey(updatedSystemDetailDTO.getUniqueKey());
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			Map<String, Object> data = new HashMap<>();
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			data.put("uniqueKey",updatedSystemDetailDTO.getUniqueKey());
+			responseDTO.setData(data);
+			return responseDTO;
 		}
 	}
 
 	@DeleteMapping("/{id}")
-	public void deleteSystemDetail(@PathVariable Long id) {
+	public void deleteSystemDetail(@PathVariable String id) {
 		systemDetailRepository.deleteById(id);
 	}
 

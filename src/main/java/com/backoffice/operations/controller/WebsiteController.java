@@ -28,7 +28,7 @@ public class WebsiteController {
     }
 
     @GetMapping("/{id}")
-    public Optional<WebsiteEntity> getWebsiteById(@PathVariable Long id) {
+    public Optional<WebsiteEntity> getWebsiteById(@PathVariable String id) {
         return websiteService.getWebsiteById(id);
     }
 }

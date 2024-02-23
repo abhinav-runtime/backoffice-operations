@@ -69,7 +69,10 @@ public class SecurityConfig {
                         authorize.requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                         		.requestMatchers("/actuator/**").permitAll()
                         		.requestMatchers("/api/v1/auth/**").permitAll()
+<<<<<<< HEAD
                                 .requestMatchers("/bo/v1/**").permitAll()
+=======
+>>>>>>> b256beb4615e68dcda529138cf02551447bc2126
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()
                                 .anyRequest().authenticated()
