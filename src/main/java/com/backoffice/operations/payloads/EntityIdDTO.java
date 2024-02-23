@@ -27,8 +27,6 @@ public class EntityIdDTO {
 	@Pattern(regexp = "\\d{4}", message = "Card Pin must be 4 digits")
 	private String cardPin;
 	
-	private String uniqueKeySystem;
-	
 	private String lang;
 
 	public String getLang() {
@@ -71,14 +69,6 @@ public class EntityIdDTO {
 		this.cardPin = cardPin;
 	}
 
-	public String getUniqueKeySystem() {
-		return uniqueKeySystem;
-	}
-
-	public void setUniqueKeySystem(String uniqueKeySystem) {
-		this.uniqueKeySystem = uniqueKeySystem;
-	}
-	
 	//Sub Class for stored pin
 	public static class StoredCardPin {
 		

@@ -1,5 +1,7 @@
 package com.backoffice.operations.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.Column;
@@ -38,6 +40,9 @@ public class ReportAnIssue {
 	
 	@Column(name="filepath")
     private String filePath;
+	
+	@Column(name="Date modified")
+	private LocalDateTime time;
 
 	public String getId() {
 		return id;
@@ -87,4 +92,12 @@ public class ReportAnIssue {
 		this.filePath = filePath;
 	}
 
+	public LocalDateTime getTime() {
+		return time;
+	}
+
+	public void setTime(LocalDateTime time) {
+		this.time = time;
+	}
+	
 }

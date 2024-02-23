@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +61,7 @@ public class ReportIssueService {
     	reportAnIssue.setFilePath(filePath);
     	reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
     	reportAnIssue.setMessage(reportAnIssueDto.getMessage());
+    	reportAnIssue.setTime(LocalDateTime.now());
     	reportIssueRepository.save(reportAnIssue);
         
         return "Issue reported successfully!";
