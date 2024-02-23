@@ -1,22 +1,19 @@
 package com.backoffice.operations.service.impl;
 
-import com.backoffice.operations.entity.AccountTransactionsEntity;
-import com.backoffice.operations.entity.CivilIdEntity;
-import com.backoffice.operations.entity.DashboardEntity;
-import com.backoffice.operations.entity.DashboardInfoEntity;
+import com.backoffice.operations.entity.*;
 import com.backoffice.operations.payloads.*;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
-import com.backoffice.operations.repository.AccountTransactionsEntityRepository;
-import com.backoffice.operations.repository.CivilIdRepository;
-import com.backoffice.operations.repository.DashboardInfoRepository;
-import com.backoffice.operations.repository.DashboardRepository;
+import com.backoffice.operations.repository.*;
 import com.backoffice.operations.service.DashboardService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +36,9 @@ public class DashboardServiceImpl implements DashboardService {
     @Value("${external.api.accounts.transaction}")
     private String externalAccountsTransactionApiUrl;
 
+    @Value("${external.api.credit.card.transaction}")
+    private String externalCardTransactionApiUrl;
+
     private final RestTemplate restTemplate;
 
     private final CivilIdRepository civilIdRepository;
@@ -49,12 +49,15 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final AccountTransactionsEntityRepository accountTransactionsEntityRepository;
 
-    public DashboardServiceImpl(RestTemplate restTemplate, CivilIdRepository civilIdRepository, DashboardRepository dashboardRepository, DashboardInfoRepository dashboardInfoRepository, AccountTransactionsEntityRepository accountTransactionsEntityRepository) {
+    private final CardTransactionsEntityRepository cardTransactionsEntityRepository;
+
+    public DashboardServiceImpl(RestTemplate restTemplate, CivilIdRepository civilIdRepository, DashboardRepository dashboardRepository, DashboardInfoRepository dashboardInfoRepository, AccountTransactionsEntityRepository accountTransactionsEntityRepository, CardTransactionsEntityRepository cardTransactionsEntityRepository) {
         this.restTemplate = restTemplate;
         this.civilIdRepository = civilIdRepository;
         this.dashboardRepository = dashboardRepository;
         this.dashboardInfoRepository = dashboardInfoRepository;
         this.accountTransactionsEntityRepository = accountTransactionsEntityRepository;
+        this.cardTransactionsEntityRepository = cardTransactionsEntityRepository;
     }
 
     @Override
@@ -242,6 +245,84 @@ public class DashboardServiceImpl implements DashboardService {
         }
     }
 
+    @Override
+    public GenericResponseDTO<Object> getCreditCardTransactions(String fromDate, String toDate, String uniqueKey) {
+
+        Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
+
+        if(civilIdEntity.isPresent()) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.add("TENANT", "ALIZZ_UAT");
+            String apiUrl = externalCardTransactionApiUrl + "?pageNo=0&pageSize=999&txnCategory=spend";
+            String requestBody = "{ \"entityId\": \"" + civilIdEntity.get().getCivilId() + "\" }";
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+            ResponseEntity<ExternalApiCardTransactionResponseDTO> cardTransactionResponseEntity = restTemplate.exchange(apiUrl,
+                    HttpMethod.POST, requestEntity, ExternalApiCardTransactionResponseDTO.class);
+            if (Objects.nonNull(cardTransactionResponseEntity.getBody()) && Objects.nonNull(cardTransactionResponseEntity.getBody().getResult())
+                    && !cardTransactionResponseEntity.getBody().getResult().isEmpty()) {
+                List<ExternalApiCardTransactionResponseDTO.Transaction> transactionList = cardTransactionResponseEntity.getBody().getResult();
+
+                List<CardTransactionResponseDTO.CardTransaction> cardTransactionsList = new ArrayList<>();
+                List<CardTransactionsEntity> cardTransactionsEntities = new ArrayList<>();
+                transactionList.forEach(txn -> {
+                    Instant instant = Instant.ofEpochMilli(txn.getTransactionDate());
+                    ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+                    LocalDate dt = zonedDateTime.toLocalDate();
+                    double amt = Double.parseDouble(txn.getAmount());
+                    String desc = txn.getMerchantName();
+                    String indicator = txn.getCrDr();
+                    String refNo = txn.getTxId();
+                    CardTransactionsEntity cardTransactionsEntity = CardTransactionsEntity.builder()
+                            .transactionDate(dt).transactionAmount(amt).transactionDescription(desc)
+                            .referenceNumber(refNo).indicator(indicator).build();
+                    cardTransactionsEntities.add(cardTransactionsEntity);
+                    CardTransactionResponseDTO.CardTransaction cardTransaction = CardTransactionResponseDTO.CardTransaction.builder()
+                            .transactionDate(dt).transactionAmount(amt).transactionDescription(desc).indicator(indicator)
+                            .referenceNumber(refNo).build();
+                    cardTransactionsList.add(cardTransaction);
+                });
+                cardTransactionsEntityRepository.saveAll(cardTransactionsEntities);
+                CardTransactionResponseDTO cardTransactionResponseDTO = CardTransactionResponseDTO.builder()
+                        .cardTransactions(cardTransactionsList).build();
+                GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+                Map<String, Object> data = new HashMap<>();
+                data.put("cardTransactions",cardTransactionResponseDTO);
+                data.put("uniqueKey",uniqueKey);
+                responseDTO.setStatus("Success");
+                responseDTO.setMessage("Success");
+                responseDTO.setData(data);
+                return responseDTO;
+            }else {
+                GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+                CardTransactionResponseDTO cardTransactionResponseDTO = CardTransactionResponseDTO.builder()
+                        .cardTransactions(List.of(CardTransactionResponseDTO.CardTransaction.builder()
+                                .transactionDate(LocalDate.now()).transactionAmount(0.0).transactionDescription("").indicator("")
+                                .referenceNumber("").build())).build();
+                Map<String, Object> data = new HashMap<>();
+                data.put("cardTransactions",cardTransactionResponseDTO);
+                data.put("uniqueKey",uniqueKey);
+                responseDTO.setStatus("Success");
+                responseDTO.setMessage("Success");
+                responseDTO.setData(data);
+                return responseDTO;
+            }
+        }else {
+            GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+            CardTransactionResponseDTO cardTransactionResponseDTO = CardTransactionResponseDTO.builder()
+                    .cardTransactions(List.of(CardTransactionResponseDTO.CardTransaction.builder()
+                            .transactionDate(LocalDate.now()).transactionAmount(0.0).transactionDescription("").indicator("")
+                            .referenceNumber("").build())).build();
+            Map<String, Object> data = new HashMap<>();
+            data.put("cardTransactions",cardTransactionResponseDTO);
+            data.put("uniqueKey",uniqueKey);
+            responseDTO.setStatus("Success");
+            responseDTO.setMessage("Success");
+            responseDTO.setData(data);
+            return responseDTO;
+        }
+    }
+
     private static GenericResponseDTO<Object> getErrorResponseObject(String uniqueKey) {
         CreditCardDetailsResponseDTO creditCardDetailsResponseDTO = new CreditCardDetailsResponseDTO();
         creditCardDetailsResponseDTO.setAvailableBalance(0.0);
@@ -259,4 +340,6 @@ public class DashboardServiceImpl implements DashboardService {
         responseDTO.setData(data);
         return responseDTO;
     }
+
+
 }
