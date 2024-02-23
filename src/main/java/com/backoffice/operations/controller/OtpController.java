@@ -1,5 +1,8 @@
 package com.backoffice.operations.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -110,20 +113,20 @@ public class OtpController {
 	}
 
 	@PostMapping("/saveSettings")
-	public ResponseEntity<ValidationResultDTO> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
+	public ResponseEntity<GenericResponseDTO<Object>> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
 		otpService.saveSecuritySettings(securitySettingsDTO);
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-		validationResultDTO.setStatus("Success");
-		validationResultDTO.setMessage("Security settings updated successfully");
-		data.setUniqueKey(securitySettingsDTO.getUniqueKey());
-		validationResultDTO.setData(data);
-		return ResponseEntity.ok(validationResultDTO);
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		Map<String, Object> data = new HashMap<>();
+		responseDTO.setStatus("Success");
+		responseDTO.setMessage("Security settings updated successfully");
+		data.put("uniqueKey",securitySettingsDTO.getUniqueKey());
+		responseDTO.setData(data);
+		return ResponseEntity.ok(responseDTO);
 	}
 	
 	@PostMapping("/signIn")
-	public ResponseEntity<ValidationResultDTO> signIn(@RequestBody LoginFlagDTO loginFlagDTO) {
-		ValidationResultDTO validationResultDTO = loginHistoryService.saveLoginFlag(loginFlagDTO);
+	public ResponseEntity<GenericResponseDTO<Object>> signIn(@RequestBody LoginFlagDTO loginFlagDTO) {
+		GenericResponseDTO<Object> validationResultDTO = loginHistoryService.saveLoginFlag(loginFlagDTO);
 		return ResponseEntity.ok(validationResultDTO);
 	}
 }

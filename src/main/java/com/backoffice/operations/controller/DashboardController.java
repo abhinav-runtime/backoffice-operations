@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import com.backoffice.operations.payloads.ValidationResultDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.DashboardService;
 import org.springframework.http.HttpHeaders;
@@ -102,12 +101,12 @@ public class DashboardController {
     }
 
     @GetMapping()
-    public ResponseEntity<ValidationResultDTO> getDashboardDetails(@RequestParam String uniqueKey){
+    public ResponseEntity<GenericResponseDTO<Object>> getDashboardDetails(@RequestParam String uniqueKey){
         return ResponseEntity.ok(dashboardService.getDashboardDetails(uniqueKey));
     }
 
     @GetMapping("/info")
-    public ResponseEntity<ValidationResultDTO> getDashboardInfo(@RequestParam String accountNumber, @RequestParam String uniqueKey){
+    public ResponseEntity<GenericResponseDTO<Object>> getDashboardInfo(@RequestParam String accountNumber, @RequestParam String uniqueKey){
         return ResponseEntity.ok(dashboardService.getDashboardInfo(accountNumber, uniqueKey));
     }
 }

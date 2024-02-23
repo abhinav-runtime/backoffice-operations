@@ -54,7 +54,6 @@ public class PinServiceImpl implements PinService {
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-//		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
 		if (user.isPresent()) {
 			CardEntity cardEntity = cardRepository.findByUniqueKeyCivilId(pinRequestDTO.getUniqueKey());
 			if (Objects.nonNull(cardEntity)) {
@@ -74,7 +73,8 @@ public class PinServiceImpl implements PinService {
 				PinRequestDTO pinRequest = new PinRequestDTO();
 				pinRequest.setEntityId(pinRequestEntity.getCivilId());
 				pinRequest.setDob(pinRequestEntity.getDob());
-				String reversedExpiryDate = pinRequestEntity.getExpiryDate().substring(2) + pinRequestEntity.getExpiryDate().substring(0, 2);
+				String reversedExpiryDate = pinRequestEntity.getExpiryDate().substring(2)
+						+ pinRequestEntity.getExpiryDate().substring(0, 2);
 				pinRequest.setExpiryDate(reversedExpiryDate);
 				pinRequest.setKitNo(pinRequestEntity.getKitNo());
 				pinRequest.setPin(pinRequestEntity.getPin());
@@ -86,19 +86,19 @@ public class PinServiceImpl implements PinService {
 				HttpEntity<PinRequestDTO> requestEntity = new HttpEntity<>(pinRequest, headers);
 				ResponseEntity<PinResponseDTO> response = null;
 				try {
-					response = restTemplate.postForEntity(externalApiPinUrl, requestEntity,
-							PinResponseDTO.class);
-				} catch (Exception e){
-					validationResultDTO.setStatus("Success");
-					validationResultDTO.setMessage("Success");
-					data.setUniqueKey(cardEntity.getUniqueKeyCivilId());
-					data.setDob(pinRequest.getDob());
-					data.setEntityId(pinRequest.getEntityId());
-					data.setExpiryDate(pinRequest.getExpiryDate());
-					data.setKitNo(pinRequest.getKitNo());
+					response = restTemplate.postForEntity(externalApiPinUrl, requestEntity, PinResponseDTO.class);
+				} catch (Exception e) {
+					Map<String, Object> data = new HashMap<>();
+					responseDTO.setStatus("Success");
+					responseDTO.setMessage("Success");
+					data.put("uniqueKey", cardEntity.getUniqueKeyCivilId());
+					data.put("dob", pinRequest.getDob());
+					data.put("entityId", pinRequest.getEntityId());
+					data.put("expiryDate", pinRequest.getExpiryDate());
+					data.put("kitNo", pinRequest.getKitNo());
 
-					validationResultDTO.setData(data);
-					return validationResultDTO;
+					responseDTO.setData(data);
+					return responseDTO;
 				}
 
 				if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null
@@ -106,28 +106,27 @@ public class PinServiceImpl implements PinService {
 					Map<String, Object> data = new HashMap<>();
 					responseDTO.setStatus("Success");
 					responseDTO.setMessage("Success");
-					data.put("uniqueKey",cardEntity.getUniqueKeyCivilId());
-          data.put("dob",pinRequest.getDob());
-					data.put("entityId",pinRequest.getEntityId());
-					data.put("expiryDate",pinRequest.getExpiryDate());
-					data.put("kitNo",pinRequest.getKitNo());
+					data.put("uniqueKey", cardEntity.getUniqueKeyCivilId());
+					data.put("dob", pinRequest.getDob());
+					data.put("entityId", pinRequest.getEntityId());
+					data.put("expiryDate", pinRequest.getExpiryDate());
+					data.put("kitNo", pinRequest.getKitNo());
 					responseDTO.setData(data);
 					return responseDTO;
 				} else {
 					Map<String, Object> data = new HashMap<>();
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Something went wrong");
-					data.put("uniqueKey",cardEntity.getUniqueKeyCivilId());
+					data.put("uniqueKey", cardEntity.getUniqueKeyCivilId());
 					responseDTO.setData(data);
 					return responseDTO;
 				}
 			}
 		}
 		Map<String, Object> data = new HashMap<>();
-		
+
 		responseDTO.setStatus("Failure");
 		responseDTO.setMessage("Something went wrong");
-		data.put("uniqueKey", null);
 		responseDTO.setData(data);
 		return responseDTO;
 	}

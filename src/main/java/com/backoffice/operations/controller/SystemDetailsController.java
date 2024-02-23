@@ -71,7 +71,7 @@ public class SystemDetailsController {
 	}
 
 	@PutMapping("/{id}")
-	public GenericResponseDTO<Object> updateSystemDetail(@PathVariable Long id,
+	public GenericResponseDTO<Object> updateSystemDetail(@PathVariable String id,
 			@RequestBody SystemDetailDTO updatedSystemDetailDTO) {
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		try {
