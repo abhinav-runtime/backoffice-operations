@@ -1,11 +1,12 @@
 package com.backoffice.operations.service;
 
-import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
+
 import org.springframework.stereotype.Service;
 
 @Service
 public interface DashboardService {
-    ValidationResultDTO getDashboardDetails(String uniqueKey);
+	GenericResponseDTO<Object> getDashboardDetails(String uniqueKey);
 
-    ValidationResultDTO getDashboardInfo(String uniqueKey);
+	GenericResponseDTO<Object> getDashboardInfo(String accountNumber, String uniqueKey);
 }

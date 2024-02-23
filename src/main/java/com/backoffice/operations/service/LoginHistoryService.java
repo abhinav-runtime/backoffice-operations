@@ -1,10 +1,10 @@
 package com.backoffice.operations.service;
 
 import com.backoffice.operations.payloads.LoginFlagDTO;
-import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 
 public interface LoginHistoryService {
 	
-	ValidationResultDTO saveLoginFlag(LoginFlagDTO loginFlagDTO);
+	GenericResponseDTO<Object> saveLoginFlag(LoginFlagDTO loginFlagDTO);
 
 }

@@ -15,7 +15,7 @@ import com.backoffice.operations.entity.CardPinParameter;
 import com.backoffice.operations.entity.SystemDetail;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.payloads.EntityIdDTO;
-import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.CardPinParameterRepository;
 import com.backoffice.operations.repository.CardRepository;
 import com.backoffice.operations.repository.SystemDetailRepository;
@@ -46,7 +46,7 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 	
 	
 	@Override
-	public ValidationResultDTO verifyCardPin(EntityIdDTO entityIdDTO, String token) {
+	public GenericResponseDTO<Object> verifyCardPin(EntityIdDTO entityIdDTO, String token) {
 		
 		long id = 1;
 		CardPinParameter cardPinParameter = cardPinParameterRepository.findById(id).orElse(null);
@@ -57,7 +57,8 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 		
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+//		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
 		
 		//If user present
 		if (user.isPresent()) {
@@ -71,9 +72,9 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 			{
 				//User is on cooldown
 				 if (isUserOnCooldown(entityIdDTO.getUniqueKeySystem(),cardPinCooldownPeriodSeconds)) {
-					 validationResultDTO.setStatus("Failure");
-						validationResultDTO.setMessage("Maximum attempts reached. Please try again later.");
-						return validationResultDTO;
+					 responseDTO.setStatus("Failure");
+					 responseDTO.setMessage("Maximum attempts reached. Please try again later.");
+						return responseDTO;
 			        }
 				 
 				//If Card Pin is Empty or does not match
@@ -88,14 +89,14 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 						//Start coolDown for user
 						cooldownMap.put(entityIdDTO.getUniqueKeySystem(), LocalDateTime.now());
 						
-						validationResultDTO.setStatus("Failure");
-						validationResultDTO.setMessage("Maximum attempts reached. Please try again later.");
-						return validationResultDTO;
+						responseDTO.setStatus("Failure");
+						responseDTO.setMessage("Maximum attempts reached. Please try again later.");
+						return responseDTO;
 					} else {
-						validationResultDTO.setStatus("Failure");
-						validationResultDTO
+						responseDTO.setStatus("Failure");
+						responseDTO
 						.setMessage("Incorrect Pin. Attempts left: " + (cardPinMaxAttempts - attempts));
-						return validationResultDTO;
+						return responseDTO;
 					}
 				}
 				else {
@@ -105,9 +106,9 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 				//If Card Pin is matching
 				if(storedPin.getStoredCardPin().equals(entityIdDTO.getCardPin())) {
 					
-					validationResultDTO.setStatus("Success");
-					validationResultDTO.setMessage("Success");
-					return validationResultDTO;	
+					responseDTO.setStatus("Success");
+					responseDTO.setMessage("Success");
+					return responseDTO;	
 				}
 			}
 		}	

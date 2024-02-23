@@ -1,5 +1,8 @@
 package com.backoffice.operations.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +24,7 @@ import com.backoffice.operations.payloads.GetPinDTO;
 import com.backoffice.operations.payloads.LoginFlagDTO;
 import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.payloads.SecuritySettingsDTO;
-import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.security.JwtTokenProvider;
 import com.backoffice.operations.service.CardPinVerifyService;
 import com.backoffice.operations.service.CivilIdService;
@@ -46,8 +49,8 @@ public class OtpController {
 	private LoginHistoryService loginHistoryService;
 
 	@PostMapping("/validate")
-	public ResponseEntity<ValidationResultDTO> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+	public ResponseEntity<GenericResponseDTO<Object>> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
+		GenericResponseDTO<Object> validationResultDTO = new GenericResponseDTO<>();
 		try {
 			validationResultDTO = otpService.validateOtp(otpRequest);
 			return ResponseEntity.ok(validationResultDTO);
@@ -57,10 +60,10 @@ public class OtpController {
 	}
 
 	@PostMapping("/resend")
-	public ResponseEntity<ValidationResultDTO> resendOtp(@RequestParam String uniqueKey,
+	public ResponseEntity<GenericResponseDTO<Object>> resendOtp(@RequestParam String uniqueKey,
 			@RequestParam String lang,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		GenericResponseDTO<Object> validationResultDTO = new GenericResponseDTO<>();
 		try {
 			if (jwtTokenProvider.validateToken(token.substring("Bearer ".length()))) {
 				validationResultDTO = otpService.resendOtp(uniqueKey);
@@ -73,26 +76,29 @@ public class OtpController {
 	}
 
 	@GetMapping("/civil/{civilId}/{lang}")
-	public ResponseEntity<ValidationResultDTO> validateCivilId(@PathVariable @Validated String civilId,
-															   @PathVariable String lang,
-															   @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		ValidationResultDTO validationResultDTO = civilIdService.validateCivilId(civilId,
+
+	public ResponseEntity<GenericResponseDTO<Object>> validateCivilId(@PathVariable @Validated String civilId,
+			@PathVariable String lang,
+			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> validationResultDTO = civilIdService.validateCivilId(civilId,
+
+
 				token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
 
 	@PostMapping("/card/verifyCard")
-	public ResponseEntity<ValidationResultDTO> verifyCard(@RequestBody @Validated EntityIdDTO entityIdDTO,
+	public ResponseEntity<GenericResponseDTO<Object>> verifyCard(@RequestBody @Validated EntityIdDTO entityIdDTO,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		ValidationResultDTO validationResultDTO = civilIdService.verifyCard(entityIdDTO,
+		GenericResponseDTO<Object> validationResultDTO = civilIdService.verifyCard(entityIdDTO,
 				token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
 
 	@PostMapping("/pin/storeAndSetPin")
-	public ResponseEntity<ValidationResultDTO> storeAndSetPin(@RequestBody GetPinDTO pinRequestDTO,
+	public ResponseEntity<GenericResponseDTO<Object>> storeAndSetPin(@RequestBody GetPinDTO pinRequestDTO,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		ValidationResultDTO validationResultDTO = pinService.storeAndSetPin(pinRequestDTO, token.substring("Bearer ".length()));
+		GenericResponseDTO<Object> validationResultDTO = pinService.storeAndSetPin(pinRequestDTO, token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
 
@@ -110,20 +116,20 @@ public class OtpController {
 	}
 
 	@PostMapping("/saveSettings")
-	public ResponseEntity<ValidationResultDTO> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
+	public ResponseEntity<GenericResponseDTO<Object>> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
 		otpService.saveSecuritySettings(securitySettingsDTO);
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-		validationResultDTO.setStatus("Success");
-		validationResultDTO.setMessage("Security settings updated successfully");
-		data.setUniqueKey(securitySettingsDTO.getUniqueKey());
-		validationResultDTO.setData(data);
-		return ResponseEntity.ok(validationResultDTO);
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		Map<String, Object> data = new HashMap<>();
+		responseDTO.setStatus("Success");
+		responseDTO.setMessage("Security settings updated successfully");
+		data.put("uniqueKey",securitySettingsDTO.getUniqueKey());
+		responseDTO.setData(data);
+		return ResponseEntity.ok(responseDTO);
 	}
 	
 	@PostMapping("/signIn")
-	public ResponseEntity<ValidationResultDTO> signIn(@RequestBody LoginFlagDTO loginFlagDTO) {
-		ValidationResultDTO validationResultDTO = loginHistoryService.saveLoginFlag(loginFlagDTO);
+	public ResponseEntity<GenericResponseDTO<Object>> signIn(@RequestBody LoginFlagDTO loginFlagDTO) {
+		GenericResponseDTO<Object> validationResultDTO = loginHistoryService.saveLoginFlag(loginFlagDTO);
 		return ResponseEntity.ok(validationResultDTO);
 	}
 }
