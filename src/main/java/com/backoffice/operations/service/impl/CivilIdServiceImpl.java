@@ -242,7 +242,6 @@ public class CivilIdServiceImpl implements CivilIdService {
 		requestBody.add("client_secret", "gh2KpMeNlwuSZJBQqCyhRbnRh0BHQwCW");
 
 		HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
-		RestTemplate restTemplate = new RestTemplate();
 
 		logger.info("requestUrl: {}", tokenApiUrl);
 		logger.info("requestEntity: {}", requestEntity);
