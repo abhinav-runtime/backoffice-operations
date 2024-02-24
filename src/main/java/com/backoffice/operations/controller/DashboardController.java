@@ -109,4 +109,16 @@ public class DashboardController {
     public ResponseEntity<GenericResponseDTO<Object>> getDashboardInfo(@RequestParam String uniqueKey){
         return ResponseEntity.ok(dashboardService.getDashboardInfo(uniqueKey));
     }
+
+    @GetMapping("/accountTransactions")
+    public ResponseEntity<GenericResponseDTO<Object>> getAccountTransactions(@RequestParam String accountNumber, @RequestParam(required = false) String fromDate
+            , @RequestParam(required = false) String toDate,@RequestParam String uniqueKey){
+        return ResponseEntity.ok(dashboardService.getAccountTransactions(accountNumber, fromDate, toDate, uniqueKey));
+    }
+
+    @GetMapping("/creditCardTransactions")
+    public ResponseEntity<GenericResponseDTO<Object>> getCreditCardTransactions(@RequestParam(required = false) String fromDate
+            , @RequestParam(required = false) String toDate,@RequestParam String uniqueKey){
+        return ResponseEntity.ok(dashboardService.getCreditCardTransactions(fromDate, toDate, uniqueKey));
+    }
 }
