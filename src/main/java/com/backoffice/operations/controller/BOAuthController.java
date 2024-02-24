@@ -1,6 +1,5 @@
 package com.backoffice.operations.controller;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backoffice.operations.payloads.BORegisterDTO;
+import com.backoffice.operations.payloads.BOSuspendUserDTO;
 import com.backoffice.operations.payloads.LoginDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.security.BOUserToken;
@@ -38,10 +38,10 @@ public class BOAuthController {
 	public GenericResponseDTO<Object> register(@RequestBody BORegisterDTO registeruser) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
-			
+
 			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
-				response.setStatus("UNAUTHORIZED");
+				response.setStatus("Failure");
 				response.setData(null);
 				return response;
 			}
@@ -50,13 +50,30 @@ public class BOAuthController {
 			}
 			response.setMessage("User not have permission to operate this action");
 			response.setStatus("Failure");
-			response.setData(null);			
+			response.setData(null);
 		} catch (Exception e) {
 			response.setMessage("Something went wrong");
 			response.setStatus("Failure");
 		}
 		return response;
-		
-		
+	}
+
+	@PostMapping(value = { "/suspend" })
+	public GenericResponseDTO<Object> suspendUser(@RequestBody BOSuspendUserDTO userDto) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		if (boUserToken.getRolesFromToken().isEmpty()) {
+			response.setMessage("Token not found or expired");
+			response.setStatus("Failure");
+			response.setData(null);
+			return response;
+		}
+		if (accessHelper.isAccessible("AUTHORIZATION", "MODIFY")) {
+			return boAuthService.suspendUser(userDto);			
+		}
+		response.setMessage("User not have permission to operate this action");
+		response.setStatus("Failure");
+		response.setData(null);
+		return response;
 	}
 }

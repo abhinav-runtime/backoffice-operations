@@ -29,10 +29,9 @@ public class BoRoleController {
 	public GenericResponseDTO<Object> roleAccessibilityAssign(@RequestBody BORoleDTO requestRoleDTO) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
-
 			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
-				response.setStatus("UNAUTHORIZED");
+				response.setStatus("Failure");
 				response.setData(null);
 				return response;
 			}
@@ -45,7 +44,7 @@ public class BoRoleController {
 		} catch (Exception e) {
 			response.setMessage("Something went wrong");
 			response.setStatus("Failure");
-			response.setData(null);
+			response.setData(e.getMessage());
 		}
 		return response;
 	}
@@ -57,7 +56,7 @@ public class BoRoleController {
 			
 			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
-				response.setStatus("UNAUTHORIZED");
+				response.setStatus("Failure");
 				response.setData(null);
 				return response;
 			}
@@ -82,7 +81,7 @@ public class BoRoleController {
 			
 			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
-				response.setStatus("UNAUTHORIZED");
+				response.setStatus("Failure");
 				response.setData(null);
 				return response;
 			}
@@ -107,7 +106,7 @@ public class BoRoleController {
 
 			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
-				response.setStatus("UNAUTHORIZED");
+				response.setStatus("Failure");
 				response.setData(null);
 				return response;
 			}

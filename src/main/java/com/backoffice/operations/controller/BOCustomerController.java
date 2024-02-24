@@ -35,7 +35,7 @@ public class BOCustomerController {
 
 			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
-				response.setStatus("UNAUTHORIZED");
+				response.setStatus("Failure");
 				response.setData(null);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
@@ -63,7 +63,7 @@ public class BOCustomerController {
 
 			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
-				response.setStatus("UNAUTHORIZED");
+				response.setStatus("Failure");
 				response.setData(null);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}

@@ -1,5 +1,6 @@
 package com.backoffice.operations.service.impl;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -9,19 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.backoffice.operations.entity.BOAccessibility;
-import com.backoffice.operations.entity.BOModuleName;
 import com.backoffice.operations.entity.BORole;
 import com.backoffice.operations.entity.BOUser;
-import com.backoffice.operations.payloads.BOModuleOrAccessTypeRequest;
 import com.backoffice.operations.payloads.BORegisterDTO;
-import com.backoffice.operations.payloads.BORoleDTO;
+import com.backoffice.operations.payloads.BOSuspendUserDTO;
 import com.backoffice.operations.payloads.LoginDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.BORolesRepo;
 import com.backoffice.operations.repository.BOUsersRepo;
-import com.backoffice.operations.repository.BoAccessibilityRepo;
-import com.backoffice.operations.repository.BoModuleNameRepo;
 import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.BOAuthService;
 import com.backoffice.operations.service.BOLoginLogSevice;
@@ -31,13 +27,13 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class BOAuthServiceImp implements BOAuthService {
+	private final PasswordEncoder passwordEncoder;
 	@Autowired
 	private final BOLoginLogSevice boLoginLogSevice;
 	@Autowired
 	private final BOUsersRepo boUsersRepo;
 	@Autowired
 	private final BORolesRepo boRolesRepo;
-	private final PasswordEncoder passwordEncoder;
 	@Autowired
 	private final BOUserToken boUserToken;
 
@@ -111,10 +107,10 @@ public class BOAuthServiceImp implements BOAuthService {
 				BORole userRole = boRolesRepo.findByName(role);
 				roles.add(userRole);
 				user.setRoles(roles);
-			};
+			}
+			;
 		});
 
-		
 		try {
 			boUsersRepo.save(user);
 			genericResult.setData(user);
@@ -129,5 +125,31 @@ public class BOAuthServiceImp implements BOAuthService {
 			}
 		}
 		return genericResult;
+	}
+
+	@Override
+	public GenericResponseDTO<Object> suspendUser(BOSuspendUserDTO userDto) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		Map<String, String> responseData = new HashMap<>();
+		if (boUsersRepo.existsByEmailAndBranch(userDto.getEmail(), userDto.getBranch())) {
+			BOUser user = boUsersRepo.findByEmailAndBranch(userDto.getEmail(), userDto.getBranch());
+			user.setStatus("Suspend");
+			user = boUsersRepo.save(user);
+
+			responseData.put("fullName", user.getFirstName() + " " + user.getLastName());
+			responseData.put("email", user.getEmail());
+			responseData.put("branch", user.getBranch());
+			responseData.put("mobile", user.getMobile());
+			responseData.put("status", user.getStatus());
+
+			response.setMessage("User Suspended Successfully");
+			response.setStatus("Success");
+			response.setData(responseData);
+		} else {
+			response.setMessage("User not found");
+			response.setStatus("Failure");
+			response.setData(responseData);
+		}
+		return response;
 	}
 }
