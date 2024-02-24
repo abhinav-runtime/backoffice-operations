@@ -76,13 +76,10 @@ public class OtpController {
 	}
 
 	@GetMapping("/civil/{civilId}/{lang}")
-
 	public ResponseEntity<GenericResponseDTO<Object>> validateCivilId(@PathVariable @Validated String civilId,
 			@PathVariable String lang,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		GenericResponseDTO<Object> validationResultDTO = civilIdService.validateCivilId(civilId,
-
-
 				token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
