@@ -44,25 +44,32 @@ public class BOAuthServiceImp implements BOAuthService {
 	@Override
 	public GenericResponseDTO<Object> login(LoginDto loginDto) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
-		Optional<BOUser> bouser = boUsersRepo.findByEmail(loginDto.getUsernameOrEmail());
-		BOUser user = bouser.get();
-		if (user.getStatus().equals("Active")) {
-			if (user != null) {
-				response.setMessage("No user found with this email");
+		try {
+
+			Optional<BOUser> bouser = boUsersRepo.findByEmail(loginDto.getUsernameOrEmail());
+			BOUser user = bouser.get();
+			if (user.getStatus().equals("Active")) {
+				if (user != null) {
+					response.setMessage("No user found with this email");
+					response.setStatus("Failure");
+					response.setData(null);
+				}
+				if (passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
+					String userToken = boUserToken.userTokenGenerate(loginDto.getUsernameOrEmail());
+					boLoginLogSevice.saveLoginLog(userToken);
+					Map<String, String> accessToken = Map.of("token", userToken);
+					response.setMessage("Success");
+					response.setStatus("Success");
+					response.setData(accessToken);
+				}
+
+			} else {
+				response.setMessage("User not have permission to login");
 				response.setStatus("Failure");
 				response.setData(null);
 			}
-			if (passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
-				String userToken = boUserToken.userTokenGenerate(loginDto.getUsernameOrEmail());
-				boLoginLogSevice.saveLoginLog(userToken);
-				Map<String, String> accessToken = Map.of("token", userToken);
-				response.setMessage("Success");
-				response.setStatus("Success");
-				response.setData(accessToken);
-			}
-
-		} else {
-			response.setMessage("User not have permission to login");
+		} catch (Exception e) {
+			response.setMessage("Something went wrong");
 			response.setStatus("Failure");
 			response.setData(null);
 		}
@@ -103,11 +110,11 @@ public class BOAuthServiceImp implements BOAuthService {
 			if (boRolesRepo.existsByName(role)) {
 				BORole userRole = boRolesRepo.findByName(role);
 				roles.add(userRole);
-				user.setRoles(roles);				
+				user.setRoles(roles);
 			};
-        });
-		
+		});
 
+		
 		try {
 			boUsersRepo.save(user);
 			genericResult.setData(user);

@@ -26,6 +26,7 @@ import com.backoffice.operations.payloads.OtpRequestDTO;
 import com.backoffice.operations.payloads.SecuritySettingsDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.security.JwtTokenProvider;
+import com.backoffice.operations.service.BOCustomerService;
 import com.backoffice.operations.service.CardPinVerifyService;
 import com.backoffice.operations.service.CivilIdService;
 import com.backoffice.operations.service.LoginHistoryService;
@@ -47,6 +48,8 @@ public class OtpController {
 	private JwtTokenProvider jwtTokenProvider;
 	@Autowired
 	private LoginHistoryService loginHistoryService;
+	@Autowired
+	private BOCustomerService customerService;
 
 	@PostMapping("/validate")
 	public ResponseEntity<GenericResponseDTO<Object>> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
@@ -118,6 +121,7 @@ public class OtpController {
 	@PostMapping("/saveSettings")
 	public ResponseEntity<GenericResponseDTO<Object>> updateSecuritySettings(@RequestBody SecuritySettingsDTO securitySettingsDTO) {
 		otpService.saveSecuritySettings(securitySettingsDTO);
+		customerService.addOnboardCustomer(securitySettingsDTO.getUniqueKey()); // It's indicate Onboarding completed
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		Map<String, Object> data = new HashMap<>();
 		responseDTO.setStatus("Success");
