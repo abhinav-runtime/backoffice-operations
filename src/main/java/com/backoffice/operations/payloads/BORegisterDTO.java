@@ -1,5 +1,7 @@
 package com.backoffice.operations.payloads;
 
+import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,5 +20,5 @@ public class BORegisterDTO {
 	 String username;
 	 String email;
 	 String password;
-	 String roles;
+	 Set<String> roles;
 }

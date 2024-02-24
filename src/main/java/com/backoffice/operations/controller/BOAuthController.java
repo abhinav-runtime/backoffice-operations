@@ -1,24 +1,19 @@
 package com.backoffice.operations.controller;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backoffice.operations.payloads.BOModuleOrAccessTypeRequest;
 import com.backoffice.operations.payloads.BORegisterDTO;
-import com.backoffice.operations.payloads.BORoleDTO;
 import com.backoffice.operations.payloads.LoginDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.BOAuthService;
-import com.backoffice.operations.service.BORoleService;
 import com.backoffice.operations.service.impl.BoAccessHelper;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +39,7 @@ public class BOAuthController {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 			
-			if (boUserToken.getRolesFromToken() == "") {
+			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
 				response.setStatus("UNAUTHORIZED");
 				response.setData(null);

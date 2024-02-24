@@ -1,7 +1,10 @@
 package com.backoffice.operations.security;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -55,27 +58,25 @@ public class BOUserToken {
 		return token.split("\\|")[0];
 	}
 
-	public String getRolesFromToken() {
-		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-		HttpServletRequest request = attributes.getRequest();
-		String token = request.getHeader("userToken");
-		if(isTokenExpire(token)==false) {
-			return "";
-		}
-		if (token == null || token.isEmpty()) {
-			return "";
-		}
-		token = deserializeUserData(token);
-		return token.split("\\|")[1];
+	public List<String> getRolesFromToken() {
+	    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+	    HttpServletRequest request = attributes.getRequest();
+	    String token = request.getHeader("userToken");
+	    if (!isTokenExpire(token) || token == null || token.isEmpty()) {
+	        return new ArrayList<>(); // Token is expired or empty, return empty list
+	    }
+	    token = deserializeUserData(token);
+	    String rolesString = token.split("\\|")[1];
+	    return Arrays.asList(rolesString.split(",")); // Assuming roles are separated by comma
 	}
-	
-	// roles extracted from token with parameter
-	public String getRolesFromToken(String token) {
-		if (token == null || token.isEmpty()) {
-			return null;
-		}
-		token = deserializeUserData(token);
-		return token.split("\\|")[1];
+
+	public List<String> getRolesFromToken(String token) {
+	    if (token == null || token.isEmpty()) {
+	        return new ArrayList<>();
+	    }
+	    token = deserializeUserData(token);
+	    String rolesString = token.split("\\|")[1];
+	    return Arrays.asList(rolesString.split(",")); // Assuming roles are separated by comma
 	}
 	
 	

@@ -1,5 +1,7 @@
 package com.backoffice.operations.service.impl;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +26,16 @@ public class BoAccessHelper {
 	private BOUserToken boUserToken;
 	
 	public Boolean isAccessible(String moduleName, String accessType) {
-		String userRole = boUserToken.getRolesFromToken();
-		String roleId = boRolesRepo.findByName(userRole).getId();
-		String moduleId = boModuleNameRepo.findByModuleName(moduleName).getId();
-		String accessId = boAccessibilityRepo.findByAccessType(accessType).getId();
-		return boRoleMuduleAccessMappingRepo.existsByRoleIdAndModuleIdAndAccessibilityId(roleId, moduleId, accessId);
+	    List<String> roles = boUserToken.getRolesFromToken();
+	    for (String userRole : roles) {
+	        String roleId = boRolesRepo.findByName(userRole).getId();
+	        String moduleId = boModuleNameRepo.findByModuleName(moduleName).getId();
+	        String accessId = boAccessibilityRepo.findByAccessType(accessType).getId();
+	        if (boRoleMuduleAccessMappingRepo.existsByRoleIdAndModuleIdAndAccessibilityId(roleId, moduleId, accessId)) {
+	            return true;
+	        }
+	    }
+	    return false;
 	}
 	
 }

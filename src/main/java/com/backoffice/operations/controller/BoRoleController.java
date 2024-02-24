@@ -30,7 +30,7 @@ public class BoRoleController {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 
-			if (boUserToken.getRolesFromToken() == "") {
+			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
 				response.setStatus("UNAUTHORIZED");
 				response.setData(null);
@@ -55,7 +55,7 @@ public class BoRoleController {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 			
-			if (boUserToken.getRolesFromToken() == "") {
+			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
 				response.setStatus("UNAUTHORIZED");
 				response.setData(null);
@@ -80,7 +80,7 @@ public class BoRoleController {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 			
-			if (boUserToken.getRolesFromToken() == "") {
+			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
 				response.setStatus("UNAUTHORIZED");
 				response.setData(null);
@@ -105,7 +105,7 @@ public class BoRoleController {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 
-			if (boUserToken.getRolesFromToken() == "") {
+			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
 				response.setStatus("UNAUTHORIZED");
 				response.setData(null);

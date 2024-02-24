@@ -99,9 +99,14 @@ public class BOAuthServiceImp implements BOAuthService {
 		user.setPassword(passwordEncoder.encode(boRegisterDTO.getPassword()));
 
 		Set<BORole> roles = new HashSet<>();
-		BORole userRole = boRolesRepo.findByName(boRegisterDTO.getRoles());
-		roles.add(userRole);
-		user.setRoles(roles);
+		boRegisterDTO.getRoles().forEach(role -> {
+			if (boRolesRepo.existsByName(role)) {
+				BORole userRole = boRolesRepo.findByName(role);
+				roles.add(userRole);
+				user.setRoles(roles);				
+			};
+        });
+		
 
 		try {
 			boUsersRepo.save(user);

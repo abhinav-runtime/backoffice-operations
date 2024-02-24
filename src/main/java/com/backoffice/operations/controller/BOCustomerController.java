@@ -33,7 +33,7 @@ public class BOCustomerController {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 
-			if (boUserToken.getRolesFromToken() == "") {
+			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
 				response.setStatus("UNAUTHORIZED");
 				response.setData(null);
@@ -50,7 +50,7 @@ public class BOCustomerController {
 		} catch (Exception e) {
 			response.setMessage("Something went wrong");
 			response.setStatus("Failure");
-			response.setData(null);
+			response.setData(e.getMessage());
 		}
 	
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -61,7 +61,7 @@ public class BOCustomerController {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 
-			if (boUserToken.getRolesFromToken() == "") {
+			if (boUserToken.getRolesFromToken().isEmpty()) {
 				response.setMessage("Token not found or expired");
 				response.setStatus("UNAUTHORIZED");
 				response.setData(null);
@@ -78,7 +78,7 @@ public class BOCustomerController {
 		} catch (Exception e) {
 			response.setMessage("Something went wrong");
 			response.setStatus("Failure");
-			response.setData(null);
+			response.setData(e.getMessage());
 		}
 	
 		return new ResponseEntity<>(response, HttpStatus.OK);
