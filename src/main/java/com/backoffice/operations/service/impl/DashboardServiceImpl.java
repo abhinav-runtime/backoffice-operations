@@ -5,12 +5,13 @@ import com.backoffice.operations.payloads.*;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.*;
 import com.backoffice.operations.service.DashboardService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-
+import com.backoffice.operations.utils.CommonUtils;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -40,7 +41,11 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Value("${external.api.credit.card.transaction}")
     private String externalCardTransactionApiUrl;
-
+    @Autowired
+    @Qualifier("jwtAuth")
+    private RestTemplate jwtAuthRestTemplate;
+    @Autowired
+    private CommonUtils commonUtils;
 
     private final RestTemplate restTemplate;
 
@@ -73,31 +78,37 @@ public class DashboardServiceImpl implements DashboardService {
         Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
 
         if(civilIdEntity.isPresent()) {
+            ResponseEntity<AccessTokenResponse>  response = commonUtils.getToken();
+            if(Objects.nonNull(response.getBody())) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBearerAuth(response.getBody().getAccessToken());
+                HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String apiUrl = accountExternalAPI + civilIdEntity.get().getCivilId();
-            ResponseEntity<AccountDetails> responseEntity = restTemplate.getForEntity(apiUrl,
-                    AccountDetails.class);
+                String apiUrl = accountExternalAPI + civilIdEntity.get().getCivilId();
+                ResponseEntity<AccountDetails> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity,
+                        AccountDetails.class);
 
-            AccountDetails apiResponse = responseEntity.getBody();
+                AccountDetails apiResponse = responseEntity.getBody();
 
-            if (apiResponse != null && apiResponse.isSuccess()) {
-                List<AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount> islamicAccountList = apiResponse.getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts();
-                AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount islamicAccount = islamicAccountList.get(0);
-                DashboardEntity dashboardEntity = DashboardEntity.builder().id(uniqueKey).accountNumber(islamicAccount.getAcc())
-                        .availableBalance(islamicAccount.getAcyavlbal()).currency(islamicAccount.getCcy()).build();
-                DashboardEntity dashboardEntityObject = dashboardRepository.save(dashboardEntity);
-                GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-                Map<String, Object> data = new HashMap<>();
-                AccountsDetailsResponseDTO accountsDetailsResponseDTO = new AccountsDetailsResponseDTO();
-                accountsDetailsResponseDTO.setAccountNumber(dashboardEntityObject.getAccountNumber());
-                accountsDetailsResponseDTO.setAccountBalance(dashboardEntityObject.getAvailableBalance());
-                accountsDetailsResponseDTO.setCurrency(dashboardEntityObject.getCurrency());
-                data.put("uniqueKey",dashboardEntityObject.getId());
-                data.put("accountDetails",List.of(accountsDetailsResponseDTO));
-                responseDTO.setStatus("Success");
-                responseDTO.setMessage("Success");
-                responseDTO.setData(data);
-                return responseDTO;
+                if (apiResponse != null && apiResponse.isSuccess()) {
+                    List<AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount> islamicAccountList = apiResponse.getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts();
+                    AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount islamicAccount = islamicAccountList.get(0);
+                    DashboardEntity dashboardEntity = DashboardEntity.builder().id(uniqueKey).accountNumber(islamicAccount.getAcc())
+                            .availableBalance(islamicAccount.getAcyavlbal()).currency(islamicAccount.getCcy()).build();
+                    DashboardEntity dashboardEntityObject = dashboardRepository.save(dashboardEntity);
+                    GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+                    Map<String, Object> data = new HashMap<>();
+                    AccountsDetailsResponseDTO accountsDetailsResponseDTO = new AccountsDetailsResponseDTO();
+                    accountsDetailsResponseDTO.setAccountNumber(dashboardEntityObject.getAccountNumber());
+                    accountsDetailsResponseDTO.setAccountBalance(dashboardEntityObject.getAvailableBalance());
+                    accountsDetailsResponseDTO.setCurrency(dashboardEntityObject.getCurrency());
+                    data.put("uniqueKey",dashboardEntityObject.getId());
+                    data.put("accountDetails",List.of(accountsDetailsResponseDTO));
+                    responseDTO.setStatus("Success");
+                    responseDTO.setMessage("Success");
+                    responseDTO.setData(data);
+                    return responseDTO;
+                }
             }
         }
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
@@ -183,8 +194,10 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public GenericResponseDTO<Object> getAccountTransactions(String accountNumber, String fromDate, String toDate, String uniqueKey) {
+        ResponseEntity<AccessTokenResponse>  response = commonUtils.getToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(response.getBody().getAccessToken());
         StringBuilder requestBody = new StringBuilder();
         if (Objects.isNull(fromDate) && Objects.isNull(toDate)) {
             requestBody.append("{\n" + "\"accountNumber\": \"").append(accountNumber).append("\"\n" + " }");
