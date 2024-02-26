@@ -27,7 +27,6 @@ import java.util.Optional;
 public class DashboardServiceImpl implements DashboardService {
 
     @Value("${external.api.accounts}")
-
     private String accountExternalAPI;
 
     @Value("${external.api.customer.fetchDue}")
@@ -41,9 +40,11 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Value("${external.api.credit.card.transaction}")
     private String externalCardTransactionApiUrl;
+
     @Autowired
     @Qualifier("jwtAuth")
     private RestTemplate jwtAuthRestTemplate;
+
     @Autowired
     private CommonUtils commonUtils;
 
@@ -55,21 +56,17 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final DashboardInfoRepository dashboardInfoRepository;
 
-
     private final AccountTransactionsEntityRepository accountTransactionsEntityRepository;
 
     private final CardTransactionsEntityRepository cardTransactionsEntityRepository;
 
     public DashboardServiceImpl(RestTemplate restTemplate, CivilIdRepository civilIdRepository, DashboardRepository dashboardRepository, DashboardInfoRepository dashboardInfoRepository, AccountTransactionsEntityRepository accountTransactionsEntityRepository, CardTransactionsEntityRepository cardTransactionsEntityRepository) {
-
         this.restTemplate = restTemplate;
         this.civilIdRepository = civilIdRepository;
         this.dashboardRepository = dashboardRepository;
         this.dashboardInfoRepository = dashboardInfoRepository;
-
         this.accountTransactionsEntityRepository = accountTransactionsEntityRepository;
         this.cardTransactionsEntityRepository = cardTransactionsEntityRepository;
-
     }
 
     @Override
