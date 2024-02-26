@@ -1,0 +1,11 @@
+# Ignore Eclipse project files
+.classpath
+.project
+.factorypath
+
+# Ignore target directory
+target/
+
+# Default ignored files
+/shelf/
+/workspace.xml

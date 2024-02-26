@@ -12,6 +12,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -28,14 +29,15 @@ public class AppConfig {
     public WebClient.Builder webClientBuilder() {
         return WebClient.builder();
     }
-	
-//	@Bean
-//    public RestTemplate restTemplate() {
-//        return new RestTemplate();
-//    }
-	
-	@Bean
-    public RestTemplate restTemplate() {
+
+	@Bean(name = "basicAuth")
+	@Primary
+    public RestTemplate basicAuthRestTemplate() {
+        return new RestTemplate();
+    }
+
+	@Bean(name = "jwtAuth")
+    public RestTemplate jwtAuthRestTemplate() {
         return new RestTemplate(clientHttpRequestFactory());
     }
 

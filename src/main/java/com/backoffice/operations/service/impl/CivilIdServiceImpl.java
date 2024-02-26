@@ -8,9 +8,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.backoffice.operations.utils.CommonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -72,11 +74,9 @@ public class CivilIdServiceImpl implements CivilIdService {
 	@Value("${external.api.m2p.client.secret}")
 	private String clientSecret;
 	@Autowired
-	private RestTemplate restTemplate;
+	private RestTemplate basicAuthRestTemplate;
 	@Value("${external.api.m2p.civilId}")
 	private String civilIdExternalAPI;
-	@Value("${external.api.civilId}")
-	private String civilId;
 	@Autowired
 	private BlockUnblockActionRepository blockUnblockActionRepository;
 	@Autowired
@@ -91,6 +91,11 @@ public class CivilIdServiceImpl implements CivilIdService {
 	private CivilIdParameterRepository civilIdParameterRepository;
 	@Autowired
 	private AccessTokenRepository accessTokenRepository;
+	@Autowired
+	@Qualifier("jwtAuth")
+	private RestTemplate jwtAuthRestTemplate;
+	@Autowired
+	private CommonUtils commonUtils;
 
 	@Override
 	public GenericResponseDTO<Object> validateCivilId(String entityId, String token) {
@@ -105,11 +110,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 		AccessToken accessToken = null;
 		try {
 			// GET Access token from M2P and save it into the DB.
-//			String requestUrl = tokenApiUrl + "?grant_type=client_credentials&scope=openid%20profile%20email&client_id=" + clientId + "&client_secret=" + clientSecret;
-//			logger.info("requestUrl: {}", requestUrl);
-//			ResponseEntity<AccessTokenResponse> response = restTemplate.postForEntity(requestUrl, null,
-//					AccessTokenResponse.class);
-			ResponseEntity<AccessTokenResponse>  response = getToken();
+			ResponseEntity<AccessTokenResponse>  response = commonUtils.getToken();
 			logger.info("response: {}", response.getBody());
 
             accessToken = saveAccessToken(Objects.requireNonNull(response.getBody()));
@@ -176,12 +177,10 @@ public class CivilIdServiceImpl implements CivilIdService {
 							headers.setBearerAuth(accessToken.getAccessToken());
 							HttpEntity<String> entity = new HttpEntity<>(headers);
 							String apiUrl = civilIdExternalAPI + entityId;
-							responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, entity,
+							responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity,
 									CivilIdAPIResponse.class);
-						} else {
-							String apiUrl = civilId + entityId;
-							responseEntity = restTemplate.getForEntity(apiUrl, CivilIdAPIResponse.class);
 						}
+
 						CivilIdAPIResponse apiResponse = responseEntity.getBody();
 						if (apiResponse != null && apiResponse.isSuccess()) {
 							CustomerFull customerFull = apiResponse.getResponse().getResult().getCustomerFull();
@@ -245,7 +244,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 
 		logger.info("requestUrl: {}", tokenApiUrl);
 		logger.info("requestEntity: {}", requestEntity);
-		ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(tokenApiUrl, HttpMethod.POST, requestEntity, AccessTokenResponse.class);
+		ResponseEntity<AccessTokenResponse> response = jwtAuthRestTemplate.exchange(tokenApiUrl, HttpMethod.POST, requestEntity, AccessTokenResponse.class);
 		logger.info("response: {}", response);
 		return response;
 	}
@@ -276,7 +275,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 					headers.setContentType(MediaType.APPLICATION_JSON);
 					String requestBody = "{ \"customerId\": \"" + civilIdEntity.get().getCivilId() + "\" }";
 					HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
-					ResponseEntity<ExternalApiResponseDTO> responseEntity = restTemplate.exchange(apiUrl,
+					ResponseEntity<ExternalApiResponseDTO> responseEntity = basicAuthRestTemplate.exchange(apiUrl,
 							HttpMethod.POST, requestEntity, ExternalApiResponseDTO.class);
 					if (responseEntity != null && responseEntity.getBody().getResult() != null) {
 						List<Card> cardList = responseEntity.getBody().getResult().getCardList();
@@ -385,7 +384,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			String requestBody = "{ \"entityId\": \"" + civilIdEntity.get().getCivilId() + "\" }";
 			HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
-			ResponseEntity<Object> responseEntity = restTemplate.exchange(fetchAllCustomers, HttpMethod.POST,
+			ResponseEntity<Object> responseEntity = basicAuthRestTemplate.exchange(fetchAllCustomers, HttpMethod.POST,
 					requestEntity, Object.class);
 			return responseEntity.getBody();
 		}
@@ -406,7 +405,7 @@ public class CivilIdServiceImpl implements CivilIdService {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<BlockUnblockActionDTO> requestEntity = new HttpEntity<>(blockUnblockActionDTO, headers);
-        ResponseEntity<Object> response = restTemplate.postForEntity(blockUnblockURL, requestEntity, Object.class);
+        ResponseEntity<Object> response = basicAuthRestTemplate.postForEntity(blockUnblockURL, requestEntity, Object.class);
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
             return response.getBody();
         } else {
