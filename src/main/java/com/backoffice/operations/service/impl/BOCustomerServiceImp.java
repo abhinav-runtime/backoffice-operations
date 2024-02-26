@@ -1,9 +1,8 @@
 package com.backoffice.operations.service.impl;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +23,8 @@ import com.backoffice.operations.repository.CustomerRepository;
 import com.backoffice.operations.service.BOCustomerService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.commons.text.similarity.LevenshteinDistance;
 
 @Service
 public class BOCustomerServiceImp implements BOCustomerService {
@@ -126,5 +127,48 @@ public class BOCustomerServiceImp implements BOCustomerService {
 			System.err.println(e.getMessage());
 		}
 		
+	}
+
+	@Override
+	public GenericResponseDTO<Object> getCustomersBySearchValue(String searchValue) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		List<Customer> searchResult = new ArrayList<>();
+		if (searchValue == "") {
+			response.setStatus("Failure");
+			response.setMessage("Search value is empty");
+			response.setData(null);
+		}else {
+			List<Customer> customersBySearchValue = customerRepository.findAll();
+			for (Customer customer : customersBySearchValue) {
+//				if (customer.getName().contains(searchValue) || customer.getBranch().contains(searchValue)
+//						|| customer.getCountry().contains(searchValue)||customer.getCustId().contains(searchValue)) {
+//					searchResult.add(customer);
+//				}
+				if (isSimilar(customer.getName(), searchValue) || isSimilar(customer.getBranch(), searchValue)
+						|| isSimilar(customer.getCountry(), searchValue)
+						|| isSimilar(customer.getCustId(), searchValue)) {
+					searchResult.add(customer);
+				}
+			}
+			
+//			searchValue.cont
+			if (searchResult.size() != 0) {
+				response.setStatus("Success");
+				response.setMessage("Search result");
+				response.setData(searchResult);
+			} else {
+				response.setStatus("Failure");
+				response.setMessage("No customers found");
+				response.setData(null);
+			}
+		}
+		return response;
+	}
+	
+	private boolean isSimilar(String s1, String s2) {
+	    int threshold = 1;
+	    LevenshteinDistance distance = LevenshteinDistance.getDefaultInstance();
+	    int dist = distance.apply(s1, s2);
+	    return dist <= threshold;
 	}
 }
