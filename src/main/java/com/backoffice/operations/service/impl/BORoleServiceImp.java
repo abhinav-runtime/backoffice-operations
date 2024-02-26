@@ -90,7 +90,7 @@ public class BORoleServiceImp implements BORoleService {
 			response.setStatus("Success");
 			response.setData(accessibility);
 		} else {
-			response.setMessage("Accessibility already exists");
+			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
 			response.setData(null);
 		}
@@ -110,7 +110,7 @@ public class BORoleServiceImp implements BORoleService {
 			response.setStatus("Success");
 			response.setData(role);
 		} else {
-			response.setMessage("Role already exists");
+			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
 			response.setData(null);
 		}
@@ -128,7 +128,7 @@ public class BORoleServiceImp implements BORoleService {
 			response.setStatus("Success");
 			response.setData(module);
 		} else {
-			response.setMessage("Module already exists");
+			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
 			response.setData(null);
 		}

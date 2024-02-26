@@ -40,7 +40,7 @@ public class BOAuthController {
 		try {
 
 			if (boUserToken.getRolesFromToken().isEmpty()) {
-				response.setMessage("Token not found or expired");
+				response.setMessage("Something went wrong.");
 				response.setStatus("Failure");
 				response.setData(null);
 				return response;
@@ -48,7 +48,7 @@ public class BOAuthController {
 			if (accessHelper.isAccessible("ACCOUNT_TYPES", "PUBLISH")) {
 				return boAuthService.register(registeruser);
 			}
-			response.setMessage("User not have permission to operate this action");
+			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
 			response.setData(null);
 		} catch (Exception e) {

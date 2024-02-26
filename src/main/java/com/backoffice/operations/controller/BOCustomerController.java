@@ -38,7 +38,7 @@ public class BOCustomerController {
 		try {
 
 			if (boUserToken.getRolesFromToken().isEmpty()) {
-				response.setMessage("Token not found or expired");
+				response.setMessage("Something went wrong.");
 				response.setStatus("Failure");
 				response.setData(null);
 				return new ResponseEntity<>(response, HttpStatus.OK);
@@ -49,7 +49,7 @@ public class BOCustomerController {
 			} else {
 
 			}
-			response.setMessage("User not have permission to operate this action");
+			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
 			response.setData(null);
 		} catch (Exception e) {
@@ -67,7 +67,7 @@ public class BOCustomerController {
 		try {
 
 			if (boUserToken.getRolesFromToken().isEmpty()) {
-				response.setMessage("Token not found or expired");
+				response.setMessage("Something went wrong.");
 				response.setStatus("Failure");
 				response.setData(null);
 				return new ResponseEntity<>(response, HttpStatus.OK);
@@ -77,7 +77,7 @@ public class BOCustomerController {
 			} else {
 
 			}
-			response.setMessage("User not have permission to operate this action");
+			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
 			response.setData(null);
 		} catch (Exception e) {
@@ -94,7 +94,7 @@ public class BOCustomerController {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 			if (boUserToken.getRolesFromToken().isEmpty()) {
-				response.setMessage("Token not found or expired");
+				response.setMessage("Something went wrong.");
 				response.setStatus("Failure");
 				response.setData(null);
 				return new ResponseEntity<>(response, HttpStatus.OK);
@@ -102,7 +102,7 @@ public class BOCustomerController {
 			if (accessHelper.isAccessible("CUSTOMERS_INDIVIDUAL", "VIEW")) {
 				return new ResponseEntity<>(customerService.getCustomersBySearchValue(search.get("search")), HttpStatus.OK);
 			} else {
-				response.setMessage("User not have permission to operate this action");
+				response.setMessage("Something went wrong.");
 				response.setStatus("Failure");
 				response.setData(null);
 			}
