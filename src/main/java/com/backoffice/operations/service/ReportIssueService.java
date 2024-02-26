@@ -43,7 +43,7 @@ public class ReportIssueService {
         }
 		
 		//FullPath
-    	String filePath = path+file.getOriginalFilename();
+    	String filePath = path + File.separator + file.getOriginalFilename();
     	
     	//Create folder if not created
     	File f = new File(path);
