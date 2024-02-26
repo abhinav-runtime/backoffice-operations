@@ -156,7 +156,7 @@ public class BOCustomerServiceImp implements BOCustomerService {
 
 	@Override
 	public GenericResponseDTO<Object> getCustomersBySearchValue(String searchValue) {
-		searchValue = searchValue.toLowerCase();
+		searchValue = searchValue.toLowerCase().trim().replaceAll("^\\s+|\\s+$", "");
 
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		List<Customer> searchResult = new ArrayList<>();
