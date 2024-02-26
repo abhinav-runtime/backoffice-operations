@@ -4,6 +4,7 @@ import com.backoffice.operations.entity.Profile;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.payloads.AccessTokenResponse;
 import com.backoffice.operations.payloads.CivilIdAPIResponse;
+import com.backoffice.operations.payloads.UpdateProfileRequest;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.ProfileRepository;
 import com.backoffice.operations.repository.UserRepository;
@@ -13,10 +14,7 @@ import com.backoffice.operations.utils.CommonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,6 +28,9 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Value("${external.api.m2p.civilId}")
     private String civilId;
+
+    @Value("${external.api.profile.update}")
+    private String profileUpdate;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -98,6 +99,57 @@ public class ProfileServiceImpl implements ProfileService {
                             responseDTO.setData(data);
                             return responseDTO;
                         }
+                    }
+                }
+            }
+            Map<String, Object> data = new HashMap<>();
+            responseDTO.setStatus("Failure");
+            responseDTO.setMessage("Something went wrong");
+            data.put("uniqueKey", uniqueKey);
+            responseDTO.setData(data);
+            return responseDTO;
+        } catch (Exception e) {
+            Map<String, Object> data = new HashMap<>();
+            responseDTO.setStatus("Failure");
+            responseDTO.setMessage("Something went wrong");
+            data.put("uniqueKey", uniqueKey);
+            responseDTO.setData(data);
+            return responseDTO;
+        }
+    }
+
+    @Override
+    public GenericResponseDTO<Object> updateProfile(String uniqueKey, UpdateProfileRequest updateProfileRequest, String token) {
+        String userEmail = jwtTokenProvider.getUsername(token);
+        Optional<User> user = userRepository.findByEmail(userEmail);
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        try {
+            if (user.isPresent()) {
+                ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+                if (Objects.nonNull(response.getBody())) {
+                    Map<String, Object> data = new HashMap<>();
+                    Profile profile = profileRepository.findByUniqueKeyCivilId(uniqueKey).orElseThrow(() -> new RuntimeException("Profile not found"));
+
+                    // Update profile details
+                    profile.setEmailId(updateProfileRequest.getEmailAddress());
+                    profile.setMobNum(updateProfileRequest.getMobileNumber());
+
+                    // Save updated profile
+                    profileRepository.save(profile);
+
+                    String apiUrl = profileUpdate + profile.getNId();
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                    headers.setBearerAuth(response.getBody().getAccessToken());
+                    HttpEntity<UpdateProfileRequest> entity = new HttpEntity<>(updateProfileRequest, headers);
+
+                    ResponseEntity<Object> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.PUT, entity, Object.class);
+                    if(Objects.nonNull(responseEntity.getBody())){
+                        responseDTO.setStatus("Success");
+                        responseDTO.setMessage("Success");
+                        data.put("uniqueKey", uniqueKey);
+                        responseDTO.setData(data);
+                        return responseDTO;
                     }
                 }
             }
