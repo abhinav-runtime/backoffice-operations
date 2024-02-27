@@ -84,6 +84,7 @@ public class BOCustomerController {
 			response.setMessage("Something went wrong");
 			response.setStatus("Failure");
 			response.setData(e.getMessage());
+			System.err.println(e);
 		}
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -100,7 +101,8 @@ public class BOCustomerController {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			if (accessHelper.isAccessible("CUSTOMERS_INDIVIDUAL", "VIEW")) {
-				return new ResponseEntity<>(customerService.getCustomersBySearchValue(search.get("search")), HttpStatus.OK);
+				return new ResponseEntity<>(customerService.getCustomersBySearchValue(search.get("search")),
+						HttpStatus.OK);
 			} else {
 				response.setMessage("Something went wrong.");
 				response.setStatus("Failure");
@@ -113,4 +115,30 @@ public class BOCustomerController {
 		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
+	@GetMapping("/getDetails/{custId}")
+	public ResponseEntity<Object> getCustomerDetails(@PathVariable(name = "custId") String custId) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		try {
+			if (boUserToken.getRolesFromToken().isEmpty()) {
+				response.setMessage("Something went wrong.");
+				response.setStatus("Failure");
+				response.setData(null);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+			if (accessHelper.isAccessible("CUSTOMERS_INDIVIDUAL", "VIEW")) {
+				return new ResponseEntity<>(customerService.getCustomerDetails(custId), HttpStatus.OK);
+			} else {
+				response.setMessage("Something went wrong.");
+				response.setStatus("Failure");
+				response.setData(null);
+			}
+		} catch (Exception e) {
+			response.setMessage("Something went wrong");
+			response.setStatus("Failure");
+			response.setData(e.getMessage());
+		}
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
 }
