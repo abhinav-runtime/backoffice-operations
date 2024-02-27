@@ -40,6 +40,8 @@ public class AccountDetails {
                     private String ccy;
                     private double currbal;
                     private double acyavlbal;
+                    private String accls;
+                    private String acctype;
 
                 }
             }

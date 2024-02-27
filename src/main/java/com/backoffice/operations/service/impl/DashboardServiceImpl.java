@@ -5,23 +5,20 @@ import com.backoffice.operations.payloads.*;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.*;
 import com.backoffice.operations.service.DashboardService;
+import com.backoffice.operations.utils.CommonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import com.backoffice.operations.utils.CommonUtils;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardServiceImpl implements DashboardService {
@@ -60,62 +57,85 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final CardTransactionsEntityRepository cardTransactionsEntityRepository;
 
-    public DashboardServiceImpl(RestTemplate restTemplate, CivilIdRepository civilIdRepository, DashboardRepository dashboardRepository, DashboardInfoRepository dashboardInfoRepository, AccountTransactionsEntityRepository accountTransactionsEntityRepository, CardTransactionsEntityRepository cardTransactionsEntityRepository) {
+    private final AccountTypeRepository accountTypeRepository;
+
+    public DashboardServiceImpl(RestTemplate restTemplate, CivilIdRepository civilIdRepository, DashboardRepository dashboardRepository, DashboardInfoRepository dashboardInfoRepository, AccountTransactionsEntityRepository accountTransactionsEntityRepository, CardTransactionsEntityRepository cardTransactionsEntityRepository, AccountTypeRepository accountTypeRepository) {
         this.restTemplate = restTemplate;
         this.civilIdRepository = civilIdRepository;
         this.dashboardRepository = dashboardRepository;
         this.dashboardInfoRepository = dashboardInfoRepository;
         this.accountTransactionsEntityRepository = accountTransactionsEntityRepository;
         this.cardTransactionsEntityRepository = cardTransactionsEntityRepository;
+        this.accountTypeRepository = accountTypeRepository;
     }
 
     @Override
     public GenericResponseDTO<Object> getDashboardDetails(String uniqueKey) {
+        return civilIdRepository.findById(uniqueKey)
+                .flatMap(civilIdEntity -> getTokenAndApiResponse(civilIdEntity.getCivilId()))
+                .map(apiResponse -> {
+                    List<AccountsDetailsResponseDTO> accountsDetailsResponseDTOList = apiResponse.getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().stream()
+                            .map(islamicAccount -> {
+                                DashboardEntity dashboardEntity = DashboardEntity.builder()
+                                        .id(uniqueKey)
+                                        .accountNumber(islamicAccount.getAcc())
+                                        .availableBalance(islamicAccount.getAcyavlbal())
+                                        .currency(islamicAccount.getCcy())
+                                        .accountCodeDesc(getAccountDescription(islamicAccount.getAccls()))
+                                        .accountType(islamicAccount.getAcctype())
+                                        .build();
+                                dashboardRepository.save(dashboardEntity);
+                                return AccountsDetailsResponseDTO.builder()
+                                        .accountBalance(Objects.nonNull(dashboardEntity.getAvailableBalance()) ? dashboardEntity.getAvailableBalance() : 0.0)
+                                        .accountNumber(Objects.nonNull(dashboardEntity.getAccountNumber()) ? dashboardEntity.getAccountNumber() : "")
+                                        .accountType(Objects.nonNull(dashboardEntity.getAccountType()) ? dashboardEntity.getAccountType() : "")
+                                        .accountCodeDesc(Objects.nonNull(dashboardEntity.getAccountCodeDesc()) ? dashboardEntity.getAccountCodeDesc(): "")
+                                        .currency(Objects.nonNull(dashboardEntity.getCurrency()) ? dashboardEntity.getCurrency() : "").build();
+                            })
+                            .collect(Collectors.toList());
 
-        Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
-
-        if(civilIdEntity.isPresent()) {
-            ResponseEntity<AccessTokenResponse>  response = commonUtils.getToken();
-            if(Objects.nonNull(response.getBody())) {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setBearerAuth(response.getBody().getAccessToken());
-                HttpEntity<String> entity = new HttpEntity<>(headers);
-
-                String apiUrl = accountExternalAPI + civilIdEntity.get().getCivilId();
-                ResponseEntity<AccountDetails> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity,
-                        AccountDetails.class);
-
-                AccountDetails apiResponse = responseEntity.getBody();
-
-                if (apiResponse != null && apiResponse.isSuccess()) {
-                    List<AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount> islamicAccountList = apiResponse.getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts();
-                    AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount islamicAccount = islamicAccountList.get(0);
-                    DashboardEntity dashboardEntity = DashboardEntity.builder().id(uniqueKey).accountNumber(islamicAccount.getAcc())
-                            .availableBalance(islamicAccount.getAcyavlbal()).currency(islamicAccount.getCcy()).build();
-                    DashboardEntity dashboardEntityObject = dashboardRepository.save(dashboardEntity);
                     GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
                     Map<String, Object> data = new HashMap<>();
-                    AccountsDetailsResponseDTO accountsDetailsResponseDTO = new AccountsDetailsResponseDTO();
-                    accountsDetailsResponseDTO.setAccountNumber(dashboardEntityObject.getAccountNumber());
-                    accountsDetailsResponseDTO.setAccountBalance(dashboardEntityObject.getAvailableBalance());
-                    accountsDetailsResponseDTO.setCurrency(dashboardEntityObject.getCurrency());
-                    data.put("uniqueKey",dashboardEntityObject.getId());
-                    data.put("accountDetails",List.of(accountsDetailsResponseDTO));
+                    data.put("uniqueKey", uniqueKey);
+                    data.put("accountDetails", accountsDetailsResponseDTOList);
                     responseDTO.setStatus("Success");
                     responseDTO.setMessage("Success");
                     responseDTO.setData(data);
                     return responseDTO;
-                }
-            }
+                })
+                .orElseGet(() -> createFailureResponse(uniqueKey));
+    }
+
+    private String getAccountDescription(String accls) {
+        AccountType response = accountTypeRepository.findByCbsProductCode(accls);
+        return Objects.nonNull(response) && Objects.nonNull(response.getDescription()) ? response.getDescription() : "";
+    }
+
+    private Optional<AccountDetails> getTokenAndApiResponse(String civilId) {
+        ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+        if (Objects.nonNull(response.getBody())) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(response.getBody().getAccessToken());
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            String apiUrl = accountExternalAPI + civilId;
+            ResponseEntity<AccountDetails> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, AccountDetails.class);
+            return Optional.ofNullable(responseEntity.getBody());
         }
+        return Optional.empty();
+    }
+
+    private GenericResponseDTO<Object> createFailureResponse(String uniqueKey) {
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         Map<String, Object> data = new HashMap<>();
         responseDTO.setStatus("Failure");
         responseDTO.setMessage("No Entry Found");
-        data.put("uniqueKey",uniqueKey);
+        data.put("uniqueKey", uniqueKey);
         responseDTO.setData(data);
-        return  responseDTO;
+        return responseDTO;
     }
+
+
 
     @Override
     public GenericResponseDTO<Object> getDashboardInfo(String uniqueKey) {
