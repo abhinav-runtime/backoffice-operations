@@ -11,5 +11,5 @@ public class UpdateProfileRequest {
 
     private String mobileNumber;
     private String emailAddress;
-
+    private Boolean emailStatementFlag;
 }

@@ -26,5 +26,6 @@ public class Profile {
     private String fullName;
     private String mobNum;
     private int mobisdno;
+    private boolean emailStatementFlag;
 
 }

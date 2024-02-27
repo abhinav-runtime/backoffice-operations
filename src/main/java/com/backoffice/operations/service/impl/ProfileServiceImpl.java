@@ -133,7 +133,7 @@ public class ProfileServiceImpl implements ProfileService {
                     // Update profile details
                     profile.setEmailId(updateProfileRequest.getEmailAddress());
                     profile.setMobNum(updateProfileRequest.getMobileNumber());
-
+                    profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
                     // Save updated profile
                     profileRepository.save(profile);
 
