@@ -9,4 +9,5 @@ public interface BOAuthService {
 	GenericResponseDTO<Object> login(LoginDto loginDto);
 	GenericResponseDTO<Object> register(BORegisterDTO boRegisterDTO);
 	GenericResponseDTO<Object> suspendUser(BOSuspendUserDTO userDto);
+	GenericResponseDTO<Object> logout();
 }
