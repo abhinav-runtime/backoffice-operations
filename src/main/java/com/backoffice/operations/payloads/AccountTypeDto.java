@@ -1,6 +1,5 @@
 package com.backoffice.operations.payloads;
 
-import com.backoffice.operations.entity.AccountType;
 import lombok.*;
 
 @Getter
