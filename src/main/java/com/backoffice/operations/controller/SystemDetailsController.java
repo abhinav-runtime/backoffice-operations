@@ -94,15 +94,17 @@ public class SystemDetailsController {
         try {
             SystemDetail existingSystemDetail = systemDetailRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("System detail not found with id: " + id));
-            existingSystemDetail.setStatus(updatedSystemDetailDTO.getStatus());
-            SystemDetail updatedSystemDetail = systemDetailRepository.save(existingSystemDetail);
-            if (Objects.nonNull(updatedSystemDetail)) {
-                Map<String, Object> data = new HashMap<>();
-                responseDTO.setStatus("Success");
-                responseDTO.setMessage("Success");
-                data.put("uniqueKey", updatedSystemDetail.getUniqueKey());
-                responseDTO.setData(data);
-                return responseDTO;
+            if(StringUtils.hasLength(existingSystemDetail.getStatus()) && existingSystemDetail.getStatus().equalsIgnoreCase("Active")){
+                existingSystemDetail.setStatus(updatedSystemDetailDTO.getStatus());
+                SystemDetail updatedSystemDetail = systemDetailRepository.save(existingSystemDetail);
+                if (Objects.nonNull(updatedSystemDetail)) {
+                    Map<String, Object> data = new HashMap<>();
+                    responseDTO.setStatus("Success");
+                    responseDTO.setMessage("Success");
+                    data.put("uniqueKey", updatedSystemDetail.getUniqueKey());
+                    responseDTO.setData(data);
+                    return responseDTO;
+                }
             }
             Map<String, Object> data = new HashMap<>();
             responseDTO.setStatus("Failure");
