@@ -5,7 +5,6 @@ import com.backoffice.operations.exceptions.ResourceNotFoundException;
 import com.backoffice.operations.payloads.AccountTypeDto;
 import com.backoffice.operations.repository.AccountTypeRepository;
 import com.backoffice.operations.service.AccountTypeService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
