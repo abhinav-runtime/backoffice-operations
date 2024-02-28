@@ -1,6 +1,8 @@
 package com.backoffice.operations.entity;
 
 import java.util.Date;
+
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.Column;
@@ -30,6 +32,7 @@ public class SystemDetail {
     private String name;
     private String type;
     private String model;
+	@NotNull
     private String status;
     private String osVersion;
     private String appVersion;
@@ -37,6 +40,7 @@ public class SystemDetail {
     private String location;
     private String ipAddress;
    	private String uniqueKey;
+	private String civilId;
 
 	public String getUniqueKey() {
 		return uniqueKey;
