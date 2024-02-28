@@ -17,4 +17,6 @@ public class DashboardEntity {
     private String accountNumber;
     private String currency;
     private Double availableBalance;
+    private String accountType;
+    private String accountCodeDesc;
 }
