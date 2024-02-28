@@ -19,11 +19,9 @@ public class AccountTypeServiceImpl implements AccountTypeService {
 
 
     private final AccountTypeRepository accountTypeRepository;
-    private final ObjectMapper objectMapper;
 
-    public AccountTypeServiceImpl(AccountTypeRepository accountTypeRepository, ObjectMapper objectMapper) {
+    public AccountTypeServiceImpl(AccountTypeRepository accountTypeRepository) {
         this.accountTypeRepository = accountTypeRepository;
-        this.objectMapper = objectMapper;
     }
 
     @Override
