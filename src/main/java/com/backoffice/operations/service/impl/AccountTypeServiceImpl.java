@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,8 +55,8 @@ public class AccountTypeServiceImpl implements AccountTypeService {
 
 
     @Override
-    public AccountTypeDto getAccountTypeById(String id) {
-        return accountTypeRepository.findById(id)
+    public AccountTypeDto getAccountTypeById(String productCode) {
+        return Optional.of(accountTypeRepository.findByCbsProductCode(productCode))
                 .map(AccountTypeServiceImpl::getAccountTypeDto)
                 .orElse(null);
     }
