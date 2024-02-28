@@ -13,6 +13,7 @@ public class SystemDetailDTO {
 	private String name;
 	private String type;
 	private String model;
+	@NotBlank(message = "Status cannot be blank")
 	private String status;
 	private String osVersion;
 	private String appVersion;

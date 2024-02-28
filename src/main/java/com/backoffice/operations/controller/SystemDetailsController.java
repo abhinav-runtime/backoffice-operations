@@ -5,6 +5,7 @@ import com.backoffice.operations.repository.CivilIdRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,7 +36,8 @@ public class SystemDetailsController {
     }
 
     @GetMapping("/all/{civilId}")
-    public List<SystemDetailDTO> getAllSystemDetailsByCivilId(@PathVariable String civilId) {
+    public List<SystemDetailDTO> getAllSystemDetailsByCivilId(@PathVariable String civilId,
+                                                              @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         List<SystemDetail> systemDetails = systemDetailRepository.findAllByCivilId(civilId);
         return systemDetails.stream().filter(systemDetail -> StringUtils.hasLength(systemDetail.getStatus()) &&
                         systemDetail.getStatus().equalsIgnoreCase("Active"))
@@ -43,14 +45,16 @@ public class SystemDetailsController {
     }
 
     @GetMapping("/{civilId}")
-    public SystemDetailDTO getSystemDetailById(@PathVariable String id) {
+    public SystemDetailDTO getSystemDetailById(@PathVariable String id,
+                                               @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         SystemDetail systemDetail = systemDetailRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("System detail not found with id: " + id));
         return mapToDTO(systemDetail);
     }
 
     @PostMapping
-    public GenericResponseDTO<Object> createSystemDetail(@RequestBody SystemDetailDTO systemDetailDTO) {
+    public GenericResponseDTO<Object> createSystemDetail(@RequestBody SystemDetailDTO systemDetailDTO,
+                                                         @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         try {
             Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(systemDetailDTO.getUniqueKey());
@@ -84,7 +88,8 @@ public class SystemDetailsController {
 
     @PutMapping("/{id}")
     public GenericResponseDTO<Object> updateSystemDetail(@PathVariable String id,
-                                                         @RequestBody SystemDetailDTO updatedSystemDetailDTO) {
+                                                         @RequestBody SystemDetailDTO updatedSystemDetailDTO,
+                                                         @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         try {
             SystemDetail existingSystemDetail = systemDetailRepository.findById(id)
