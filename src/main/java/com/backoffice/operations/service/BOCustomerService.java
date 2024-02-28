@@ -14,4 +14,5 @@ public interface BOCustomerService {
 	public GenericResponseDTO<CustomerResponseDTO> editCustomer(String custId, CustomerRequestDTO customerRequestDTO);
 	public void addOnboardCustomer(String uniqueToken);
 	public GenericResponseDTO<Object> getCustomersBySearchValue(String searchValue);
+	public GenericResponseDTO<Object> getCustomerDetails(String custId);
 }

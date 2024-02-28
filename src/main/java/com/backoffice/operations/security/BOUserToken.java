@@ -99,6 +99,12 @@ public class BOUserToken {
 			return false;
 		}
 		Date tokenExpiry = loginLog.getTokanExpireTime();
-		return tokenExpiry != null && tokenExpiry.after(new Date());
+		return tokenExpiry != null && tokenExpiry.after(new Date()); // Return true if token is not expired
+	}
+	
+	public String getUserToken() {
+		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+		HttpServletRequest request = attributes.getRequest();
+		return request.getHeader("userToken");
 	}
 }

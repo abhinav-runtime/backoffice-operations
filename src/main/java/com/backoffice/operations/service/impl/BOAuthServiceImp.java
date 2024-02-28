@@ -1,5 +1,6 @@
 package com.backoffice.operations.service.impl;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -10,12 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.backoffice.operations.entity.BOLoginLog;
 import com.backoffice.operations.entity.BORole;
 import com.backoffice.operations.entity.BOUser;
 import com.backoffice.operations.payloads.BORegisterDTO;
 import com.backoffice.operations.payloads.BOSuspendUserDTO;
 import com.backoffice.operations.payloads.LoginDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.repository.BOLoginLogRepo;
 import com.backoffice.operations.repository.BORolesRepo;
 import com.backoffice.operations.repository.BOUsersRepo;
 import com.backoffice.operations.security.BOUserToken;
@@ -36,6 +39,8 @@ public class BOAuthServiceImp implements BOAuthService {
 	private final BORolesRepo boRolesRepo;
 	@Autowired
 	private final BOUserToken boUserToken;
+	@Autowired
+	private final BOLoginLogRepo boLoginLogRepo;
 
 	@Override
 	public GenericResponseDTO<Object> login(LoginDto loginDto) {
@@ -113,6 +118,7 @@ public class BOAuthServiceImp implements BOAuthService {
 
 		try {
 			boUsersRepo.save(user);
+			user.setPassword(null);
 			genericResult.setData(user);
 			genericResult.setMessage("User registered successfully!.");
 		} catch (Exception ex) {
@@ -149,6 +155,33 @@ public class BOAuthServiceImp implements BOAuthService {
 			response.setMessage("User not found");
 			response.setStatus("Failure");
 			response.setData(responseData);
+		}
+		return response;
+	}
+
+	@Override
+	public GenericResponseDTO<Object> logout() {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		Date nowDate = new Date(System.currentTimeMillis());
+		if (boUserToken.isTokenExpire(boUserToken.getUserToken())) {
+			try {
+				BOLoginLog loginLog = boLoginLogRepo.findByUserToken(boUserToken.getUserToken());
+				loginLog.setLogoutTime(nowDate);
+				loginLog.setTokanExpireTime(nowDate);
+				boLoginLogRepo.save(loginLog);
+				
+				response.setMessage("Logout Successfully");
+				response.setStatus("Success");
+				response.setData(new HashMap<>());
+			} catch (Exception e) {
+				response.setMessage("Something went wrong");
+				response.setStatus("Failure");
+				response.setData(new HashMap<>());
+			}			
+		}else {
+			response.setMessage("Something went wrong.");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
 		}
 		return response;
 	}

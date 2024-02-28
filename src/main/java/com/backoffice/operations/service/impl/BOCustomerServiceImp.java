@@ -16,9 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.backoffice.operations.entity.AccessToken;
 import com.backoffice.operations.entity.Customer;
 import com.backoffice.operations.payloads.AccessTokenResponse;
+import com.backoffice.operations.payloads.BOCustomerDetailsResponseDTO;
 import com.backoffice.operations.payloads.CustomerRequestDTO;
 import com.backoffice.operations.payloads.CustomerResponseDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
@@ -162,7 +162,7 @@ public class BOCustomerServiceImp implements BOCustomerService {
 		List<Customer> searchResult = new ArrayList<>();
 		if (searchValue == "") {
 			response.setStatus("Failure");
-			response.setMessage("Search value is empty");
+			response.setMessage("Something went wrong");
 			response.setData(null);
 		} else {
 			List<Customer> customersBySearchValue = customerRepository.findAll();
@@ -175,12 +175,12 @@ public class BOCustomerServiceImp implements BOCustomerService {
 					searchResult.add(customer);
 				}
 			}
-			
+
 			while (searchResult.size() == 0 && accuracyThreshold <= 5) {
 				searchResult = findCustomers(searchValue, accuracyThreshold, customersBySearchValue);
-				accuracyThreshold ++;
+				accuracyThreshold++;
 			}
-			
+
 			if (searchResult.size() != 0) {
 				response.setStatus("Success");
 				response.setMessage("Search result");
@@ -211,5 +211,73 @@ public class BOCustomerServiceImp implements BOCustomerService {
 		LevenshteinDistance distance = LevenshteinDistance.getDefaultInstance();
 		int dist = distance.apply(s1, s2);
 		return dist <= threshold;
+	}
+
+	@Override
+	public GenericResponseDTO<Object> getCustomerDetails(String custId) {
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		BOCustomerDetailsResponseDTO customerResponseDTO = new BOCustomerDetailsResponseDTO();
+		String accessToken = null;
+		try {
+			
+//			ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+//			logger.info("response: {}", response.getBody());
+//
+//			accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
+//			logger.info("accessToken: {}", accessToken);
+
+			String apiUrl = externalApiUrl + custId;
+			HttpHeaders headers = new HttpHeaders();
+			headers.setBearerAuth(accessToken);
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+//			ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
+//					String.class);
+			ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
+					String.class);
+
+			String jsonResponse = responseEntity.getBody();
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode jsonNode = mapper.readTree(jsonResponse);
+			customerResponseDTO.setCusId(custId);
+			customerResponseDTO.setStatus("Active");
+			customerResponseDTO.setUname("");
+			customerResponseDTO.setName(jsonNode.at("/response/result/customerFull/fullname").asText());
+			customerResponseDTO.setDob(jsonNode.at("/response/additional_information/birth_date").asText());
+			customerResponseDTO.setNationalId(jsonNode.at("/response/additional_information/id_number").asText());
+			customerResponseDTO.setNationalType(jsonNode.at("/response/additional_information/id_type").asText());
+			customerResponseDTO.setNationalExpiry(jsonNode.at("/response/additional_information/id_expiry_date").asText());
+			customerResponseDTO.setNationality(jsonNode.at("/response/additional_information/nationality").asText());
+			customerResponseDTO.setMotherName(jsonNode.at("/response/result/customerFull/custpersonal/mothermaidnname").asText());
+			customerResponseDTO.setGender(jsonNode.at("/response/additional_information/gender").asText());
+			customerResponseDTO.setMaritalStatus(jsonNode.at("/response/result/customerFull/custdomestic/maritalstat").asText());
+			customerResponseDTO.setProfession("");
+			customerResponseDTO.setDateRegister(customerRepository.findByCustId(custId).getDateRegistered().toString());
+			customerResponseDTO.setBranch(jsonNode.at("/response/additional_information/home_branch").asText());
+			customerResponseDTO.setRoles("");
+			customerResponseDTO.setSegment(jsonNode.at("/response/result/customerFull/custsegment"));
+			customerResponseDTO.setStaff(jsonNode.at("/response/additional_information/is_staff").asText());
+			customerResponseDTO.setEstatment("");
+			customerResponseDTO.setAccesptedvalueDisclamer("");
+			customerResponseDTO.setRegistrantionStatus("");
+			
+			customerResponseDTO.setPhone(jsonNode.at("/response/result/customerFull/custpersonal/telephno").asText());
+			customerResponseDTO.setMobile(jsonNode.at("/response/additional_information/mobile_number").asText());
+			customerResponseDTO.setFax(jsonNode.at("/response/result/customerFull/custpersonal/faxnumber").asText());
+			customerResponseDTO.setEmail(jsonNode.at("/response/result/customerFull/custpersonal/emailid").asText());
+			customerResponseDTO.setAddress1(jsonNode.at("/response/result/customerFull/custpersonal/add1PC").asText());
+			customerResponseDTO.setAddress2(jsonNode.at("/response/result/customerFull/custpersonal/add2PC").asText());
+			customerResponseDTO.setAddress3(jsonNode.at("/response/result/customerFull/custpersonal/add3PC").asText());
+			customerResponseDTO.setCountry(jsonNode.at("/response/result/customerFull/country").asText());
+			
+			responseDTO.setStatus("Success");
+			responseDTO.setMessage("Customer details");
+			responseDTO.setData(customerResponseDTO);
+
+		} catch (Exception e) {
+			System.err.println(e);
+			logger.error("Error: {}", e.getMessage());
+		}
+		return responseDTO;
 	}
 }

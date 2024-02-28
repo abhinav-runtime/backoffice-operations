@@ -76,4 +76,9 @@ public class BOAuthController {
 		response.setData(null);
 		return response;
 	}
+	
+	@PostMapping(value = { "/logout" })
+	public GenericResponseDTO<Object> logout() {
+		return boAuthService.logout();
+	}
 }
