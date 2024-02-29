@@ -5,12 +5,12 @@ import com.backoffice.operations.exceptions.ResourceNotFoundException;
 import com.backoffice.operations.payloads.AccountTypeDto;
 import com.backoffice.operations.repository.AccountTypeRepository;
 import com.backoffice.operations.service.AccountTypeService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,11 +18,9 @@ public class AccountTypeServiceImpl implements AccountTypeService {
 
 
     private final AccountTypeRepository accountTypeRepository;
-    private final ObjectMapper objectMapper;
 
-    public AccountTypeServiceImpl(AccountTypeRepository accountTypeRepository, ObjectMapper objectMapper) {
+    public AccountTypeServiceImpl(AccountTypeRepository accountTypeRepository) {
         this.accountTypeRepository = accountTypeRepository;
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -54,8 +52,8 @@ public class AccountTypeServiceImpl implements AccountTypeService {
 
 
     @Override
-    public AccountTypeDto getAccountTypeById(String id) {
-        return accountTypeRepository.findById(id)
+    public AccountTypeDto getAccountTypeById(String productCode) {
+        return Optional.of(accountTypeRepository.findByCbsProductCode(productCode))
                 .map(AccountTypeServiceImpl::getAccountTypeDto)
                 .orElse(null);
     }

@@ -11,7 +11,7 @@ public interface AccountTypeService {
 
     List<AccountTypeDto> getAllAccountTypes();
 
-    AccountTypeDto getAccountTypeById(String id);
+    AccountTypeDto getAccountTypeById(String productCode);
 
     AccountTypeDto updateAccountType(String id, AccountTypeDto accountType);
 

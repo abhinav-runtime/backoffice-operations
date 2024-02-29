@@ -26,9 +26,9 @@ public class AccountTypeController {
         return accountTypeService.getAllAccountTypes();
     }
 
-    @GetMapping("/{id}")
-    public AccountTypeDto getAccountTypeById(@PathVariable String id) {
-        return accountTypeService.getAccountTypeById(id);
+    @GetMapping("/{productCode}")
+    public AccountTypeDto getAccountTypeById(@PathVariable String productCode) {
+        return accountTypeService.getAccountTypeById(productCode);
     }
 
     @PutMapping("/{id}")
