@@ -10,17 +10,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.http.*;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class TransferServiceImpl implements TransferService {
@@ -43,11 +35,6 @@ public class TransferServiceImpl implements TransferService {
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(response.getBody().getAccessToken());
-            TransferRequestDto.Header header = new TransferRequestDto.Header();
-            header.setSource_system("mpp-digital-app");
-            header.setSource_user("Aditya");
-            header.setSource_operation("Fund Transfer");
-            transferRequest.setHeader(header);
             ObjectMapper objectMapper = JsonMapper.builder()
                     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
                     .build();
