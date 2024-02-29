@@ -105,14 +105,13 @@ public class SystemDetailsController {
 
     }
 
-    @PutMapping("/{id}")
-    public GenericResponseDTO<Object> updateSystemDetail(@PathVariable String id,
-                                                         @RequestBody SystemDetailDTO updatedSystemDetailDTO,
+    @PostMapping("/update")
+    public GenericResponseDTO<Object> updateSystemDetail(@RequestBody SystemDetailDTO updatedSystemDetailDTO,
                                                          @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         try {
-            SystemDetail existingSystemDetail = systemDetailRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("System detail not found with id: " + id));
+            SystemDetail existingSystemDetail = systemDetailRepository.findById(updatedSystemDetailDTO.getId())
+                    .orElseThrow(() -> new RuntimeException("System detail not found with id: " + updatedSystemDetailDTO.getId()));
             if(StringUtils.hasLength(existingSystemDetail.getStatus()) && existingSystemDetail.getStatus().equalsIgnoreCase("Active")){
                 existingSystemDetail.setStatus(updatedSystemDetailDTO.getStatus());
                 SystemDetail updatedSystemDetail = systemDetailRepository.save(existingSystemDetail);
