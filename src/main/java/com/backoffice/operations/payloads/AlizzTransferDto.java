@@ -45,6 +45,14 @@ public class AlizzTransferDto {
         private String transactionCurrency;
         @JsonProperty("transaction_reference")
         private String transaction_reference;
+        @JsonProperty("charge_type")
+        private String charge_type;
+        @JsonProperty("cbs_product")
+        private String cbs_product;
+        @JsonProperty("cbs_module")
+        private String cbs_module;
+        @JsonProperty("cbs_network")
+        private String cbs_network;
     }
 
     @Getter
