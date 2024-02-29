@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 public class SystemDetailDTO {
 
+	private String id;
 	@NotBlank(message = "Device Id cannot be blank")
 	private String deviceId;
 	private String name;

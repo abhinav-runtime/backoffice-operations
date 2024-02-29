@@ -131,6 +131,7 @@ public class SystemDetailsController {
     // Helper method to map entity to DTO
     private SystemDetailDTO mapToDTO(SystemDetail entity) {
         SystemDetailDTO dto = new SystemDetailDTO();
+        dto.setId(entity.getId());
         dto.setDeviceId(entity.getDeviceId());
         dto.setName(entity.getName());
         dto.setType(entity.getType());
