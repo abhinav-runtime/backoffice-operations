@@ -37,12 +37,11 @@ public class BoProductRequest {
 	private String mobileNumber;
 	@Column(name = "email", nullable = false)
 	private String email;
-
 	@CreationTimestamp
 	@Column(name = "request_date", nullable = false)
 	private Date requestDate;
-	
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "product_sub_categories_id", referencedColumnName = "id")
-	private BoProductSubCategories subCategories;
+	@Column(name = "sub_categories", nullable = false)
+	private String subCategories;
+	@Column(name = "categories", nullable = false)
+	private String categories;
 }

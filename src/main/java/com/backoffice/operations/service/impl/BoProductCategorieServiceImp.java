@@ -1,10 +1,11 @@
 package com.backoffice.operations.service.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -62,8 +63,8 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 
 			BoProductSubCategories subCategories = new BoProductSubCategories();
 			subCategories.setSubCategoriesName(requestDTO.getSubCategoriesName());
-			subCategories.setCategories(category); // Set the category object
-
+			subCategories.setCategories(category);
+			subCategories.setExpireDate(requestDTO.getExpireDate());
 			subCategories = boSubCategoriesRepo.save(subCategories);
 
 			response.setStatus("Success");
@@ -81,8 +82,36 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 	public GenericResponseDTO<Object> getProductSubCategories(String categoriesName) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		BoProductCategories categories = boCategoriesRepo.findByCategoriesName(categoriesName);
-		List<BoProductSubCategories> responseSubCategories = boSubCategoriesRepo.findByCategories(categories);
 
+		List<String> responseSubCategories = new ArrayList<>();
+		boSubCategoriesRepo.findByCategories(categories).forEach(item -> {
+			if (item.getExpireDate() == null) {
+				responseSubCategories.add(item.getSubCategoriesName());
+			} else {
+				Date expireDate = item.getExpireDate();
+				if (expireDate.after(new Date())) {
+					responseSubCategories.add(item.getSubCategoriesName());
+				}
+			}
+		});
+		if (categories != null) {
+			response.setStatus("Success");
+			response.setMessage("Sub Categories Fetched Successfully");
+			response.setData(responseSubCategories);
+		} else {
+			response.setStatus("Failed");
+			response.setMessage("Something went wrong.");
+			response.setData(new HashMap<>());
+		}
+		return response;
+	}
+
+	@Override
+	public GenericResponseDTO<Object> getProductSubCategoriesForBO(String categoriesName) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		BoProductCategories categories = boCategoriesRepo.findByCategoriesName(categoriesName);
+
+		List<BoProductSubCategories> responseSubCategories = boSubCategoriesRepo.findByCategories(categories);
 		if (categories != null) {
 			response.setStatus("Success");
 			response.setMessage("Sub Categories Fetched Successfully");
@@ -105,7 +134,8 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			requestProduct.setName(request.getName());
 			requestProduct.setMobileNumber(request.getMobileNumber());
 			requestProduct.setEmail(request.getEmail());
-			requestProduct.setSubCategories(subCategories);
+			requestProduct.setSubCategories(subCategories.getSubCategoriesName());
+			requestProduct.setCategories(subCategories.getCategories().getCategoriesName());
 			requestProduct = boProductRequestRepo.save(requestProduct);
 
 			response.setStatus("Success");
@@ -123,18 +153,18 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 	public GenericResponseDTO<Object> getRequestDetails() {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		List<ProductResponseDTO> responseData = new ArrayList<>();
-		
+
 		boProductRequestRepo.findAll().forEach(item -> {
 			ProductResponseDTO responseDTO = new ProductResponseDTO();
 			responseDTO.setName(item.getName());
 			responseDTO.setMobileNumber(item.getMobileNumber());
 			responseDTO.setEmail(item.getEmail());
 			responseDTO.setRequestDate(item.getRequestDate().toString());
-			responseDTO.setCategories(item.getSubCategories().getCategories().getCategoriesName());
-			responseDTO.setSubCategories(item.getSubCategories().getSubCategoriesName());
+			responseDTO.setCategories(item.getSubCategories());
+			responseDTO.setSubCategories(item.getSubCategories());
 			responseData.add(responseDTO);
 		});
-		
+
 		if (responseData.size() == 0) {
 			response.setStatus("Failed");
 			response.setMessage("Something went wrong.");
@@ -146,33 +176,52 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 		}
 		return response;
 	}
-	
+
 	@Override
-	public GenericResponseDTO<Object> deleteCatagories(String categoriesName){
+	public GenericResponseDTO<Object> deleteCatagories(String categoriesName) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
-        try {
-        	BoProductCategories categories = boCategoriesRepo.findByCategoriesName(categoriesName);
-        	boSubCategoriesRepo.findByCategories(categories).forEach(item -> {
-        		boSubCategoriesRepo.delete(item);
-        	});
-            boCategoriesRepo.delete(categories);
-            response.setStatus("Success");
-            response.setMessage("Request Successfully Processed");
-            response.setData(new HashMap<>());
-        } catch (Exception e) {
-            response.setStatus("Failed");
-            response.setMessage("Something went wrong.");
-            response.setData(new HashMap<>());
-        }
-        return response;
-    }
-	
+		try {
+			BoProductCategories categories = boCategoriesRepo.findByCategoriesName(categoriesName);
+			boSubCategoriesRepo.findByCategories(categories).forEach(item -> {
+				boSubCategoriesRepo.delete(item);
+			});
+			boCategoriesRepo.delete(categories);
+			response.setStatus("Success");
+			response.setMessage("Request Successfully Processed");
+			response.setData(new HashMap<>());
+		} catch (Exception e) {
+			response.setStatus("Failed");
+			response.setMessage("Something went wrong.");
+			response.setData(new HashMap<>());
+		}
+		return response;
+	}
+
 	@Override
-	public GenericResponseDTO<Object> deleteSubCatagories(String subCategoriesName){
+	public GenericResponseDTO<Object> deleteSubCatagories(String subCategoriesName) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 			BoProductSubCategories subCategories = boSubCategoriesRepo.findBySubCategoriesName(subCategoriesName);
 			boSubCategoriesRepo.delete(subCategories);
+			response.setStatus("Success");
+			response.setMessage("Request Successfully Processed");
+			response.setData(new HashMap<>());
+		} catch (Exception e) {
+			response.setStatus("Failed");
+			response.setMessage("Something went wrong.");
+			response.setData(new HashMap<>());
+		}
+		return response;
+	}
+
+	@Override
+	public GenericResponseDTO<Object> dateExpiryUpdate(BoProductCategoriesRequestDTO requestDTO) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		try {
+			BoProductSubCategories subCategories = boSubCategoriesRepo
+					.findBySubCategoriesName(requestDTO.getSubCategoriesName());
+			subCategories.setExpireDate(requestDTO.getExpireDate());
+			boSubCategoriesRepo.save(subCategories);
 			response.setStatus("Success");
 			response.setMessage("Request Successfully Processed");
 			response.setData(new HashMap<>());

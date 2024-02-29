@@ -1,8 +1,10 @@
 package com.backoffice.operations.entity;
 
+import java.util.Date;
+
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,7 +35,11 @@ public class BoProductSubCategories {
 	
 	@Column(nullable = false, unique = true)
 	private String subCategoriesName;
-	
+	@CreationTimestamp
+	@Column(nullable = false)
+	private Date issueDate;
+	@Column(nullable = true)
+	private Date expireDate;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "product_categories_id", referencedColumnName = "id")
 	private BoProductCategories categories;
