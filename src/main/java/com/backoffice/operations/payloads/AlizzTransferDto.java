@@ -33,9 +33,18 @@ public class AlizzTransferDto {
 
         @JsonProperty("payment_details_1")
         private String paymentDetails1;
-
         @JsonProperty("payment_details_2")
         private String paymentDetails2;
+        @JsonProperty("transaction_date")
+        private String transactionDate;
+        @JsonProperty("transaction_amount")
+        private String transactionAmount;
+        @JsonProperty("transaction_purpose")
+        private String transactionPurpose;
+        @JsonProperty("transaction_currency")
+        private String transactionCurrency;
+        @JsonProperty("transaction_reference")
+        private String transaction_reference;
     }
 
     @Getter
