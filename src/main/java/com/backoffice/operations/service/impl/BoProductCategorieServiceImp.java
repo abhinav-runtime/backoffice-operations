@@ -160,7 +160,7 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			responseDTO.setMobileNumber(item.getMobileNumber());
 			responseDTO.setEmail(item.getEmail());
 			responseDTO.setRequestDate(item.getRequestDate().toString());
-			responseDTO.setCategories(item.getSubCategories());
+			responseDTO.setCategories(item.getCategories());
 			responseDTO.setSubCategories(item.getSubCategories());
 			responseData.add(responseDTO);
 		});
