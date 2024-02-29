@@ -4,13 +4,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
-import com.backoffice.operations.entity.UserLoginDetails;
+import com.backoffice.operations.entity.LoginHistory;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.payloads.LogoutDto;
-import com.backoffice.operations.payloads.ValidationResultDTO;
-import com.backoffice.operations.repository.UserLoginDetailsRepository;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.repository.LoginHistoryRepository;
 import com.backoffice.operations.repository.UserRepository;
 import com.backoffice.operations.security.JwtTokenProvider;
 
@@ -24,31 +27,34 @@ public class LogoutService {
 	private UserRepository userRepository;
 	
 	@Autowired
-	private UserLoginDetailsRepository logRepository;
+	private LoginHistoryRepository loginHistoryRepository;
 	
-	public ValidationResultDTO logout(LogoutDto logoutDto, String token) {
+	public GenericResponseDTO<Object> logout(LogoutDto logoutDto, String token) {
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
+		List<LoginHistory> obj = loginHistoryRepository.findByUniqueKey(logoutDto.getUniqueKey());
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		
-		if (user.isPresent()) {
+		if (user.isPresent() && obj != null) {
 			
-			UserLoginDetails userLoginDetails = logRepository.findById(logoutDto.getId()).orElseThrow(() -> new RuntimeException("Session not found"));
-			userLoginDetails.setLogoutTime(LocalDateTime.now());
-			logRepository.save(userLoginDetails);
+			LoginHistory loginHistory = loginHistoryRepository.findFirstByOrderByLoginTimestampDesc();
+
+			loginHistory.setLogoutTimestamp(LocalDateTime.now());
+			loginHistoryRepository.save(loginHistory);
 			
-			validationResultDTO.setStatus("Success");
-			validationResultDTO.setMessage("Success");
-			data.setUniqueKey(null);
-			validationResultDTO.setData(data);
-			return validationResultDTO;
+			Map<String, String> data = new HashMap<>();
+			responseDTO.setStatus("Success");
+			responseDTO.setMessage("Success");
+			data.put("uniqueKey",null);
+			responseDTO.setData(data);
+			return responseDTO;
 		}
 		
-		validationResultDTO.setStatus("Failure");
-		validationResultDTO.setMessage("Something went wrong");
-		data.setUniqueKey(null);
-		validationResultDTO.setData(data);
-		return validationResultDTO;
+		Map<String, String> data = new HashMap<>();
+		responseDTO.setStatus("Failure");
+		responseDTO.setMessage("Something went wrong");
+		data.put("uniqueKey",null);
+		responseDTO.setData(data);
+		return responseDTO;
 	}	
 }

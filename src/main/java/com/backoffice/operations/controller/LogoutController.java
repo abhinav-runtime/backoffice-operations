@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backoffice.operations.payloads.LogoutDto;
-import com.backoffice.operations.payloads.ValidationResultDTO;
+
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.LogoutService;
 
 
@@ -22,9 +23,9 @@ public class LogoutController {
 	private LogoutService logoutService;
 	
 	@PostMapping("/logout")
-	public ResponseEntity<ValidationResultDTO> logoutDevice(@RequestBody LogoutDto logoutDto,
+	public ResponseEntity<GenericResponseDTO<Object>> logoutDevice(@RequestBody LogoutDto logoutDto,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		ValidationResultDTO validationResultDTO = logoutService.logout(logoutDto, token.substring("Bearer ".length()));
+		GenericResponseDTO<Object> validationResultDTO = logoutService.logout(logoutDto, token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
 }

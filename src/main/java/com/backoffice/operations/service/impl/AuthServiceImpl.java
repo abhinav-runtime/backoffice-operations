@@ -2,7 +2,6 @@ package com.backoffice.operations.service.impl;
 
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -10,18 +9,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.backoffice.operations.entity.UserLoginDetails;
 import com.backoffice.operations.entity.Role;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.payloads.LoginDto;
 import com.backoffice.operations.payloads.RegisterDto;
-import com.backoffice.operations.repository.UserLoginDetailsRepository;
 import com.backoffice.operations.repository.RoleRepository;
 import com.backoffice.operations.repository.UserRepository;
 import com.backoffice.operations.security.JwtTokenProvider;
 import com.backoffice.operations.service.AuthService;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,9 +29,6 @@ public class AuthServiceImpl implements AuthService {
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
     private JwtTokenProvider jwtTokenProvider;
-    
-    @Autowired
-    private UserLoginDetailsRepository logRepository;
 
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
@@ -58,11 +51,6 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String token = jwtTokenProvider.generateToken(authentication);
-        UserLoginDetails logEntity = new UserLoginDetails();
-        logEntity.setUsernameOrEmail(loginDto.getUsernameOrEmail());
-        logEntity.setAccess(token);
-        logEntity.setLoginTime(LocalDateTime.now());
-        logRepository.save(logEntity);
         return token;
     }
 

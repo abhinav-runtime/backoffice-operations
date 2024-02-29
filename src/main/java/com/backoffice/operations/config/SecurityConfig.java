@@ -68,7 +68,8 @@ public class SecurityConfig {
                         //authorize.anyRequest().authenticated()
                         authorize.requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                         		.requestMatchers("/actuator/**").permitAll()
-                                .requestMatchers("/api/v1/auth/**").permitAll()
+                        		.requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers("/bo/v1/**").permitAll()
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()
                                 .anyRequest().authenticated()
@@ -93,20 +94,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-    
-//    @Bean
-//    public UserDetailsService userDetailsService(){
-//        UserDetails ramesh = User.builder()
-//                .username("ramesh")
-//                .password(passwordEncoder().encode("ramesh"))
-//                .roles("USER")
-//                .build();
-//
-//        UserDetails admin = User.builder()
-//                .username("admin")
-//                .password(passwordEncoder().encode("admin"))
-//                .roles("ADMIN")
-//                .build();
-//        return new InMemoryUserDetailsManager(ramesh, admin);
-//    }
+
 }

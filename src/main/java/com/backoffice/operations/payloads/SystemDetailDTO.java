@@ -1,14 +1,20 @@
 package com.backoffice.operations.payloads;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class SystemDetailDTO {
 
+	private String id;
 	@NotBlank(message = "Device Id cannot be blank")
 	private String deviceId;
 	private String name;
 	private String type;
 	private String model;
+	@NotBlank(message = "Status cannot be blank")
 	private String status;
 	private String osVersion;
 	private String appVersion;
@@ -19,6 +25,8 @@ public class SystemDetailDTO {
 	@NotBlank(message = "Unique Key cannot be blank")
 	private String uniqueKey;
 	private String lang;
+
+	private String civilId;
 
 	public String getLang() {
 		return lang;

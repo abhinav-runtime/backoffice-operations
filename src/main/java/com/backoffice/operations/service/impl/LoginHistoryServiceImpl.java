@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.backoffice.operations.entity.LoginHistory;
 import com.backoffice.operations.payloads.LoginFlagDTO;
-import com.backoffice.operations.payloads.ValidationResultDTO;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.LoginHistoryRepository;
 import com.backoffice.operations.service.LoginHistoryService;
 
@@ -18,9 +18,9 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 	private LoginHistoryRepository loginHistoryRepository;
 
 	@Override
-	public ValidationResultDTO saveLoginFlag(LoginFlagDTO loginFlagDTO) {
+	public GenericResponseDTO<Object> saveLoginFlag(LoginFlagDTO loginFlagDTO) {
 		
-		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		LoginHistory loginHistory = new LoginHistory();
         loginHistory.setFlag(loginFlagDTO.isFlag());
         loginHistory.setLoginTimestamp(LocalDateTime.now());
@@ -28,9 +28,10 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
         loginHistory.setLang(loginFlagDTO.getLang());
         loginHistoryRepository.save(loginHistory);
         
-        validationResultDTO.setStatus("Success");
-		validationResultDTO.setMessage("Success");
-        return validationResultDTO;
+        responseDTO.setStatus("Success");
+        responseDTO.setData(null);
+        responseDTO.setMessage("Success");
+        return responseDTO;
 	}
 
 }

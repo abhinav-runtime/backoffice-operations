@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "login_history")
+@Table(name = "az_login_history_bk")
 public class LoginHistory {
 	
 	@Id
@@ -21,6 +21,7 @@ public class LoginHistory {
     private String id;
     private boolean flag;
     private LocalDateTime loginTimestamp;
+    private LocalDateTime logoutTimestamp;
     private String uniqueKey;
     private String lang;
     
@@ -53,6 +54,12 @@ public class LoginHistory {
 	}
 	public void setLang(String lang) {
 		this.lang = lang;
+	}
+	public LocalDateTime getLogoutTimestamp() {
+		return logoutTimestamp;
+	}
+	public void setLogoutTimestamp(LocalDateTime logoutTimestamp) {
+		this.logoutTimestamp = logoutTimestamp;
 	}
     
 }
