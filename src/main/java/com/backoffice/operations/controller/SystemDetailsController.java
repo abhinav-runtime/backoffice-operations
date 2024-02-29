@@ -30,26 +30,45 @@ public class SystemDetailsController {
     private CivilIdRepository civilIdRepository;
 
     @GetMapping
-    public List<SystemDetailDTO> getAllSystemDetails() {
+    public GenericResponseDTO<Object> getAllSystemDetails() {
+    	GenericResponseDTO<Object> response = new GenericResponseDTO<>();
         List<SystemDetail> systemDetails = systemDetailRepository.findAll();
-        return systemDetails.stream().map(this::mapToDTO).collect(Collectors.toList());
+        response.setStatus("Success");
+        response.setMessage("Success");
+        response.setData(systemDetails.stream().map(this::mapToDTO).collect(Collectors.toList()));
+        return response;
     }
 
     @GetMapping("/all/{civilId}")
-    public List<SystemDetailDTO> getAllSystemDetailsByCivilId(@PathVariable String civilId,
+    public GenericResponseDTO<Object> getAllSystemDetailsByCivilId(@PathVariable String civilId,
                                                               @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         List<SystemDetail> systemDetails = systemDetailRepository.findAllByCivilId(civilId);
-        return systemDetails.stream().filter(systemDetail -> StringUtils.hasLength(systemDetail.getStatus()) &&
-                        systemDetail.getStatus().equalsIgnoreCase("Active"))
-                .map(this::mapToDTO).collect(Collectors.toList());
+        GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+        
+        response.setStatus("Success");
+        response.setMessage("Success");
+        response.setData(systemDetails.stream().filter(systemDetail -> StringUtils.hasLength(systemDetail.getStatus()) &&
+                systemDetail.getStatus().equalsIgnoreCase("Active"))
+        .map(this::mapToDTO).collect(Collectors.toSet()));
+        
+        return response;
     }
 
-    @GetMapping("/{civilId}")
-    public SystemDetailDTO getSystemDetailById(@PathVariable String id,
+    @GetMapping("/{id}")
+    public GenericResponseDTO<Object> getSystemDetailById(@PathVariable String id,
                                                @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        SystemDetail systemDetail = systemDetailRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("System detail not found with id: " + id));
-        return mapToDTO(systemDetail);
+    	GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+    	try {
+        SystemDetail systemDetail = systemDetailRepository.findById(id).get();
+        response.setStatus("Success");
+        response.setMessage("Success");
+        response.setData(mapToDTO(systemDetail));
+    	} catch (Exception e) {
+    		response.setStatus("Failure");
+			response.setMessage("System detail not found with id: " + id);
+			response.setData(new HashMap<>());
+    	}
+        return response;
     }
 
     @PostMapping
@@ -124,8 +143,13 @@ public class SystemDetailsController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteSystemDetail(@PathVariable String id) {
+    public GenericResponseDTO<Object> deleteSystemDetail(@PathVariable String id) {
+    	GenericResponseDTO<Object> response = new GenericResponseDTO<>();
         systemDetailRepository.deleteById(id);
+        response.setStatus("Success");
+        response.setMessage("Operation Successful");
+        response.setData(new HashMap<>());
+        return response;
     }
 
     // Helper method to map entity to DTO
@@ -148,7 +172,7 @@ public class SystemDetailsController {
     }
 
     // Helper method to map DTO to entity
-    private SystemDetail mapToEntity(SystemDetailDTO dto, Optional<CivilIdEntity> civilIdEntity) {
+    private SystemDetail mapToEntity(SystemDetailDTO dto, Optional<CivilIdEntity> civilIdEntity) {    	
         SystemDetail entity = new SystemDetail();
         entity.setDeviceId(dto.getDeviceId());
         entity.setName(dto.getName());
