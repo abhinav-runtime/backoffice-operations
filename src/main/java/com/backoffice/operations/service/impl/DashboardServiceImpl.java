@@ -119,7 +119,7 @@ public class DashboardServiceImpl implements DashboardService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String apiUrl = accountExternalAPI + civilId;
-            ResponseEntity<AccountDetails> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, AccountDetails.class);
+            ResponseEntity<AccountDetails> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity, AccountDetails.class);
             return Optional.ofNullable(responseEntity.getBody());
         }
         return Optional.empty();
@@ -230,7 +230,7 @@ public class DashboardServiceImpl implements DashboardService {
                     .append("\",\n" + "\"toDate\":\"").append(toDate).append("\"\n" + " }");
         }
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody.toString(), headers);
-        ResponseEntity<ExternalApiTransactionResponseDTO> accountsTransactionResponseEntity = restTemplate.exchange(externalAccountsTransactionApiUrl,
+        ResponseEntity<ExternalApiTransactionResponseDTO> accountsTransactionResponseEntity = jwtAuthRestTemplate.exchange(externalAccountsTransactionApiUrl,
                 HttpMethod.POST, requestEntity, ExternalApiTransactionResponseDTO.class);
         List<AccountTransactionsEntity> accountTransactionsEntityList = new ArrayList<>();
         if (Objects.nonNull(accountsTransactionResponseEntity.getBody()) && accountsTransactionResponseEntity.getBody().isSuccess()
