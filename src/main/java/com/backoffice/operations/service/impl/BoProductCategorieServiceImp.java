@@ -11,7 +11,6 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.backoffice.operations.entity.BoProductCategories;
 import com.backoffice.operations.entity.BoProductRequest;
 import com.backoffice.operations.entity.BoProductSubCategories;
@@ -32,7 +31,7 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 	private BoProductSubCategoriesRepo boSubCategoriesRepo;
 	@Autowired
 	private BoProductRequestRepo boProductRequestRepo;
-
+	
 	@Override
 	public GenericResponseDTO<Object> saveProductCategories(BoProductCategoriesRequestDTO requestDTO) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
@@ -66,8 +65,13 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 
 			BoProductSubCategories subCategories = new BoProductSubCategories();
 			subCategories.setSubCategoriesName(requestDTO.getSubCategoriesName());
+			subCategories.setProductTitle(requestDTO.getProductTitle());
 			subCategories.setCategories(category);
 			subCategories.setExpireDate(requestDTO.getExpireDate());
+			subCategories.setIssueDate(requestDTO.getIssueDate());
+			subCategories.setBenefits(requestDTO.getBenefits());
+			subCategories.setDescription(requestDTO.getDescription());
+			subCategories.setFeatures(requestDTO.getFeatures());
 			subCategories = boSubCategoriesRepo.save(subCategories);
 
 			response.setStatus("Success");
