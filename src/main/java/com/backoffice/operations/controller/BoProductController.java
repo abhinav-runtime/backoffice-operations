@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,6 +70,7 @@ public class BoProductController {
 		return response;
 	}
 
+	@PreAuthorize(value = "authenticated")
 	@GetMapping("/get-sub-categories/{categoriesId}")
 	public GenericResponseDTO<Object> getProductSubCategoriesForUser(@PathVariable String categoriesId) {
 		return boProductCategorieService.getProductSubCategories(categoriesId);
@@ -92,6 +94,7 @@ public class BoProductController {
 		return response;
 	}
 
+	@PreAuthorize(value = "authenticated")
 	@PostMapping("/request")
 	public ResponseEntity<Object> createProductRequest(@RequestBody ProductRequestDTO requestDTO) {
 		return new ResponseEntity<>(boProductCategorieService.productRequest(requestDTO), HttpStatus.OK);
@@ -152,6 +155,7 @@ public class BoProductController {
 		response.setData(new HashMap<>());
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
 	@PostMapping("/date-expiry-update")
 	public GenericResponseDTO<Object> expiryDateUpdate(@RequestBody BoProductCategoriesRequestDTO requestDTO) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
@@ -170,9 +174,10 @@ public class BoProductController {
 		response.setData(new HashMap<>());
 		return response;
 	}
-	
+
+	@PreAuthorize(value = "authenticated")
 	@GetMapping("/get-categories")
 	public GenericResponseDTO<Object> getProductCategories() {
-		return boProductCategorieService.getProductCategories();
+			return boProductCategorieService.getProductCategories();
 	}
 }
