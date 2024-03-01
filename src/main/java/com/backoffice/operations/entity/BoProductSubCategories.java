@@ -18,30 +18,34 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Data
-@Table(name ="az_bo_product_sub_categories_bk")
+@Table(name = "az_bo_product_sub_categories_bk")
 public class BoProductSubCategories {
-	
+
 	@Id
 	@GeneratedValue(generator = "uuid")
 	@GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
 	@Column(name = "id", unique = true, nullable = false)
 	private String id;
-	
+
 	@Column(nullable = false, unique = true)
 	private String subCategoriesName;
-	@CreationTimestamp
 	@Column(nullable = false)
 	private Date issueDate;
 	@Column(nullable = true)
 	private Date expireDate;
-	@Column(nullable = true)
-	private String imgUrl;
+	@Column(nullable = false)
+	private String productTitle;
+	@Column(nullable = false, length = 1000)
+	private String description;
+	@Column(nullable = false, length = 1000)
+	private String features;
+	@Column(nullable = false, length = 1000)
+	private String benefits;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "product_categories_id", referencedColumnName = "id")
 	private BoProductCategories categories;
