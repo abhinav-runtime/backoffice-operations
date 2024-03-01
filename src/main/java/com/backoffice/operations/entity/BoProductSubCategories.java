@@ -40,6 +40,8 @@ public class BoProductSubCategories {
 	private Date issueDate;
 	@Column(nullable = true)
 	private Date expireDate;
+	@Column(nullable = true)
+	private String imgUrl;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "product_categories_id", referencedColumnName = "id")
 	private BoProductCategories categories;
