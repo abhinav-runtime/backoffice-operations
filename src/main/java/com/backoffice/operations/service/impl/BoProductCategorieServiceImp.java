@@ -104,7 +104,8 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			} else {
 				Date expireDate = item.getExpireDate();
 				if (expireDate.after(new Date())) {
-					Map<String, Object> subCategoriesTemp = new LinkedHashMap<>();
+					Map<String, Object> subCategoriesTemp = new LinkedHashMap<>(); 
+					
 					subCategoriesTemp.put("id",item.getId());
 					subCategoriesTemp.put("subCategoriesName",item.getSubCategoriesName());
 					subCategoriesTemp.put("description", item.getDescription());
