@@ -15,4 +15,5 @@ public interface BoProductCategorieService {
 	GenericResponseDTO<Object> deleteCatagories(String categoriesName);
 	GenericResponseDTO<Object> getProductSubCategoriesForBO(String categoriesName);
 	GenericResponseDTO<Object> dateExpiryUpdate(BoProductCategoriesRequestDTO requestDTO);
+	GenericResponseDTO<Object> getProductCategories();
 }

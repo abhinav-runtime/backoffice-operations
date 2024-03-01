@@ -15,4 +15,5 @@ public class BoProductCategoriesRequestDTO {
 	String categoriesName;
 	String subCategoriesName;
 	Date expireDate;
+	String imgUrl;
 }

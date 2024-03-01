@@ -13,5 +13,5 @@ public class ProductRequestDTO {
 	String name;
 	String mobileNumber;
 	String email;
-	String subCategoriesName;
+	String subCategoriesId;
 }
