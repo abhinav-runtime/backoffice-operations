@@ -59,6 +59,10 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final AccountTypeRepository accountTypeRepository;
 
+    private final String account = "account";
+
+    private static final String creditCard = "card";
+
     public DashboardServiceImpl(RestTemplate restTemplate, CivilIdRepository civilIdRepository, DashboardRepository dashboardRepository, DashboardInfoRepository dashboardInfoRepository, AccountTransactionsEntityRepository accountTransactionsEntityRepository, CardTransactionsEntityRepository cardTransactionsEntityRepository, AccountTypeRepository accountTypeRepository) {
         this.restTemplate = restTemplate;
         this.civilIdRepository = civilIdRepository;
@@ -90,7 +94,8 @@ public class DashboardServiceImpl implements DashboardService {
                                         .accountNumber(Objects.nonNull(dashboardEntity.getAccountNumber()) ? dashboardEntity.getAccountNumber() : "")
                                         .accountType(Objects.nonNull(dashboardEntity.getAccountType()) ? dashboardEntity.getAccountType() : "")
                                         .accountCodeDesc(Objects.nonNull(dashboardEntity.getAccountCodeDesc()) ? dashboardEntity.getAccountCodeDesc(): "")
-                                        .currency(Objects.nonNull(dashboardEntity.getCurrency()) ? dashboardEntity.getCurrency() : "").build();
+                                        .currency(Objects.nonNull(dashboardEntity.getCurrency()) ? dashboardEntity.getCurrency() : "")
+                                        .type(account).build();
                             })
                             .collect(Collectors.toList());
 
@@ -112,17 +117,17 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     private Optional<AccountDetails> getTokenAndApiResponse(String civilId) {
-        ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-        if (Objects.nonNull(response.getBody())) {
+//        ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+//        if (Objects.nonNull(response.getBody())) {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(response.getBody().getAccessToken());
+//            headers.setBearerAuth(response.getBody().getAccessToken());
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String apiUrl = accountExternalAPI + civilId;
             ResponseEntity<AccountDetails> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity, AccountDetails.class);
             return Optional.ofNullable(responseEntity.getBody());
-        }
-        return Optional.empty();
+//        }
+//        return Optional.empty();
     }
 
     private GenericResponseDTO<Object> createFailureResponse(String uniqueKey) {
@@ -181,6 +186,7 @@ public class DashboardServiceImpl implements DashboardService {
                             creditCardDetailsResponseDTO.setOutstandingBalance(outStandingAmount);
                             creditCardDetailsResponseDTO.setCustomerName(customerName);
                             creditCardDetailsResponseDTO.setCreditCardNumber(creditCardNumber);
+                            creditCardDetailsResponseDTO.setType(creditCard);
                             creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
 
                             DashboardInfoEntity dashboardInfoEntity = DashboardInfoEntity.builder().creditCardNumber(creditCardNumber)
@@ -367,6 +373,7 @@ public class DashboardServiceImpl implements DashboardService {
         creditCardDetailsResponseDTO.setOutstandingBalance(0.0);
         creditCardDetailsResponseDTO.setCustomerName("");
         creditCardDetailsResponseDTO.setCreditCardNumber("");
+        creditCardDetailsResponseDTO.setType(creditCard);
         List<CreditCardDetailsResponseDTO> creditCardDetailsResponseList = new ArrayList<>();
         creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
