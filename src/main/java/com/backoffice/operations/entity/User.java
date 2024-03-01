@@ -41,6 +41,8 @@ public class User {
 	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@JoinTable(name = "az_users_roles_bk", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
 	private Set<Role> roles;
+	@Column(nullable = false, unique = true)
+	private String mobileNumber;
 
 	public String getId() {
 		return id;

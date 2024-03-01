@@ -16,6 +16,8 @@ public class OtpRequestDTO {
 	private String otp;
 	@NotBlank(message = "Unique Key cannot be blank")
 	private String uniqueKey;
+	private boolean profileValidate;
+	private boolean beneficiaryValidate;
 	private String lang;
 
 	public String getLang() {

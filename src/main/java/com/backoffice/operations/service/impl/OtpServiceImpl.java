@@ -1,17 +1,12 @@
 package com.backoffice.operations.service.impl;
 
-import com.backoffice.operations.entity.CivilIdEntity;
-import com.backoffice.operations.entity.OtpEntity;
-import com.backoffice.operations.entity.OtpParameter;
-import com.backoffice.operations.entity.SecuritySettings;
+import com.backoffice.operations.entity.*;
 import com.backoffice.operations.exceptions.MaxResendAttemptsException;
 import com.backoffice.operations.exceptions.OtpValidationException;
 import com.backoffice.operations.payloads.*;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
-import com.backoffice.operations.repository.CivilIdRepository;
-import com.backoffice.operations.repository.OtpParameterRepository;
-import com.backoffice.operations.repository.OtpRepository;
-import com.backoffice.operations.repository.SecuritySettingsRepository;
+import com.backoffice.operations.repository.*;
+import com.backoffice.operations.security.JwtTokenProvider;
 import com.backoffice.operations.service.OtpService;
 import com.backoffice.operations.utils.CommonUtils;
 import org.slf4j.Logger;
@@ -49,23 +44,36 @@ public class OtpServiceImpl implements OtpService {
     @Qualifier("jwtAuth")
     private RestTemplate jwtAuthRestTemplate;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private UserRepository userRepository;
+
     @Value("${external.api.sms}")
     private String smsNotify;
 
     @Autowired
     private CommonUtils commonUtils;
 
+    @Autowired
+    private ProfileRepository profileRepository;
+
+    @Value("${external.api.profile.update}")
+    private String profileUpdate;
+
     @Override
-    public GenericResponseDTO<Object> validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException {
+    public GenericResponseDTO<Object> validateOtp(OtpRequestDTO otpRequest, String token) throws OtpValidationException {
         long id = 1;
+        String userEmail = jwtTokenProvider.getUsername(token);
+        Optional<User> user = userRepository.findByEmail(userEmail);
+
         OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
         int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
 
         Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-//		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-//		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
-        if (civilIdEntity.isPresent()) {
+        if (civilIdEntity.isPresent() && user.isPresent()) {
             OtpEntity otpEntity = new OtpEntity();
             otpEntity.setOtp("1234");
 
@@ -121,10 +129,38 @@ public class OtpServiceImpl implements OtpService {
             responseDTO.setMessage("Success");
             data.put("uniqueKey", civilIdEntity.get().getId());
             responseDTO.setData(data);
+
+            if (otpRequest.isProfileValidate()) {
+                Optional<Profile> profile = profileRepository.findByUserId(user.get().getId());
+                if (profile.isPresent()) {
+                    UpdateProfileRequestBank updateProfileRequestBank = new UpdateProfileRequestBank();
+                    updateProfileRequestBank.setEmailAddress(profile.get().getEmailId());
+                    updateProfileRequestBank.setMobileNumber(profile.get().getMobNum());
+
+                    ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+                    if (Objects.nonNull(response.getBody())) {
+                        String apiUrl = profileUpdate + profile.get().getNId();
+                        HttpHeaders headers = new HttpHeaders();
+                        headers.setContentType(MediaType.APPLICATION_JSON);
+                        headers.setBearerAuth(response.getBody().getAccessToken());
+                        HttpEntity<UpdateProfileRequestBank> entity = new HttpEntity<>(updateProfileRequestBank, headers);
+
+                        ResponseEntity<Object> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.PUT, entity, Object.class);
+                        if (Objects.nonNull(responseEntity.getBody())) {
+                            user.get().setMobileNumber(updateProfileRequestBank.getMobileNumber());
+                            userRepository.save(user.get());
+                            responseDTO.setStatus("Success");
+                            responseDTO.setMessage("Success");
+                            data.put("uniqueKey", otpRequest.getUniqueKey());
+                            responseDTO.setData(data);
+                            return responseDTO;
+                        }
+                    }
+                }
+            }
             return responseDTO;
         }
-
-        return null;
+        return responseDTO;
     }
 
     @Override

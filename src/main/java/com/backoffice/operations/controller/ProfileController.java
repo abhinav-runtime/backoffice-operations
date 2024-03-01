@@ -25,10 +25,15 @@ public class ProfileController {
         return ResponseEntity.ok(genericResponseDTO);
     }
 
-    @PutMapping("/update/{uniqueKey}")
+    @PostMapping("/update/{uniqueKey}")
     public ResponseEntity<GenericResponseDTO<Object>> updateProfile(@PathVariable String uniqueKey, @RequestBody UpdateProfileRequest updateProfileRequest, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         GenericResponseDTO<Object> genericResponseDTO = profileService.updateProfile(uniqueKey, updateProfileRequest, token.substring("Bearer ".length()));
         return ResponseEntity.ok(genericResponseDTO);
+    }
+
+    @GetMapping("/verifyEmail")
+    public ResponseEntity<String> verifyEmail(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        return ResponseEntity.ok(profileService.verifyEmail(token.substring("Bearer ".length())));
     }
 
 }
