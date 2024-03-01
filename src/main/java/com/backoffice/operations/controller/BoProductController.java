@@ -69,13 +69,13 @@ public class BoProductController {
 		return response;
 	}
 
-	@GetMapping("/get-sub-categories/{categories}")
-	public GenericResponseDTO<Object> getProductSubCategoriesForUser(@PathVariable String categories) {
-		return boProductCategorieService.getProductSubCategories(categories);
+	@GetMapping("/get-sub-categories/{categoriesId}")
+	public GenericResponseDTO<Object> getProductSubCategoriesForUser(@PathVariable String categoriesId) {
+		return boProductCategorieService.getProductSubCategories(categoriesId);
 	}
 
-	@GetMapping("/get-sub-categories-bo/{categories}")
-	public GenericResponseDTO<Object> getSubCategoriesForBO(@PathVariable String categories) {
+	@GetMapping("/get-sub-categories-bo/{categoriesId}")
+	public GenericResponseDTO<Object> getSubCategoriesForBO(@PathVariable String categoriesId) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -84,7 +84,7 @@ public class BoProductController {
 			return response;
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "VIEW") || accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return boProductCategorieService.getProductSubCategoriesForBO(categories);
+			return boProductCategorieService.getProductSubCategoriesForBO(categoriesId);
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
@@ -115,8 +115,8 @@ public class BoProductController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@DeleteMapping("/delete-sub-categories/{subCategories}")
-	public ResponseEntity<Object> deleteSubCatagories(@PathVariable String subCategories) {
+	@DeleteMapping("/delete-sub-categories/{categoriesId}")
+	public ResponseEntity<Object> deleteSubCatagories(@PathVariable String categoriesId) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -126,7 +126,7 @@ public class BoProductController {
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return new ResponseEntity<>(boProductCategorieService.deleteSubCatagories(subCategories), HttpStatus.OK);
+			return new ResponseEntity<>(boProductCategorieService.deleteSubCatagories(categoriesId), HttpStatus.OK);
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
@@ -134,8 +134,8 @@ public class BoProductController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@DeleteMapping("/delete-catagories/{categories}")
-	public ResponseEntity<Object> deleteCatagories(@PathVariable String categories) {
+	@DeleteMapping("/delete-catagories/{categoriesId}")
+	public ResponseEntity<Object> deleteCatagories(@PathVariable String categoriesId) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -145,7 +145,7 @@ public class BoProductController {
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return new ResponseEntity<>(boProductCategorieService.deleteCatagories(categories), HttpStatus.OK);
+			return new ResponseEntity<>(boProductCategorieService.deleteCatagories(categoriesId), HttpStatus.OK);
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
@@ -169,5 +169,10 @@ public class BoProductController {
 		response.setStatus("Failure");
 		response.setData(new HashMap<>());
 		return response;
+	}
+	
+	@GetMapping("/get-categories")
+	public GenericResponseDTO<Object> getProductCategories() {
+		return boProductCategorieService.getProductCategories();
 	}
 }
