@@ -1,6 +1,7 @@
 package com.backoffice.operations.controller;
 
 import com.backoffice.operations.payloads.AlizzTransferDto;
+import com.backoffice.operations.payloads.AlizzTransferRequestDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.AlizzTransferService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,7 +22,7 @@ public class AlizzTransferController {
     }
 
     @PostMapping
-    public ResponseEntity<GenericResponseDTO<Object>> transferToAlizzAccount(@RequestBody AlizzTransferDto alizzTransferDto) throws JsonProcessingException {
-        return ResponseEntity.ok(alizzTransferService.transferToAlizzAccount(alizzTransferDto));
+    public ResponseEntity<GenericResponseDTO<Object>> transferToAlizzAccount(@RequestBody AlizzTransferRequestDto alizzTransferRequestDto) throws JsonProcessingException {
+        return ResponseEntity.ok(alizzTransferService.transferToAlizzAccount(alizzTransferRequestDto));
     }
 }
