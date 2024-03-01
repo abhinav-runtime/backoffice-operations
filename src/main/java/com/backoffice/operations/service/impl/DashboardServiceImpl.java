@@ -117,17 +117,17 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     private Optional<AccountDetails> getTokenAndApiResponse(String civilId) {
-//        ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-//        if (Objects.nonNull(response.getBody())) {
+        ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+        if (Objects.nonNull(response.getBody())) {
             HttpHeaders headers = new HttpHeaders();
-//            headers.setBearerAuth(response.getBody().getAccessToken());
+            headers.setBearerAuth(response.getBody().getAccessToken());
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String apiUrl = accountExternalAPI + civilId;
             ResponseEntity<AccountDetails> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity, AccountDetails.class);
             return Optional.ofNullable(responseEntity.getBody());
-//        }
-//        return Optional.empty();
+        }
+        return Optional.empty();
     }
 
     private GenericResponseDTO<Object> createFailureResponse(String uniqueKey) {
