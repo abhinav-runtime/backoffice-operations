@@ -282,7 +282,7 @@ public class CivilIdServiceImpl implements CivilIdService {
                     HttpHeaders headers = new HttpHeaders();
                     headers.add("TENANT", "ALIZZ_UAT");
                     headers.setContentType(MediaType.APPLICATION_JSON);
-                    String requestBody = "{ \"customerId\": \"" + civilIdEntity.get().getCivilId() + "\" }";
+                    String requestBody = "{ \"customerId\": \"" + civilIdEntity.get().getEntityId() + "\" }";
                     HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
                     ResponseEntity<ExternalApiResponseDTO> responseEntity = basicAuthRestTemplate.exchange(apiUrl,
                             HttpMethod.POST, requestEntity, ExternalApiResponseDTO.class);
@@ -375,7 +375,13 @@ public class CivilIdServiceImpl implements CivilIdService {
                 otpEntity.setLastAttemptTime(LocalDateTime.now());
                 otpRepository.save(otpEntity);
 
-                return getSMSResponseObject(newOtp, responseDTO, civilIdEntity);
+                Map<String, String> data = new HashMap<>();
+                responseDTO.setStatus("Success");
+                responseDTO.setMessage("Success");
+                data.put("uniqueKey", civilIdEntity.get().getId());
+                responseDTO.setData(data);
+                return responseDTO;
+//                return getSMSResponseObject(newOtp, responseDTO, civilIdEntity);
             }
         } catch (Exception e) {
             logger.error("ERROR in class CivilIdServiceImpl method sendOtp", e);
