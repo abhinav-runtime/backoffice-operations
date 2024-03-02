@@ -42,6 +42,9 @@ public class ReportAnIssue {
 	
 	@Column(name="dateModified")
 	private LocalDateTime time;
+
+	@Column(name="lang")
+	private String lang;
 	
 	public String getId() {
 		return id;
@@ -97,5 +100,12 @@ public class ReportAnIssue {
 
 	public void setTime(LocalDateTime time) {
 		this.time = time;
+	}
+	public String getLang() {
+		return lang;
+	}
+
+	public void setLang(String lang) {
+		this.lang = lang;
 	}
 }
