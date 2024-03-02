@@ -32,12 +32,11 @@ public class LogoutService {
 	public GenericResponseDTO<Object> logout(LogoutDto logoutDto, String token) {
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
-		List<LoginHistory> obj = loginHistoryRepository.findByUniqueKey(logoutDto.getUniqueKey());
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		
-		if (user.isPresent() && obj != null) {
-			
-			LoginHistory loginHistory = loginHistoryRepository.findFirstByOrderByLoginTimestampDesc();
+		if (user.isPresent()) {
+
+			LoginHistory loginHistory = loginHistoryRepository.findFirstByUniqueKeyOrderByLoginTimestampDesc(logoutDto.getUniqueKey());
 
 			loginHistory.setLogoutTimestamp(LocalDateTime.now());
 			loginHistoryRepository.save(loginHistory);
