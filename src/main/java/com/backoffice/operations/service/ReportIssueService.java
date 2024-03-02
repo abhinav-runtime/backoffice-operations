@@ -82,7 +82,6 @@ public class ReportIssueService {
 			Map<String, Object> data = new HashMap<>();
 			responseDTO.setStatus("Success");
 			responseDTO.setMessage("Issue reported successfully!");
-			data.put("response", null);
 			responseDTO.setData(data);
 			return responseDTO;
 		}
