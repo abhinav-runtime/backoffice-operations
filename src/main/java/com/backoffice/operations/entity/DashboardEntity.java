@@ -19,4 +19,5 @@ public class DashboardEntity {
     private Double availableBalance;
     private String accountType;
     private String accountCodeDesc;
+    private String accountNickName;
 }

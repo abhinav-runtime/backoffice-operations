@@ -80,13 +80,17 @@ public class DashboardServiceImpl implements DashboardService {
                 .map(apiResponse -> {
                     List<AccountsDetailsResponseDTO> accountsDetailsResponseDTOList = apiResponse.getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().stream()
                             .map(islamicAccount -> {
+                                AccountType accountType = getAccountDescription(islamicAccount.getAccls());
+                                String accountCodeDesc = Objects.nonNull(accountType) && Objects.nonNull(accountType.getDescription()) ? accountType.getDescription() : "";
+                                String accNickName = Objects.nonNull(accountType) && Objects.nonNull(accountType.getAccountNickName()) ? accountType.getAccountNickName() : "";
                                 DashboardEntity dashboardEntity = DashboardEntity.builder()
                                         .id(uniqueKey)
                                         .accountNumber(islamicAccount.getAcc())
                                         .availableBalance(islamicAccount.getAcyavlbal())
                                         .currency(islamicAccount.getCcy())
-                                        .accountCodeDesc(getAccountDescription(islamicAccount.getAccls()))
+                                        .accountCodeDesc(accountCodeDesc)
                                         .accountType(islamicAccount.getAcctype())
+                                        .accountNickName(accNickName)
                                         .build();
                                 dashboardRepository.save(dashboardEntity);
                                 return AccountsDetailsResponseDTO.builder()
@@ -95,7 +99,8 @@ public class DashboardServiceImpl implements DashboardService {
                                         .accountType(Objects.nonNull(dashboardEntity.getAccountType()) ? dashboardEntity.getAccountType() : "")
                                         .accountCodeDesc(Objects.nonNull(dashboardEntity.getAccountCodeDesc()) ? dashboardEntity.getAccountCodeDesc(): "")
                                         .currency(Objects.nonNull(dashboardEntity.getCurrency()) ? dashboardEntity.getCurrency() : "")
-                                        .type(account).build();
+                                        .type(account)
+                                        .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "").build();
                             })
                             .collect(Collectors.toList());
 
@@ -111,9 +116,8 @@ public class DashboardServiceImpl implements DashboardService {
                 .orElseGet(() -> createFailureResponse(uniqueKey));
     }
 
-    private String getAccountDescription(String accls) {
-        AccountType response = accountTypeRepository.findByCbsProductCode(accls);
-        return Objects.nonNull(response) && Objects.nonNull(response.getDescription()) ? response.getDescription() : "";
+    private AccountType getAccountDescription(String accls) {
+        return accountTypeRepository.findByCbsProductCode(accls);
     }
 
     private Optional<AccountDetails> getTokenAndApiResponse(String civilId) {
