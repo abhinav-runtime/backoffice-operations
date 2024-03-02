@@ -1,8 +1,12 @@
 package com.backoffice.operations.payloads;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class SelfTransferDTO {
 
     private String fromAccountNumber;

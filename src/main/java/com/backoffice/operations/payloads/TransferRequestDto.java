@@ -22,6 +22,7 @@ public class TransferRequestDto {
     }
 
     @Data
+    public
     class Transaction {
         private String transaction_reference;
         private String transaction_date;

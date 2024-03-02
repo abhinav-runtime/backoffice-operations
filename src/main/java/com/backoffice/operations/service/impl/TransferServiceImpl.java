@@ -1,11 +1,20 @@
 package com.backoffice.operations.service.impl;
 
+import com.backoffice.operations.entity.AccountCurrency;
+import com.backoffice.operations.entity.SourceOperation;
+import com.backoffice.operations.entity.TransactionPurpose;
+import com.backoffice.operations.entity.TransferAccountFields;
 import com.backoffice.operations.payloads.AccessTokenResponse;
 import com.backoffice.operations.payloads.AccountDetails;
 import com.backoffice.operations.payloads.SelfTransferDTO;
 import com.backoffice.operations.payloads.TransferRequestDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.repository.AccountCurrencyRepository;
+import com.backoffice.operations.repository.SourceOperationRepository;
+import com.backoffice.operations.repository.TransactionPurposeRepository;
+import com.backoffice.operations.repository.TransferAccountFieldsRepository;
 import com.backoffice.operations.service.TransferService;
+import com.backoffice.operations.utils.ApiCaller;
 import com.backoffice.operations.utils.CommonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import java.time.LocalDate;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -34,13 +44,25 @@ public class TransferServiceImpl implements TransferService {
     private RestTemplate jwtAuthRestTemplate;
 
     private final RestTemplate restTemplate;
-    public TransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate) {
+    public TransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, ApiCaller apiCaller) {
         this.commonUtils = commonUtils;
         this.restTemplate = restTemplate;
+        this.apiCaller = apiCaller;
     }
 
     @Value("${bank.transfer.url}")
     private String bankTransferUrl;
+
+    @Autowired
+    private SourceOperationRepository sourceOperationRepository;
+    @Autowired
+    private TransferAccountFieldsRepository transferAccountFieldsRepository;
+    @Autowired
+    private TransactionPurposeRepository transactionPurposeRepository;
+    @Autowired
+    private AccountCurrencyRepository AccountCurrencyRepository;
+
+    private final ApiCaller apiCaller;
 
 
     @Override
@@ -48,29 +70,61 @@ public class TransferServiceImpl implements TransferService {
 
         TransferRequestDto transferRequestDto = new TransferRequestDto();
 
-        //Sender details
+        String transactionRefcode = "TRWA";
+        //String refId = String.format("%012d", getNextSequence());
+        //String txnRefId = transactionRefcode + refId;
+
+        //set Sender details
         TransferRequestDto.Sender sender = transferRequestDto.new Sender();
         sender.setAccount_number(selfTransferDTO.getFromAccountNumber());
         String senderCifNo = selfTransferDTO.getFromAccountNumber().substring(3, 10);
-        Optional<AccountDetails> senderAccountInfo = getTokenAndApiResponse(senderCifNo);
-        String senderAccName = senderAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAccdesc();
-        sender.setAccount_name(senderAccName);
 
-        //Receiver details
+        // below code commented for testing
+        //Optional<AccountDetails> senderAccountInfo = getTokenAndApiResponse(senderCifNo);
+        //String senderAccName = senderAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAccdesc();
+        //sender.setAccount_name(senderAccName);
+        AccountCurrency accountCurrency = AccountCurrencyRepository.findByAccountCurrencyCode("omr");
+        sender.setAccount_currency(accountCurrency.getAccountCurrency());
+
+        //set Receiver details
         TransferRequestDto.Receiver receiver = transferRequestDto.new Receiver();
         receiver.setAccount_number(selfTransferDTO.getToAccountNumber());
         String receiverCifNo = selfTransferDTO.getToAccountNumber().substring(3, 10);
-        Optional<AccountDetails> receiverAccountInfo = getTokenAndApiResponse(receiverCifNo);
-        String receiverCifNoAccName = receiverAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAccdesc();
-        receiver.setAccount_name(receiverCifNoAccName);
+        // below code commented for testing
+        //Optional<AccountDetails> receiverAccountInfo = getTokenAndApiResponse(receiverCifNo);
+        //String receiverCifNoAccName = receiverAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAccdesc();
+        //receiver.setAccount_name(receiverCifNoAccName);
 
+        //set header
         TransferRequestDto.Header header = transferRequestDto.new Header();
         header.setSource_system("mpp-digital-app");
         header.setSource_user(selfTransferDTO.getUniqueKey());
+        SourceOperation SourceOperation = sourceOperationRepository.findBySourceCode("SelfTransfer");
+        header.setSource_operation(SourceOperation.getSourceOperation());
 
+        //set transaction
+        TransferRequestDto.Transaction transaction = transferRequestDto.new Transaction();
+        TransferAccountFields TransferAccountFields = transferAccountFieldsRepository.findByTransferType("SELF TRANSFER");
+        //shreya code required
+        //transaction.setTransaction_reference();
+        transaction.setTransaction_date(LocalDate.now().toString());
+        TransactionPurpose transactionPurpose = transactionPurposeRepository.findByTransactionPurposeCode("ordinaryTransfer");
+        transaction.setTransaction_purpose(transactionPurpose.getTransactionPurpose());
+        transaction.setTransaction_currency(accountCurrency.getAccountCurrency());
+        transaction.setCbs_product(TransferAccountFields.getCbsProduct());
+        transaction.setCbs_module(TransferAccountFields.getCbsModule());
+        transaction.setCbs_network(TransferAccountFields.getCbsNetwork());
+        transaction.setCharge_type(TransferAccountFields.getChargeType());
+        transaction.setPayment_details_1(selfTransferDTO.getNotesToReceiver());
 
+        transaction.setTransaction_amount(selfTransferDTO.getTransactionAmount());
 
-
+        Double avlBalance = apiCaller.getAvailableBalance(selfTransferDTO.getFromAccountNumber());
+        if(avlBalance > selfTransferDTO.getTransactionAmount()){
+            transaction.setTransaction_amount(selfTransferDTO.getTransactionAmount());
+        }else{
+            throw new RuntimeException("Insufficient balance for the transaction");
+        }
 
         ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
@@ -102,4 +156,8 @@ public class TransferServiceImpl implements TransferService {
         }
         return Optional.empty();
     }
+
+
+
+
 }
