@@ -176,14 +176,26 @@ public class ProfileServiceImpl implements ProfileService {
                         user.get().setEmail(updateProfileRequest.getEmailAddress());
                         String newToken = jwtTokenProvider.generateToken(user.get());
                         sendVerificationEmail(profile.getEmailId(),
-                                verifyEmailLink + "backoffice/api/v1//profile/verifyToken?token=" + newToken, user.get().getUsername());
+                                verifyEmailLink + "backoffice/api/v1/profile/verifyToken?token=" + newToken, user.get().getUsername());
 
                         profile.setUserId(user.get().getId());
                         profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
                         profileRepository.save(profile);
+
+                        responseDTO.setStatus("Success");
+                        responseDTO.setMessage("Success");
+                        data.put("uniqueKey", uniqueKey);
+                        responseDTO.setData(data);
+                        return responseDTO;
                     } else if (null != updateProfileRequest.getEmailStatementFlag()) {
                         profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
                         profileRepository.save(profile);
+
+                        responseDTO.setStatus("Success");
+                        responseDTO.setMessage("Success");
+                        data.put("uniqueKey", uniqueKey);
+                        responseDTO.setData(data);
+                        return responseDTO;
                     } else {
                         responseDTO.setStatus("Failure");
                         responseDTO.setMessage("Invalid CivilId passed.");
@@ -247,7 +259,7 @@ public class ProfileServiceImpl implements ProfileService {
                 + "</body></html>";
 
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("noreply@gmail.com");
+        message.setFrom("aditya.runtime@gmail.com");
         message.setTo(emailAddress);
         message.setSubject("Email Verification");
         message.setText(htmlMessage);
