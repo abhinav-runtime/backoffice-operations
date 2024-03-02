@@ -37,10 +37,10 @@ public class ReportAnIssue {
 	@Column(name="type")
     private String type;
 	
-	@Column(name="filepath")
+	@Column(name="filePath")
     private String filePath;
 	
-	@Column(name="Date modified")
+	@Column(name="dateModified")
 	private LocalDateTime time;
 	
 	public String getId() {

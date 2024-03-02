@@ -37,7 +37,7 @@ public class ReportIssueService {
 	private ReportIssueRepository reportIssueRepository;
 
 	private final List<String> ALLOWED_FILE_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png");
-	private final long MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 1MB
+	private final long MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024; // 1MB
 
 	public GenericResponseDTO<Object> postReportIssue(ReportAnIssueDto reportAnIssueDto, String path,
 			MultipartFile file, String token) throws IOException {
@@ -47,43 +47,58 @@ public class ReportIssueService {
 		Optional<User> user = userRepository.findByEmail(userEmail);
 
 		if (user.isPresent()) {
-			// file size validation
-			if (file.getSize() > MAX_FILE_SIZE_BYTES) {
-				throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File size should be below 2MB!.");
+			if (file != null) {
+				// file size validation
+				if (file.getSize() > MAX_FILE_SIZE_BYTES) {
+					throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File size should be below 2MB!.");
+				}
+
+				// file extension validation
+				String fileExtension = getFileExtension(file.getOriginalFilename());
+				if (!ALLOWED_FILE_EXTENSIONS.contains(fileExtension.toLowerCase())) {
+					throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File type Should be 'jpg', 'jpeg', 'png'.");
+				}
+
+				// FullPath
+				String filePath = path + File.separator + file.getOriginalFilename();
+
+				// Create folder if not created
+				File f = new File(path);
+				if (!f.exists()) {
+					f.mkdir();
+				}
+
+				// file copy
+				Files.copy(file.getInputStream(), Paths.get(filePath));
+
+				ReportAnIssue reportAnIssue = new ReportAnIssue();
+				reportAnIssue.setName(file.getOriginalFilename());
+				reportAnIssue.setType(file.getContentType());
+				reportAnIssue.setFilePath(filePath);
+				reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
+				reportAnIssue.setMessage(reportAnIssueDto.getMessage());
+				reportAnIssue.setTime(LocalDateTime.now());
+				reportIssueRepository.save(reportAnIssue);
+
+				Map<String, Object> data = new HashMap<>();
+				responseDTO.setStatus("Success");
+				responseDTO.setMessage("Issue reported successfully!");
+				responseDTO.setData(data);
+				return responseDTO;
 			}
+			if (file == null) {
+				ReportAnIssue reportAnIssue = new ReportAnIssue();
+				reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
+				reportAnIssue.setMessage(reportAnIssueDto.getMessage());
+				reportAnIssue.setTime(LocalDateTime.now());
+				reportIssueRepository.save(reportAnIssue);
 
-			// file extension validation
-			String fileExtension = getFileExtension(file.getOriginalFilename());
-			if (!ALLOWED_FILE_EXTENSIONS.contains(fileExtension.toLowerCase())) {
-				throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File type Should be 'jpg', 'jpeg', 'png'.");
+				Map<String, Object> data = new HashMap<>();
+				responseDTO.setStatus("Success");
+				responseDTO.setMessage("Issue reported successfully!");
+				responseDTO.setData(data);
+				return responseDTO;
 			}
-
-			// FullPath
-			String filePath = path + File.separator + file.getOriginalFilename();
-
-			// Create folder if not created
-			File f = new File(path);
-			if (!f.exists()) {
-				f.mkdir();
-			}
-
-			// file copy
-			Files.copy(file.getInputStream(), Paths.get(filePath));
-
-			ReportAnIssue reportAnIssue = new ReportAnIssue();
-			reportAnIssue.setName(file.getOriginalFilename());
-			reportAnIssue.setType(file.getContentType());
-			reportAnIssue.setFilePath(filePath);
-			reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
-			reportAnIssue.setMessage(reportAnIssueDto.getMessage());
-			reportAnIssue.setTime(LocalDateTime.now());
-			reportIssueRepository.save(reportAnIssue);
-
-			Map<String, Object> data = new HashMap<>();
-			responseDTO.setStatus("Success");
-			responseDTO.setMessage("Issue reported successfully!");
-			responseDTO.setData(data);
-			return responseDTO;
 		}
 		responseDTO.setStatus("Failure");
 		responseDTO.setMessage("Something went wrong");
