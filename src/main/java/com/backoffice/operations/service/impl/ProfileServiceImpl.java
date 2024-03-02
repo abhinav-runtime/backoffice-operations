@@ -148,51 +148,48 @@ public class ProfileServiceImpl implements ProfileService {
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         try {
             if (user.isPresent()) {
-                ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-                if (Objects.nonNull(response.getBody())) {
-                    Map<String, Object> data = new HashMap<>();
-                    Profile profile = profileRepository.findByUniqueKeyCivilId(uniqueKey).orElseThrow(() -> new RuntimeException("Profile not found"));
-                    Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
-                    if (civilIdEntity.isPresent()) {
-                        if (StringUtils.hasLength(updateProfileRequest.getMobileNumber()) &&
-                                StringUtils.hasLength(updateProfileRequest.getCivilId()) &&
-                                civilIdEntity.get().getEntityId().equalsIgnoreCase(updateProfileRequest.getCivilId())) {
-                            profile.setCivilId(updateProfileRequest.getCivilId());
-                            profile.setExpiryDate(updateProfileRequest.getExpiryDate());
-                            profile.setMobNum(updateProfileRequest.getMobileNumber());
+                Map<String, Object> data = new HashMap<>();
+                Profile profile = profileRepository.findByUniqueKeyCivilId(uniqueKey).orElseThrow(() -> new RuntimeException("Profile not found"));
+                Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
+                if (civilIdEntity.isPresent()) {
+                    if (StringUtils.hasLength(updateProfileRequest.getMobileNumber()) &&
+                            StringUtils.hasLength(updateProfileRequest.getCivilId()) &&
+                            civilIdEntity.get().getEntityId().equalsIgnoreCase(updateProfileRequest.getCivilId())) {
+                        profile.setCivilId(updateProfileRequest.getCivilId());
+                        profile.setExpiryDate(updateProfileRequest.getExpiryDate());
+                        profile.setMobNum(updateProfileRequest.getMobileNumber());
 
-                            GenericResponseDTO<Object> newOtp = civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
-                            if (Objects.nonNull(newOtp) && newOtp.getStatus().equalsIgnoreCase("Success")) {
-                                profile.setUserId(user.get().getId());
-                                profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
-                                profileRepository.save(profile);
-
-                                responseDTO.setStatus("Success");
-                                responseDTO.setMessage("Success");
-                                data.put("uniqueKey", uniqueKey);
-                                responseDTO.setData(data);
-                                return responseDTO;
-                            }
-                        } else if (StringUtils.hasLength(updateProfileRequest.getEmailAddress())) {
-                            profile.setEmailId(updateProfileRequest.getEmailAddress());
-                            user.get().setEmail(updateProfileRequest.getEmailAddress());
-                            String newToken = jwtTokenProvider.generateToken(user.get());
-                            sendVerificationEmail(profile.getEmailId(),
-                                    verifyEmailLink + "backoffice/api/v1//profile/verifyToken?token=" + newToken, user.get().getUsername());
-
+                        GenericResponseDTO<Object> newOtp = civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
+                        if (Objects.nonNull(newOtp) && newOtp.getStatus().equalsIgnoreCase("Success")) {
                             profile.setUserId(user.get().getId());
                             profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
                             profileRepository.save(profile);
-                        } else if (null != updateProfileRequest.getEmailStatementFlag()) {
-                            profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
-                            profileRepository.save(profile);
-                        } else {
-                            responseDTO.setStatus("Failure");
-                            responseDTO.setMessage("Invalid CivilId passed.");
+
+                            responseDTO.setStatus("Success");
+                            responseDTO.setMessage("Success");
                             data.put("uniqueKey", uniqueKey);
                             responseDTO.setData(data);
                             return responseDTO;
                         }
+                    } else if (StringUtils.hasLength(updateProfileRequest.getEmailAddress())) {
+                        profile.setEmailId(updateProfileRequest.getEmailAddress());
+                        user.get().setEmail(updateProfileRequest.getEmailAddress());
+                        String newToken = jwtTokenProvider.generateToken(user.get());
+                        sendVerificationEmail(profile.getEmailId(),
+                                verifyEmailLink + "backoffice/api/v1//profile/verifyToken?token=" + newToken, user.get().getUsername());
+
+                        profile.setUserId(user.get().getId());
+                        profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
+                        profileRepository.save(profile);
+                    } else if (null != updateProfileRequest.getEmailStatementFlag()) {
+                        profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
+                        profileRepository.save(profile);
+                    } else {
+                        responseDTO.setStatus("Failure");
+                        responseDTO.setMessage("Invalid CivilId passed.");
+                        data.put("uniqueKey", uniqueKey);
+                        responseDTO.setData(data);
+                        return responseDTO;
                     }
                 }
             }
