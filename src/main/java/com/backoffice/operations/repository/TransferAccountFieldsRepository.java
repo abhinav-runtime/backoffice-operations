@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface TransferAccountFieldsRepository extends JpaRepository<TransferAccountFields, String> {
 
     TransferAccountFields findByTransferType(String selfTransfer);
-    TransferAccountFields findByTransferType(String transferType);
+
 
 }
