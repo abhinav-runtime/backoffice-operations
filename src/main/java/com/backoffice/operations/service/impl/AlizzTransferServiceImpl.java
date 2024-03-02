@@ -73,7 +73,15 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
             AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount senderAccDetails = getIslamicAccount(alizzTransferRequestDto.getFromAccountNumber());
 
+            if(Objects.isNull(senderAccDetails)){
+                return getErrorResponseGenericDTO(alizzTransferRequestDto, "Sender Account Invalid");
+            }
+
             AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails = getIslamicAccount(alizzTransferRequestDto.getToAccountNumber());
+
+            if(Objects.isNull(receiverAccDetails)){
+                return getErrorResponseGenericDTO(alizzTransferRequestDto, "Receiver Account Invalid");
+            }
 
             AlizzTransferDto.Sender sender = AlizzTransferDto.Sender.builder().accountNumber(senderAccDetails.getAcc())
                     .accountCurrency(senderAccDetails.getCcy()).accountName(senderAccDetails.getAdesc())
@@ -110,6 +118,17 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
             return responseDTO;
         }
         return null;
+    }
+
+    private static GenericResponseDTO<Object> getErrorResponseGenericDTO(AlizzTransferRequestDto alizzTransferRequestDto, String Receiver_Account_Invalid) {
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        Map<String, Object> data = new HashMap<>();
+        data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
+        data.put("message", Receiver_Account_Invalid);
+        responseDTO.setStatus("Failure");
+        responseDTO.setMessage("Failure");
+        responseDTO.setData(data);
+        return responseDTO;
     }
 
     private AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount getIslamicAccount(String accountNumber) {
