@@ -282,7 +282,7 @@ public class CivilIdServiceImpl implements CivilIdService {
                     HttpHeaders headers = new HttpHeaders();
                     headers.add("TENANT", "ALIZZ_UAT");
                     headers.setContentType(MediaType.APPLICATION_JSON);
-                    String requestBody = "{ \"customerId\": \"" + civilIdEntity.get().getEntityId() + "\" }";
+                    String requestBody = "{ \"customerId\": \"" + civilIdEntity.get().getCivilId() + "\" }";
                     HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
                     ResponseEntity<ExternalApiResponseDTO> responseEntity = basicAuthRestTemplate.exchange(apiUrl,
                             HttpMethod.POST, requestEntity, ExternalApiResponseDTO.class);
@@ -308,8 +308,8 @@ public class CivilIdServiceImpl implements CivilIdService {
                                     responseDTO.setData(data);
                                     return responseDTO;
                                 } else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
-                                    GenericResponseDTO<Object> newOtp = sendOtp(civilIdEntity, responseDTO);
-                                    if (newOtp != null) return newOtp;
+                                    //send OTP
+                                    sendOtp(civilIdEntity, responseDTO);
                                     Map<String, String> data = new HashMap<>();
                                     responseDTO.setStatus("Success");
                                     responseDTO.setMessage("Success");
