@@ -29,4 +29,5 @@ public class AccountType {
     private String transfers;
     private String editAccountInfo;
     private String visibility;
+    private String accountNickName;
 }

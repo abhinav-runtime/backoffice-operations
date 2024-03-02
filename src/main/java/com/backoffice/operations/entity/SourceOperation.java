@@ -23,5 +23,7 @@ public class SourceOperation {
     private String sourceCode;
     @Column(nullable = false, unique = true)
     private String sourceOperation;
+    @Column(nullable = false, unique = true)
+    private String sourceSystem;
 
 }

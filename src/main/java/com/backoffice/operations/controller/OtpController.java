@@ -52,10 +52,10 @@ public class OtpController {
 	private BOCustomerService customerService;
 
 	@PostMapping("/validate")
-	public ResponseEntity<GenericResponseDTO<Object>> validateOtp(@RequestBody OtpRequestDTO otpRequest) {
+	public ResponseEntity<GenericResponseDTO<Object>> validateOtp(@RequestBody OtpRequestDTO otpRequest, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		GenericResponseDTO<Object> validationResultDTO = new GenericResponseDTO<>();
 		try {
-			validationResultDTO = otpService.validateOtp(otpRequest);
+			validationResultDTO = otpService.validateOtp(otpRequest, token.substring("Bearer ".length()));
 			return ResponseEntity.ok(validationResultDTO);
 		} catch (OtpValidationException e) {
 			return ResponseEntity.ok(validationResultDTO);

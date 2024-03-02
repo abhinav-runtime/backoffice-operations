@@ -13,4 +13,5 @@ public class CreditCardDetailsResponseDTO {
     private String customerName;
     private Double outstandingBalance;
     private Double availableBalance;
+    private String type;
 }

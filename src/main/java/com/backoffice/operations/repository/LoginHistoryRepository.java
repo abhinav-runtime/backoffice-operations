@@ -10,5 +10,5 @@ import com.backoffice.operations.entity.LoginHistory;
 @Repository
 public interface LoginHistoryRepository extends JpaRepository<LoginHistory, String> {
 	List<LoginHistory> findByUniqueKey(String uniqueKey);
-	LoginHistory findFirstByOrderByLoginTimestampDesc();
+	LoginHistory findFirstByUniqueKeyOrderByLoginTimestampDesc(String uniqueKey);
 }
