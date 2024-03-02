@@ -1,5 +1,6 @@
 package com.backoffice.operations.controller;
 
+import com.backoffice.operations.payloads.SelfTransferDTO;
 import com.backoffice.operations.payloads.TransferRequestDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.TransferService;
@@ -22,7 +23,7 @@ public class TransferController {
     }
 
     @PostMapping("/self")
-    public ResponseEntity<GenericResponseDTO<Object>> transferToBank(@RequestBody TransferRequestDto transferRequest) throws JsonProcessingException {
-        return ResponseEntity.ok(transferService.transferToBank(transferRequest));
+    public ResponseEntity<GenericResponseDTO<Object>> transferToBank(@RequestBody SelfTransferDTO selfTransferDTO) throws JsonProcessingException {
+        return ResponseEntity.ok(transferService.transferToBank(selfTransferDTO));
     }
 }

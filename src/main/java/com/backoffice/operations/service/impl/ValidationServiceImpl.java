@@ -2,6 +2,7 @@ package com.backoffice.operations.service.impl;
 
 import com.backoffice.operations.payloads.AccessTokenResponse;
 import com.backoffice.operations.payloads.AccountDetails;
+import com.backoffice.operations.payloads.CivilIdAPIResponse;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.ValidationService;
 import com.backoffice.operations.utils.CommonUtils;
@@ -28,6 +29,9 @@ public class ValidationServiceImpl implements ValidationService {
 
     private final RestTemplate restTemplate;
 
+    @Value("${external.api.m2p.civilId}")
+    private String civilIdExternalAPI;
+
     public ValidationServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate) {
         this.commonUtils = commonUtils;
         this.restTemplate = restTemplate;
@@ -42,10 +46,12 @@ public class ValidationServiceImpl implements ValidationService {
                         .stream()
                         .anyMatch(accDetails -> accDetails.getAcc().equals(accountNumber)))
                 .map(isValidUser -> {
+                    String custFullName = isValidUser ? getTokenAndApiResponseForCustomerInformation(cifNumber) : "";
                     GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
                     Map<String, Object> data = new HashMap<>();
                     data.put("accountNumber", accountNumber);
                     data.put("isValidUser", isValidUser);
+                    data.put("custName", custFullName);
                     data.put("message", isValidUser ? "Account is linked with the User" : "Account is not linked with the User");
                     responseDTO.setStatus("Success");
                     responseDTO.setMessage("Success");
@@ -78,5 +84,26 @@ public class ValidationServiceImpl implements ValidationService {
             return Optional.ofNullable(responseEntity.getBody());
         }
         return Optional.empty();
+    }
+
+    private String getTokenAndApiResponseForCustomerInformation(String civilId) {
+        ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+        if (Objects.nonNull(response.getBody())) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(response.getBody().getAccessToken());
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            String apiUrl = civilIdExternalAPI + civilId;
+            ResponseEntity<CivilIdAPIResponse> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, entity,
+                    CivilIdAPIResponse.class);
+            CivilIdAPIResponse apiResponse = responseEntity.getBody();
+            if (apiResponse != null && apiResponse.isSuccess()) {
+                CivilIdAPIResponse.CustomerFull customerFull = apiResponse.getResponse().getResult().getCustomerFull();
+
+                if (customerFull != null) {
+                    return customerFull.getFullname();
+                }}
+        }
+        return "";
     }
 }
