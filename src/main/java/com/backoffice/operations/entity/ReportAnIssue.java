@@ -28,7 +28,7 @@ public class ReportAnIssue {
 	@Column(name="typeOfIssue")
     private String typeOfIssue;
 	
-	@Column(name="message")
+	@Column(name="message", length = 255)
     private String message;
     
 	@Column(name="name")
