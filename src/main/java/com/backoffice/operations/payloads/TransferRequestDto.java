@@ -6,7 +6,7 @@ import lombok.*;
 public class TransferRequestDto {
     private Header header;
     private Transaction transaction;
-    private Sender sender;
+    public Sender sender;
     private Receiver receiver;
 
 
@@ -14,7 +14,7 @@ public class TransferRequestDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class Header {
+    public class Header {
         private String source_system;
         private String source_user;
         private String source_operation;
@@ -22,6 +22,7 @@ public class TransferRequestDto {
     }
 
     @Data
+    public
     class Transaction {
         private String transaction_reference;
         private String transaction_date;
@@ -38,6 +39,7 @@ public class TransferRequestDto {
     }
 
     @Data
+    public
     class Sender {
         private String account_name;
         private String account_number;
@@ -45,6 +47,7 @@ public class TransferRequestDto {
     }
 
     @Data
+    public
     class Receiver {
         private String account_number;
         private String account_name;

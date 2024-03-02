@@ -27,6 +27,7 @@ import com.backoffice.operations.security.JwtTokenProvider;
 @Service
 public class ReportIssueService {
 
+
 	@Autowired
 	private JwtTokenProvider jwtTokenProvider;
 
