@@ -153,24 +153,31 @@ public class ProfileServiceImpl implements ProfileService {
                 Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
                 if (civilIdEntity.isPresent()) {
                     if (StringUtils.hasLength(updateProfileRequest.getMobileNumber()) &&
-                            StringUtils.hasLength(updateProfileRequest.getCivilId()) &&
-                            civilIdEntity.get().getEntityId().equalsIgnoreCase(updateProfileRequest.getCivilId())) {
+                            StringUtils.hasLength(updateProfileRequest.getCivilId())
+//                            && civilIdEntity.get().getEntityId().equalsIgnoreCase(updateProfileRequest.getCivilId())
+                    ) {
                         profile.setCivilId(updateProfileRequest.getCivilId());
                         profile.setExpiryDate(updateProfileRequest.getExpiryDate());
                         profile.setMobNum(updateProfileRequest.getMobileNumber());
 
-                        GenericResponseDTO<Object> newOtp = civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
-                        if (Objects.nonNull(newOtp) && newOtp.getStatus().equalsIgnoreCase("Success")) {
-                            profile.setUserId(user.get().getId());
-                            profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
-                            profileRepository.save(profile);
-
-                            responseDTO.setStatus("Success");
-                            responseDTO.setMessage("Success");
-                            data.put("uniqueKey", uniqueKey);
-                            responseDTO.setData(data);
-                            return responseDTO;
-                        }
+//                        GenericResponseDTO<Object> newOtp =
+                                civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
+                        responseDTO.setStatus("Success");
+                        responseDTO.setMessage("Success");
+                        data.put("uniqueKey", uniqueKey);
+                        responseDTO.setData(data);
+                        return responseDTO;
+//                        if (Objects.nonNull(newOtp) && newOtp.getStatus().equalsIgnoreCase("Success")) {
+//                            profile.setUserId(user.get().getId());
+//                            profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
+//                            profileRepository.save(profile);
+//
+//                            responseDTO.setStatus("Success");
+//                            responseDTO.setMessage("Success");
+//                            data.put("uniqueKey", uniqueKey);
+//                            responseDTO.setData(data);
+//                            return responseDTO;
+//                        }
                     } else if (StringUtils.hasLength(updateProfileRequest.getEmailAddress())) {
                         profile.setEmailId(updateProfileRequest.getEmailAddress());
                         user.get().setEmail(updateProfileRequest.getEmailAddress());

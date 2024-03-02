@@ -310,6 +310,8 @@ public class CivilIdServiceImpl implements CivilIdService {
                                 } else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
                                     //send OTP
                                     sendOtp(civilIdEntity, responseDTO);
+                                    CardEntity cardEntity = getCardEntity(card, civilIdEntity, responseEntity);
+                                    cardRepository.save(cardEntity);
                                     Map<String, String> data = new HashMap<>();
                                     responseDTO.setStatus("Success");
                                     responseDTO.setMessage("Success");
