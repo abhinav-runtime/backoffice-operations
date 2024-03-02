@@ -7,7 +7,7 @@ import lombok.Setter;
 @Entity
 @Setter
 @Getter
-@Table(name = "sequence_counter")
+@Table(name = "az_sequence_counter_bk")
 public class SequenceCounter {
 
     @Id

@@ -18,10 +18,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class AlizzTransferServiceImpl implements AlizzTransferService {
@@ -161,22 +159,20 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
     }
 
     private static AlizzTransferDto.Receiver getReceiverDetails(AlizzTransferRequestDto alizzTransferRequestDto, AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails) {
-        AlizzTransferDto.Receiver receiver = AlizzTransferDto.Receiver.builder()
+        return AlizzTransferDto.Receiver.builder()
                 .notesToReceiver(alizzTransferRequestDto.getNotesToReceiver())
                 .accountName(receiverAccDetails.getAdesc()).accountNumber(receiverAccDetails.getAcc()).build();
-        return receiver;
     }
 
     private static AlizzTransferDto.Sender getSenderDetails(AlizzTransferRequestDto alizzTransferRequestDto, AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount senderAccDetails, BeneficiaryBank beneficiaryBank) {
-        AlizzTransferDto.Sender sender = AlizzTransferDto.Sender.builder().accountNumber(senderAccDetails.getAcc())
+        return AlizzTransferDto.Sender.builder().accountNumber(senderAccDetails.getAcc())
                 .accountCurrency(senderAccDetails.getCcy()).accountName(senderAccDetails.getAdesc())
                 .branchCode(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankCode() : "")
                 .bankCode(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3)).build();
-        return sender;
     }
 
     private static AlizzTransferDto.Transaction getTransactionDetails(AlizzTransferRequestDto alizzTransferRequestDto, String txnRefId, String txnDate, AccountCurrency accountCurrency, TransferAccountFields transferAccountFields) {
-        AlizzTransferDto.Transaction transaction = AlizzTransferDto.Transaction.builder()
+        return AlizzTransferDto.Transaction.builder()
                 .paymentDetails1(alizzTransferRequestDto.getNotesToReceiver()).paymentDetails2("")
                 .transactionReference(txnRefId).transactionDate(txnDate)
                 .transactionAmount(alizzTransferRequestDto.getTransactionAmount())
@@ -186,7 +182,6 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
                 .cbsProduct(Objects.nonNull(transferAccountFields) && Objects.nonNull(transferAccountFields.getCbsProduct()) ? transferAccountFields.getCbsProduct() : "")
                 .chargeType(Objects.nonNull(transferAccountFields) && Objects.nonNull(transferAccountFields.getChargeType()) ? transferAccountFields.getChargeType() : "")
                 .build();
-        return transaction;
     }
 
     private static GenericResponseDTO<Object> getErrorResponseGenericDTO(AlizzTransferRequestDto alizzTransferRequestDto, String Receiver_Account_Invalid) {

@@ -20,7 +20,7 @@ public class FundTransferResponseDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public class Response {
+    public static class Response {
     Result ResultObject;
 }
 
@@ -28,10 +28,10 @@ public class FundTransferResponseDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public class Result {
+    public static class Result {
     CstmrCdtTrfInitn CstmrCdtTrfInitnObject;
-    ArrayList<Object> fcubserrorresp = new ArrayList<Object>();
-    ArrayList<Object> fcubswarningresp = new ArrayList<Object>();
+    ArrayList<Object> fcubserrorresp = new ArrayList<>();
+    ArrayList<Object> fcubswarningresp = new ArrayList<>();
 
 }
 
@@ -39,7 +39,7 @@ public class FundTransferResponseDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public class CstmrCdtTrfInitn {
+    public static class CstmrCdtTrfInitn {
     GrpTlr GrpTlrObject;
 
 }
@@ -48,7 +48,7 @@ public class FundTransferResponseDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public class GrpTlr {
+    public static class GrpTlr {
     private Integer txnRefNo;
 }
 
