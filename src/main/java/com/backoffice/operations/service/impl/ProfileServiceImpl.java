@@ -159,7 +159,7 @@ public class ProfileServiceImpl implements ProfileService {
                         profile.setCivilId(updateProfileRequest.getCivilId());
                         profile.setExpiryDate(updateProfileRequest.getExpiryDate());
                         profile.setMobNum(updateProfileRequest.getMobileNumber());
-
+                        profileRepository.save(profile);
 //                        GenericResponseDTO<Object> newOtp =
                                 civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
                         responseDTO.setStatus("Success");
