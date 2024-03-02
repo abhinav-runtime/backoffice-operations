@@ -352,7 +352,7 @@ public class TransactionLimitServiceImpl implements TransactionLimitService{
         	data.put("list", transactionLimitsEntity);
         	responseDTO.setData(data);
         	return responseDTO;
-        }
+        }  
         responseDTO.setStatus("Failure");
     	responseDTO.setMessage("Something went wrong");
     	return responseDTO;    	
