@@ -1,9 +1,6 @@
 package com.backoffice.operations.service.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,104 +28,103 @@ import com.backoffice.operations.service.PinService;
 @Service
 public class PinServiceImpl implements PinService {
 
-	@Autowired
-	private PinRequestRepository pinRequestRepository;
+    @Autowired
+    private PinRequestRepository pinRequestRepository;
 
-	@Value("${external.api.pinUrl}")
-	private String externalApiPinUrl;
+    @Value("${external.api.pinUrl}")
+    private String externalApiPinUrl;
 
-	@Autowired
-	private RestTemplate restTemplate;
+    @Autowired
+    private RestTemplate restTemplate;
 
-	@Autowired
-	private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
-	@Autowired
-	private UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-	@Autowired
-	private CardRepository cardRepository;
+    @Autowired
+    private CardRepository cardRepository;
 
-	@Override
-	public GenericResponseDTO<Object> storeAndSetPin(GetPinDTO pinRequestDTO, String token) {
-		String userEmail = jwtTokenProvider.getUsername(token);
-		Optional<User> user = userRepository.findByEmail(userEmail);
-		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		if (user.isPresent()) {
-			CardEntity cardEntity = cardRepository.findByUniqueKeyCivilId(pinRequestDTO.getUniqueKey());
-			if (Objects.nonNull(cardEntity)) {
-				PinRequestEntity pinRequestEntity = pinRequestRepository
-						.findByUniqueKeyCivilId(cardEntity.getUniqueKeyCivilId());
-				if (Objects.isNull(pinRequestEntity)) {
-					pinRequestEntity = new PinRequestEntity();
-					pinRequestEntity.setUniqueKeyCivilId(cardEntity.getUniqueKeyCivilId());
-					pinRequestEntity.setCivilId(cardEntity.getCivilId());
-					pinRequestEntity.setPin(pinRequestDTO.getPin());
-					pinRequestEntity.setKitNo(cardEntity.getCardKitNo());
-					pinRequestEntity.setExpiryDate(cardEntity.getExpiry());
-					pinRequestEntity.setDob(cardEntity.getDobOfUser());
-					pinRequestRepository.save(pinRequestEntity);
-				}
+    @Override
+    public GenericResponseDTO<Object> storeAndSetPin(GetPinDTO pinRequestDTO, String token) {
+        String userEmail = jwtTokenProvider.getUsername(token);
+        Optional<User> user = userRepository.findByEmail(userEmail);
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        if (user.isPresent()) {
+            List<CardEntity> cardEntity = cardRepository.findAllByUniqueKeyCivilId(pinRequestDTO.getUniqueKey());
+            if (!cardEntity.isEmpty() && Objects.nonNull(cardEntity.get(0))) {
+                PinRequestEntity pinRequestEntity = pinRequestRepository
+                        .findByUniqueKeyCivilId(cardEntity.get(0).getUniqueKeyCivilId());
+                if (Objects.isNull(pinRequestEntity)) {
+                    pinRequestEntity = new PinRequestEntity();
+                    pinRequestEntity.setUniqueKeyCivilId(cardEntity.get(0).getUniqueKeyCivilId());
+                    pinRequestEntity.setCivilId(cardEntity.get(0).getCivilId());
+                    pinRequestEntity.setPin(pinRequestDTO.getPin());
+                    pinRequestEntity.setKitNo(cardEntity.get(0).getCardKitNo());
+                    pinRequestEntity.setExpiryDate(cardEntity.get(0).getExpiry());
+                    pinRequestEntity.setDob(cardEntity.get(0).getDobOfUser());
+                    pinRequestRepository.save(pinRequestEntity);
+                }
 
-				PinRequestDTO pinRequest = new PinRequestDTO();
-				pinRequest.setEntityId(pinRequestEntity.getCivilId());
-				pinRequest.setDob(pinRequestEntity.getDob());
-				String reversedExpiryDate = pinRequestEntity.getExpiryDate().substring(2)
-						+ pinRequestEntity.getExpiryDate().substring(0, 2);
-				pinRequest.setExpiryDate(reversedExpiryDate);
-				pinRequest.setKitNo(pinRequestEntity.getKitNo());
-				pinRequest.setPin(pinRequestEntity.getPin());
+                PinRequestDTO pinRequest = new PinRequestDTO();
+                pinRequest.setEntityId(pinRequestEntity.getCivilId());
+                pinRequest.setDob(pinRequestEntity.getDob());
+                String reversedExpiryDate = pinRequestEntity.getExpiryDate().substring(2)
+                        + pinRequestEntity.getExpiryDate().substring(0, 2);
+                pinRequest.setExpiryDate(reversedExpiryDate);
+                pinRequest.setKitNo(pinRequestEntity.getKitNo());
+                pinRequest.setPin(pinRequestEntity.getPin());
 
-				HttpHeaders headers = new HttpHeaders();
-				headers.add("TENANT", "ALIZZ_UAT");
-				headers.setContentType(MediaType.APPLICATION_JSON);
+                HttpHeaders headers = new HttpHeaders();
+                headers.add("TENANT", "ALIZZ_UAT");
+                headers.setContentType(MediaType.APPLICATION_JSON);
 
-				HttpEntity<PinRequestDTO> requestEntity = new HttpEntity<>(pinRequest, headers);
-				ResponseEntity<PinResponseDTO> response = null;
-				try {
-					response = restTemplate.postForEntity(externalApiPinUrl, requestEntity, PinResponseDTO.class);
-				} catch (Exception e) {
-					Map<String, Object> data = new HashMap<>();
-					responseDTO.setStatus("Success");
-					responseDTO.setMessage("Success");
-					data.put("uniqueKey", cardEntity.getUniqueKeyCivilId());
-					data.put("dob", pinRequest.getDob());
-					data.put("entityId", pinRequest.getEntityId());
-					data.put("expiryDate", pinRequest.getExpiryDate());
-					data.put("kitNo", pinRequest.getKitNo());
+                HttpEntity<PinRequestDTO> requestEntity = new HttpEntity<>(pinRequest, headers);
+                ResponseEntity<PinResponseDTO> response;
+                try {
+                    response = restTemplate.postForEntity(externalApiPinUrl, requestEntity, PinResponseDTO.class);
+                } catch (Exception e) {
+                    Map<String, Object> data = new HashMap<>();
+                    responseDTO.setStatus("Success");
+                    responseDTO.setMessage("Success");
+                    data.put("uniqueKey", cardEntity.get(0).getUniqueKeyCivilId());
+                    data.put("dob", pinRequest.getDob());
+                    data.put("entityId", pinRequest.getEntityId());
+                    data.put("expiryDate", pinRequest.getExpiryDate());
+                    data.put("kitNo", pinRequest.getKitNo());
 
-					responseDTO.setData(data);
-					return responseDTO;
-				}
+                    responseDTO.setData(data);
+                    return responseDTO;
+                }
 
-				if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null
-						&& response.getBody().getResult() != null && response.getBody().getResult().isStatus()) {
-					Map<String, Object> data = new HashMap<>();
-					responseDTO.setStatus("Success");
-					responseDTO.setMessage("Success");
-					data.put("uniqueKey", cardEntity.getUniqueKeyCivilId());
-					data.put("dob", pinRequest.getDob());
-					data.put("entityId", pinRequest.getEntityId());
-					data.put("expiryDate", pinRequest.getExpiryDate());
-					data.put("kitNo", pinRequest.getKitNo());
-					responseDTO.setData(data);
-					return responseDTO;
-				} else {
-					Map<String, Object> data = new HashMap<>();
-					responseDTO.setStatus("Failure");
-					responseDTO.setMessage("Something went wrong");
-					data.put("uniqueKey", cardEntity.getUniqueKeyCivilId());
-					responseDTO.setData(data);
-					return responseDTO;
-				}
-			}
-		}
-		Map<String, Object> data = new HashMap<>();
-
-		responseDTO.setStatus("Failure");
-		responseDTO.setMessage("Something went wrong");
-		responseDTO.setData(data);
-		return responseDTO;
-	}
+                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null
+                        && response.getBody().getResult() != null && response.getBody().getResult().isStatus()) {
+                    Map<String, Object> data = new HashMap<>();
+                    responseDTO.setStatus("Success");
+                    responseDTO.setMessage("Success");
+                    data.put("uniqueKey", cardEntity.get(0).getUniqueKeyCivilId());
+                    data.put("dob", pinRequest.getDob());
+                    data.put("entityId", pinRequest.getEntityId());
+                    data.put("expiryDate", pinRequest.getExpiryDate());
+                    data.put("kitNo", pinRequest.getKitNo());
+                    responseDTO.setData(data);
+                    return responseDTO;
+                } else {
+                    Map<String, Object> data = new HashMap<>();
+                    responseDTO.setStatus("Failure");
+                    responseDTO.setMessage("Something went wrong");
+                    data.put("uniqueKey", cardEntity.get(0).getUniqueKeyCivilId());
+                    responseDTO.setData(data);
+                    return responseDTO;
+                }
+            }
+        }
+        Map<String, Object> data = new HashMap<>();
+        responseDTO.setStatus("Failure");
+        responseDTO.setMessage("Something went wrong");
+        responseDTO.setData(data);
+        return responseDTO;
+    }
 
 }

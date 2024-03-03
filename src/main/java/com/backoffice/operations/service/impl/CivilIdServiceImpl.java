@@ -98,7 +98,7 @@ public class CivilIdServiceImpl implements CivilIdService {
     private static CardEntity getCardEntity(Card card, Optional<CivilIdEntity> civilIdEntity,
                                             ResponseEntity<ExternalApiResponseDTO> responseEntity) {
         CardEntity cardEntity = new CardEntity();
-        cardEntity.setUniqueKeyCivilId(civilIdEntity.get().getId().toString());
+        cardEntity.setUniqueKeyCivilId(civilIdEntity.get().getId());
         cardEntity.setCivilId(civilIdEntity.get().getCivilId());
         cardEntity.setCardKitNo(card.getKitNo());
         cardEntity.setExpiry(card.getExpiryDate());
