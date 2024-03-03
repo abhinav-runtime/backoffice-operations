@@ -38,14 +38,14 @@ public class ReportAnIssue {
 	@Column(name="type")
     private String type;
 
-	//TODO: changes this into camel case.
-	@Column(name="filepath")
+	
+	@Column(name="filePath")
     private String filePath;
-
-	//TODO: changes this into camel case.
-	@Column(name="Date modified")
+	
+	@Column(name="dateModified")
 	private LocalDateTime time;
 
+	@Column(name="lang")
 	private String lang;
 	
 	public String getId() {
@@ -102,5 +102,12 @@ public class ReportAnIssue {
 
 	public void setTime(LocalDateTime time) {
 		this.time = time;
+	}
+	public String getLang() {
+		return lang;
+	}
+
+	public void setLang(String lang) {
+		this.lang = lang;
 	}
 }
