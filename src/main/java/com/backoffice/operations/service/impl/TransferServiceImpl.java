@@ -7,41 +7,36 @@ import com.backoffice.operations.repository.*;
 import com.backoffice.operations.service.TransferService;
 import com.backoffice.operations.utils.ApiCaller;
 import com.backoffice.operations.utils.CommonUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import java.time.LocalDate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class TransferServiceImpl implements TransferService {
 
+    private static final Logger logger = LoggerFactory.getLogger(TransferServiceImpl.class);
     private final CommonUtils commonUtils;
-
+    private final RestTemplate restTemplate;
+    private final ApiCaller apiCaller;
     @Value("${external.api.accounts}")
     private String accountExternalAPI;
-
     @Autowired
     @Qualifier("jwtAuth")
     private RestTemplate jwtAuthRestTemplate;
-
-    private final RestTemplate restTemplate;
-    public TransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, ApiCaller apiCaller) {
-        this.commonUtils = commonUtils;
-        this.restTemplate = restTemplate;
-        this.apiCaller = apiCaller;
-    }
-
     @Value("${bank.transfer.url}")
     private String bankTransferUrl;
 
@@ -53,20 +48,21 @@ public class TransferServiceImpl implements TransferService {
     private TransactionPurposeRepository transactionPurposeRepository;
     @Autowired
     private AccountCurrencyRepository AccountCurrencyRepository;
-
-    private final ApiCaller apiCaller;
     @Autowired
-    private  SequenceCounterRepository sequenceCounterRepository;
-
+    private SequenceCounterRepository sequenceCounterRepository;
     @Autowired
-    private  TransactionRepository transactionRepository;
+    private TransactionRepository transactionRepository;
 
+    public TransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, ApiCaller apiCaller) {
+        this.commonUtils = commonUtils;
+        this.restTemplate = restTemplate;
+        this.apiCaller = apiCaller;
+    }
 
     @Override
-    public GenericResponseDTO<Object> transferToBank(SelfTransferDTO selfTransferDTO) throws JsonProcessingException {
+    public GenericResponseDTO<Object> transferToBank(SelfTransferDTO selfTransferDTO) {
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-        try{
-
+        try {
             TransferRequestDto transferRequestDto = new TransferRequestDto();
 
             String transactionRefcode = "TRST";
@@ -85,6 +81,9 @@ public class TransferServiceImpl implements TransferService {
             sender.setAccount_name(senderAccName);
             AccountCurrency accountCurrency = AccountCurrencyRepository.findByAccountCurrencyCode("omr");
             sender.setAccount_currency(accountCurrency.getAccountCurrency());
+            sender.setBank_code("IZZB");
+            sender.setBank_name("Alizz Islamic Bank");
+            sender.setBranch_code(selfTransferDTO.getFromAccountNumber().substring(0, 2));
 
             //set Receiver details
             TransferRequestDto.Receiver receiver = transferRequestDto.new Receiver();
@@ -94,6 +93,19 @@ public class TransferServiceImpl implements TransferService {
             Optional<AccountDetails> receiverAccountInfo = getTokenAndApiResponse(receiverCifNo);
             String receiverCifNoAccName = receiverAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAccdesc();
             receiver.setAccount_name(receiverCifNoAccName);
+            receiver.setBank_code("IZZB");
+            receiver.setBank_name("Alizz Islamic Bank");
+            receiver.setBranch_code(selfTransferDTO.getFromAccountNumber().substring(0, 2));
+            receiver.setIban_account_number("");
+            receiver.setBank_address1("Muscat");
+            receiver.setBank_address2("Muscat");
+            receiver.setBank_address3("Muscat");
+            receiver.setBank_address4("Muscat");
+            receiver.setBene_address1("Muscat");
+            receiver.setBene_address2("Muscat");
+            receiver.setBene_address3("Muscat");
+            receiver.setBene_address4("Muscat");
+            receiver.setNotes_to_receiver(selfTransferDTO.getNotesToReceiver());
 
             //set header
             TransferRequestDto.Header header = transferRequestDto.new Header();
@@ -106,7 +118,8 @@ public class TransferServiceImpl implements TransferService {
             TransferRequestDto.Transaction transaction = transferRequestDto.new Transaction();
             TransferAccountFields TransferAccountFields = transferAccountFieldsRepository.findByTransferType("SELF TRANSFER");
             transaction.setTransaction_reference(txnRefId);
-            transaction.setTransaction_date(LocalDate.now().toString());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            transaction.setTransaction_date(LocalDate.now().minusDays(1).format(formatter).toString());
             TransactionPurpose transactionPurpose = transactionPurposeRepository.findByTransactionPurposeCode("ordinaryTransfer");
             transaction.setTransaction_purpose(transactionPurpose.getTransactionPurpose());
             transaction.setTransaction_currency(accountCurrency.getAccountCurrency());
@@ -115,13 +128,16 @@ public class TransferServiceImpl implements TransferService {
             transaction.setCbs_network(TransferAccountFields.getCbsNetwork());
             transaction.setCharge_type(TransferAccountFields.getChargeType());
             transaction.setPayment_details_1(selfTransferDTO.getNotesToReceiver());
+            transaction.setPayment_details_2("");
+            transaction.setPayment_details_3("");
+            transaction.setPayment_details_4("");
 
             transaction.setTransaction_amount(selfTransferDTO.getTransactionAmount());
 
-            Double avlBalance = apiCaller.getAvailableBalance(selfTransferDTO.getFromAccountNumber());
-            if(avlBalance > selfTransferDTO.getTransactionAmount()){
+            double avlBalance = apiCaller.getAvailableBalance(selfTransferDTO.getFromAccountNumber());
+            if (avlBalance > selfTransferDTO.getTransactionAmount()) {
                 transaction.setTransaction_amount(selfTransferDTO.getTransactionAmount());
-            }else{
+            } else {
                 throw new RuntimeException("Insufficient balance for the transaction");
             }
             transferRequestDto.setSender(sender);
@@ -137,12 +153,14 @@ public class TransferServiceImpl implements TransferService {
                     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
                     .build();
             String jsonRequestBody = objectMapper.writeValueAsString(transferRequestDto);
+            logger.info("jsonRequestBody: {}", jsonRequestBody);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
             ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(bankTransferUrl, HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
 
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
+                logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
                 Integer responseTxnRefNo = fundTransferResponseDto.getResponseObject().getResultObject().getCstmrCdtTrfInitnObject().getGrpTlrObject().getTxnRefNo();
                 String errorResponse = objectMapper.writeValueAsString(Objects.nonNull(fundTransferResponseDto.getResponseObject().getResultObject().getFcubserrorresp()) ? fundTransferResponseDto.getResponseObject().getResultObject().getFcubserrorresp() : "");
                 Transaction transactionObj = Transaction.builder()
@@ -159,8 +177,8 @@ public class TransferServiceImpl implements TransferService {
             responseDTO.setStatus("Success");
             responseDTO.setMessage("Success");
             responseDTO.setData(responseEntity);
-
-        }catch (Exception e) {
+        } catch (Exception e) {
+            logger.error("ERROR in class TransferServiceImpl method transferToBank", e);
             responseDTO.setMessage("Something went wrong");
             responseDTO.setStatus("Failure");
         }
