@@ -4,9 +4,9 @@ import lombok.*;
 
 @Data
 public class TransferRequestDto {
+    public Sender sender;
     private Header header;
     private Transaction transaction;
-    public Sender sender;
     private Receiver receiver;
 
 
@@ -35,6 +35,8 @@ public class TransferRequestDto {
         private String charge_type;
         private String payment_details_1;
         private String payment_details_2;
+        private String payment_details_3;
+        private String payment_details_4;
 
     }
 
@@ -44,6 +46,9 @@ public class TransferRequestDto {
         private String account_name;
         private String account_number;
         private String account_currency;
+        private String bank_code;
+        private String bank_name;
+        private String branch_code;
     }
 
     @Data
@@ -52,5 +57,18 @@ public class TransferRequestDto {
         private String account_number;
         private String account_name;
         private String notes_to_receiver;
+        private String bank_code;
+        private String bank_name;
+        private String branch_code;
+        private String bank_country;
+        private String iban_account_number;
+        private String bank_address1;
+        private String bank_address2;
+        private String bank_address3;
+        private String bank_address4;
+        private String bene_address1;
+        private String bene_address2;
+        private String bene_address3;
+        private String bene_address4;
     }
 }
