@@ -62,7 +62,12 @@ public class BOAuthServiceImp implements BOAuthService {
 					response.setMessage("Success");
 					response.setStatus("Success");
 					response.setData(accessToken);
+				}else {
+					response.setMessage("Invalid Password");
+					response.setStatus("Failure");
+					response.setData(null);
 				}
+				
 
 			} else {
 				response.setMessage("User not have permission to login");
