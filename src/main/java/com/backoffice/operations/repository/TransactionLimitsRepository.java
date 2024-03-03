@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.backoffice.operations.entity.TransactionLimitsEntity;
 
 public interface TransactionLimitsRepository extends JpaRepository<TransactionLimitsEntity, String> {
+	
 	TransactionLimitsEntity findByCustomerId(String customerId);
+	
 }
 

@@ -53,7 +53,7 @@ public class SetTransactionLimitsController {
 		return ResponseEntity.ok(validationResultDTO);
 	}
 	
-	@GetMapping("/getTransactionLimits/{customerId}")
+	@GetMapping("/getLimits/{customerId}")
 	public ResponseEntity<GenericResponseDTO<Object>> getTransactionLimitsByCustId(@PathVariable String customerId,
 																				@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		GenericResponseDTO<Object> validationResultDTO = transactionLimitService.getTransactionLimitsByCustId(customerId, token.substring("Bearer ".length()));

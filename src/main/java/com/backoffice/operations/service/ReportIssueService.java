@@ -27,113 +27,130 @@ import com.backoffice.operations.security.JwtTokenProvider;
 @Service
 public class ReportIssueService {
 
-    private final List<String> ALLOWED_FILE_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png");
-    private final long MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 1MB
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ReportIssueRepository reportIssueRepository;
 
-    public GenericResponseDTO<Object> postReportIssue(ReportAnIssueDto reportAnIssueDto, String path,
-                                                      MultipartFile file, String token) throws IOException {
+	@Autowired
+	private JwtTokenProvider jwtTokenProvider;
 
-        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-        String userEmail = jwtTokenProvider.getUsername(token);
-        Optional<User> user = userRepository.findByEmail(userEmail);
-        ReportAnIssue reportAnIssue = new ReportAnIssue();
-        if (user.isPresent()) {
-            if (!file.isEmpty()) {
-                // file size validation
-                if (file.getSize() > MAX_FILE_SIZE_BYTES) {
-                    throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File size should be below 2MB!.");
-                }
+	@Autowired
+	private UserRepository userRepository;
 
-                // file extension validation
-                String fileExtension = getFileExtension(file.getOriginalFilename());
-                if (!ALLOWED_FILE_EXTENSIONS.contains(fileExtension.toLowerCase())) {
-                    throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File type Should be 'jpg', 'jpeg', 'png'.");
-                }
+	@Autowired
+	private ReportIssueRepository reportIssueRepository;
 
-                // FullPath
-                String filePath = path + File.separator + file.getOriginalFilename();
+	private final List<String> ALLOWED_FILE_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png");
+	private final long MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024; // 1MB
 
-                // Create folder if not created
-                File f = new File(path);
-                if (!f.exists()) {
-                    f.mkdir();
-                }
+	public GenericResponseDTO<Object> postReportIssue(ReportAnIssueDto reportAnIssueDto, String path,
+			MultipartFile file, String token) throws IOException {
 
-                // file copy
-                Files.copy(file.getInputStream(), Paths.get(filePath));
-                reportAnIssue.setFilePath(filePath);
-                reportAnIssue.setName(file.getOriginalFilename());
-                reportAnIssue.setType(file.getContentType());
-            }
-            reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
-            reportAnIssue.setMessage(reportAnIssueDto.getMessage());
-            reportAnIssue.setTime(LocalDateTime.now());
-			reportAnIssue.setLang(reportAnIssueDto.getLang());
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		String userEmail = jwtTokenProvider.getUsername(token);
+		Optional<User> user = userRepository.findByEmail(userEmail);
 
-            reportIssueRepository.save(reportAnIssue);
+		if (user.isPresent()) {
+			if (file != null) {
+				// file size validation
+				if (file.getSize() > MAX_FILE_SIZE_BYTES) {
+					throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File size should be below 2MB!.");
+				}
 
-            Map<String, Object> data = new HashMap<>();
-            responseDTO.setStatus("Success");
-            responseDTO.setMessage("Issue reported successfully!");
-            responseDTO.setData(data);
-            return responseDTO;
-        }
-        responseDTO.setStatus("Failure");
-        responseDTO.setMessage("Something went wrong");
-        return responseDTO;
-    }
+				// file extension validation
+				String fileExtension = getFileExtension(file.getOriginalFilename());
+				if (!ALLOWED_FILE_EXTENSIONS.contains(fileExtension.toLowerCase())) {
+					throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File type Should be 'jpg', 'jpeg', 'png'.");
+				}
 
-    // Get all Report Details
-    public GenericResponseDTO<Object> findAllReports(String token) {
-        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-        String userEmail = jwtTokenProvider.getUsername(token);
-        Optional<User> user = userRepository.findByEmail(userEmail);
+				// FullPath
+				String filePath = path + File.separator + file.getOriginalFilename();
 
-        if (user.isPresent()) {
-            List<ReportAnIssue> reportAnIssue = reportIssueRepository.findAll();
-            Map<String, Object> data = new HashMap<>();
-            responseDTO.setStatus("Success");
-            responseDTO.setMessage("Report an issues list!");
-            data.put("list", reportAnIssue);
-            responseDTO.setData(data);
-            return responseDTO;
-        }
-        responseDTO.setStatus("Failure");
-        responseDTO.setMessage("Something went wrong");
-        return responseDTO;
-    }
+				// Create folder if not created
+				File f = new File(path);
+				if (!f.exists()) {
+					f.mkdir();
+				}
 
-    // Get By ID Report Details
-    public GenericResponseDTO<Object> getReportIssueById(String id, String token) {
-        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-        String userEmail = jwtTokenProvider.getUsername(token);
-        Optional<User> user = userRepository.findByEmail(userEmail);
-        if (user.isPresent()) {
-            Optional<ReportAnIssue> reportAnIssue = reportIssueRepository.findById(id);
-            Map<String, Object> data = new HashMap<>();
-            responseDTO.setStatus("Success");
-            responseDTO.setMessage("Report an issues");
-            data.put("list", reportAnIssue);
-            responseDTO.setData(data);
-            return responseDTO;
-        }
-        responseDTO.setStatus("Failure");
-        responseDTO.setMessage("Something went wrong");
-        return responseDTO;
-    }
+				// file copy
+				Files.copy(file.getInputStream(), Paths.get(filePath));
 
-    private String getFileExtension(String filename) {
-        int lastDotIndex = filename.lastIndexOf('.');
-        if (lastDotIndex == -1) {
-            // No extension found
-            throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File type Should be 'jpg', 'jpeg', 'png'.");
-        }
-        return filename.substring(lastDotIndex + 1);
-    }
+				ReportAnIssue reportAnIssue = new ReportAnIssue();
+				reportAnIssue.setName(file.getOriginalFilename());
+				reportAnIssue.setType(file.getContentType());
+				reportAnIssue.setFilePath(filePath);
+				reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
+				reportAnIssue.setMessage(reportAnIssueDto.getMessage());
+				reportAnIssue.setTime(LocalDateTime.now());
+				reportIssueRepository.save(reportAnIssue);
+
+				Map<String, Object> data = new HashMap<>();
+				responseDTO.setStatus("Success");
+				responseDTO.setMessage("Issue reported successfully!");
+				responseDTO.setData(data);
+				return responseDTO;
+			}
+			if (file == null) {
+				ReportAnIssue reportAnIssue = new ReportAnIssue();
+				reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
+				reportAnIssue.setMessage(reportAnIssueDto.getMessage());
+				reportAnIssue.setTime(LocalDateTime.now());
+				reportIssueRepository.save(reportAnIssue);
+
+				Map<String, Object> data = new HashMap<>();
+				responseDTO.setStatus("Success");
+				responseDTO.setMessage("Issue reported successfully!");
+				responseDTO.setData(data);
+				return responseDTO;
+			}
+		}
+		responseDTO.setStatus("Failure");
+		responseDTO.setMessage("Something went wrong");
+		return responseDTO;
+	}
+
+	// Get all Report Details
+	public GenericResponseDTO<Object> findAllReports(String token) {
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		String userEmail = jwtTokenProvider.getUsername(token);
+		Optional<User> user = userRepository.findByEmail(userEmail);
+
+		if (user.isPresent()) {
+			List<ReportAnIssue> reportAnIssue = reportIssueRepository.findAll();
+			Map<String, Object> data = new HashMap<>();
+			responseDTO.setStatus("Success");
+			responseDTO.setMessage("Report an issues list!");
+			data.put("list", reportAnIssue);
+			responseDTO.setData(data);
+			return responseDTO;
+		}
+		responseDTO.setStatus("Failure");
+		responseDTO.setMessage("Something went wrong");
+		return responseDTO;
+	}
+
+	// Get By ID Report Details
+	public GenericResponseDTO<Object> getReportIssueById(String id, String token) {
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		String userEmail = jwtTokenProvider.getUsername(token);
+		Optional<User> user = userRepository.findByEmail(userEmail);
+		if (user.isPresent()) {
+			Optional<ReportAnIssue> reportAnIssue = reportIssueRepository.findById(id);
+			Map<String, Object> data = new HashMap<>();
+			responseDTO.setStatus("Success");
+			responseDTO.setMessage("Report an issues");
+			data.put("list", reportAnIssue);
+			responseDTO.setData(data);
+			return responseDTO;
+		}
+		responseDTO.setStatus("Failure");
+		responseDTO.setMessage("Something went wrong");
+		return responseDTO;
+	}
+
+	private String getFileExtension(String filename) {
+		int lastDotIndex = filename.lastIndexOf('.');
+		if (lastDotIndex == -1) {
+			// No extension found
+			throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File type Should be 'jpg', 'jpeg', 'png'.");
+		}
+		return filename.substring(lastDotIndex + 1);
+	}
 }
