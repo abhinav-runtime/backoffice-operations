@@ -154,7 +154,7 @@ public class BoProductController {
 			if (response.getStatus().equals("Failure")) {
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		}
 		response.setMessage("Something went wrong.");
@@ -178,7 +178,7 @@ public class BoProductController {
 			if (response.getStatus().equals("Failure")) {
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		}
 		response.setMessage("Something went wrong.");
