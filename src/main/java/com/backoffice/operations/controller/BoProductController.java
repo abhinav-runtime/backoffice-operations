@@ -42,12 +42,11 @@ public class BoProductController {
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			if (boProductCategorieService.saveProductCategories(requestDTO).getStatus().equals("Failure")) {
-				return new ResponseEntity<>(boProductCategorieService.saveProductCategories(requestDTO),
-						HttpStatus.INTERNAL_SERVER_ERROR);
+			response = boProductCategorieService.saveProductCategories(requestDTO);
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(boProductCategorieService.saveProductCategories(requestDTO),
-						HttpStatus.CREATED);
+				return new ResponseEntity<>(response, HttpStatus.CREATED);
 			}
 		}
 		response.setMessage("Something went wrong.");
@@ -67,12 +66,11 @@ public class BoProductController {
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			if (boProductCategorieService.saveProductSubCategories(requestDTO).getStatus().equals("Failure")) {
-				return new ResponseEntity<>(boProductCategorieService.saveProductSubCategories(requestDTO),
-						HttpStatus.INTERNAL_SERVER_ERROR);
+			response = boProductCategorieService.saveProductSubCategories(requestDTO);
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(boProductCategorieService.saveProductSubCategories(requestDTO),
-						HttpStatus.CREATED);
+				return new ResponseEntity<>(response, HttpStatus.CREATED);
 			}
 		}
 		response.setMessage("Something went wrong.");
@@ -98,12 +96,11 @@ public class BoProductController {
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "VIEW") || accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			if (boProductCategorieService.getProductSubCategoriesForBO(categoriesId).getStatus().equals("Failure")) {
-				return new ResponseEntity<>(boProductCategorieService.getProductSubCategoriesForBO(categoriesId),
-						HttpStatus.INTERNAL_SERVER_ERROR);
+			response = boProductCategorieService.getProductSubCategoriesForBO(categoriesId);
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(boProductCategorieService.getProductSubCategoriesForBO(categoriesId),
-						HttpStatus.OK);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		}
 		response.setMessage("Something went wrong.");
@@ -129,11 +126,11 @@ public class BoProductController {
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "VIEW") || accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			if (boProductCategorieService.getRequestDetails().getStatus().equals("Failure")) {
-				return new ResponseEntity<>(boProductCategorieService.getRequestDetails(),
-						HttpStatus.INTERNAL_SERVER_ERROR);
+			response = boProductCategorieService.getRequestDetails();
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(boProductCategorieService.getRequestDetails(), HttpStatus.OK);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		}
 		response.setMessage("Something went wrong.");
@@ -153,11 +150,11 @@ public class BoProductController {
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			if (boProductCategorieService.deleteSubCatagories(categoriesId).getStatus().equals("Failure")) {
-				return new ResponseEntity<>(boProductCategorieService.deleteSubCatagories(categoriesId),
-						HttpStatus.INTERNAL_SERVER_ERROR);
+			response = boProductCategorieService.deleteSubCatagories(categoriesId);
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(boProductCategorieService.deleteSubCatagories(categoriesId), HttpStatus.OK);
+				return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
 			}
 		}
 		response.setMessage("Something went wrong.");
@@ -177,11 +174,11 @@ public class BoProductController {
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			if (boProductCategorieService.deleteCatagories(categoriesId).getStatus().equals("Failure")) {
-				return new ResponseEntity<>(boProductCategorieService.deleteCatagories(categoriesId),
-						HttpStatus.INTERNAL_SERVER_ERROR);
+			response = boProductCategorieService.deleteCatagories(categoriesId);
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(boProductCategorieService.deleteCatagories(categoriesId), HttpStatus.OK);
+				return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
 			}
 		}
 		response.setMessage("Something went wrong.");
@@ -201,11 +198,11 @@ public class BoProductController {
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			if (boProductCategorieService.dateExpiryUpdate(requestDTO).getStatus().equals("Failure")) {
-				return new ResponseEntity<>(boProductCategorieService.dateExpiryUpdate(requestDTO),
-						HttpStatus.INTERNAL_SERVER_ERROR);
+			response = boProductCategorieService.dateExpiryUpdate(requestDTO);
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(boProductCategorieService.dateExpiryUpdate(requestDTO), HttpStatus.OK);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		}
 		response.setMessage("Something went wrong.");
@@ -231,11 +228,11 @@ public class BoProductController {
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "VIEW") || accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			if (boProductCategorieService.getProductCategories().getStatus().equals("Failure")) {
-				return new ResponseEntity<>(boProductCategorieService.getProductCategories(),
-						HttpStatus.INTERNAL_SERVER_ERROR);
+			response = boProductCategorieService.getProductCategories();
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(boProductCategorieService.getProductCategories(), HttpStatus.OK);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		}
 		response.setMessage("Something went wrong.");

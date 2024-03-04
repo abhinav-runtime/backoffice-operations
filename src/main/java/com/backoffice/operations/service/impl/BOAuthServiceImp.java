@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class BOAuthServiceImp implements BOAuthService {
+	private static final Logger logger = LoggerFactory.getLogger(BOAuthServiceImp.class);
 	private final PasswordEncoder passwordEncoder;
 	@Autowired
 	private final BOLoginLogSevice boLoginLogSevice;
@@ -62,12 +65,11 @@ public class BOAuthServiceImp implements BOAuthService {
 					response.setMessage("Success");
 					response.setStatus("Success");
 					response.setData(accessToken);
-				}else {
+				} else {
 					response.setMessage("Invalid Password");
 					response.setStatus("Failure");
 					response.setData(null);
 				}
-				
 
 			} else {
 				response.setMessage("User not have permission to login");
@@ -75,6 +77,7 @@ public class BOAuthServiceImp implements BOAuthService {
 				response.setData(null);
 			}
 		} catch (Exception e) {
+			logger.error("Error in login  : {}", e);
 			response.setMessage("Something went wrong");
 			response.setStatus("Failure");
 			response.setData(null);
@@ -85,55 +88,45 @@ public class BOAuthServiceImp implements BOAuthService {
 	@Override
 	public GenericResponseDTO<Object> register(BORegisterDTO boRegisterDTO) {
 		GenericResponseDTO<Object> genericResult = new GenericResponseDTO<>();
-		genericResult.setStatus("Success");
-
-		Boolean isUserNamePresent = boUsersRepo.existsByUsername(boRegisterDTO.getEmail());
-
-		if (isUserNamePresent) {
-			genericResult.setStatus("Failure");
-			genericResult.setMessage("Username is already exists!.");
-		}
-
-		Boolean isEmailPresent = boUsersRepo.existsByEmail(boRegisterDTO.getEmail());
-
-		if (isEmailPresent) {
-			genericResult.setStatus("Failure");
-			genericResult.setMessage("Email is already exists!.");
-		}
-
-		BOUser user = new BOUser();
-		user.setFirstName(boRegisterDTO.getFirstName());
-		user.setLastName(boRegisterDTO.getLastName());
-		user.setUsername(boRegisterDTO.getUsername());
-		user.setEmail(boRegisterDTO.getEmail());
-		user.setBranch(boRegisterDTO.getBranch());
-		user.setMobile(boRegisterDTO.getMobile());
-		user.setStatus("Active");
-		user.setPassword(passwordEncoder.encode(boRegisterDTO.getPassword()));
-
-		Set<BORole> roles = new HashSet<>();
-		boRegisterDTO.getRoles().forEach(role -> {
-			if (boRolesRepo.existsByName(role)) {
-				BORole userRole = boRolesRepo.findByName(role);
-				roles.add(userRole);
-				user.setRoles(roles);
-			}
-			;
-		});
-
 		try {
-			boUsersRepo.save(user);
-			user.setPassword(null);
-			genericResult.setData(user);
-			genericResult.setMessage("User registered successfully!.");
-		} catch (Exception ex) {
-			if (boUsersRepo.existsByEmail(user.getEmail())) {
+			if (boUsersRepo.existsByEmail(boRegisterDTO.getEmail())) {
+				System.out.println(boUsersRepo.existsByEmail(boRegisterDTO.getEmail()));
 				genericResult.setStatus("Failure");
-				genericResult.setMessage("Duplicate Email Found!.");
+				genericResult.setMessage("Email is already exists!.");
+				genericResult.setData(new HashMap<>());
+				return genericResult;
 			} else {
-				genericResult.setStatus("Failure");
-				genericResult.setMessage("Your request cannot be processed.");
+				BOUser user = new BOUser();
+				user.setFirstName(boRegisterDTO.getFirstName());
+				user.setLastName(boRegisterDTO.getLastName());
+				user.setUsername(boRegisterDTO.getUsername());
+				user.setEmail(boRegisterDTO.getEmail());
+				user.setBranch(boRegisterDTO.getBranch());
+				user.setMobile(boRegisterDTO.getMobile());
+				user.setStatus("Active");
+				user.setPassword(passwordEncoder.encode(boRegisterDTO.getPassword()));
+
+				Set<BORole> roles = new HashSet<>();
+				boRegisterDTO.getRoles().forEach(role -> {
+					if (boRolesRepo.existsByName(role)) {
+						BORole userRole = boRolesRepo.findByName(role);
+						roles.add(userRole);
+						user.setRoles(roles);
+					}
+					;
+				});
+				boUsersRepo.save(user);
+				user.setPassword(null);
+				genericResult.setData(user);
+				genericResult.setStatus("Success");
+				genericResult.setMessage("User registered successfully!.");
+				return  genericResult;
 			}
+		} catch (Exception ex) {
+			logger.error("Error in register  : {}", ex.getMessage());
+			genericResult.setStatus("Failure");
+			genericResult.setMessage("Your request cannot be processed.");
+			genericResult.setData(new HashMap<>());
 		}
 		return genericResult;
 	}
@@ -174,7 +167,7 @@ public class BOAuthServiceImp implements BOAuthService {
 				loginLog.setLogoutTime(nowDate);
 				loginLog.setTokanExpireTime(nowDate);
 				boLoginLogRepo.save(loginLog);
-				
+
 				response.setMessage("Logout Successfully");
 				response.setStatus("Success");
 				response.setData(new HashMap<>());
@@ -182,8 +175,8 @@ public class BOAuthServiceImp implements BOAuthService {
 				response.setMessage("Something went wrong");
 				response.setStatus("Failure");
 				response.setData(new HashMap<>());
-			}			
-		}else {
+			}
+		} else {
 			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
 			response.setData(new HashMap<>());
