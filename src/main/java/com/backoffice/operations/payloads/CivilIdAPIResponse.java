@@ -4,106 +4,124 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 public class CivilIdAPIResponse {
-	
-	private boolean success;
+
+    private boolean success;
     private String message;
     private ResponseData response;
 
     public CivilIdAPIResponse() {
         // Default constructor for Jackson
     }
-    
-	public boolean isSuccess() {
-		return success;
-	}
 
-	public void setSuccess(boolean success) {
-		this.success = success;
-	}
+    public boolean isSuccess() {
+        return success;
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
+    public String getMessage() {
+        return message;
+    }
 
-	public ResponseData getResponse() {
-		return response;
-	}
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-	public void setResponse(ResponseData response) {
-		this.response = response;
-	}
+    public ResponseData getResponse() {
+        return response;
+    }
 
-	public static class ResponseData {
+    public void setResponse(ResponseData response) {
+        this.response = response;
+    }
 
-		private MyResult result;
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @Builder
+    public static class ResponseData {
 
-		public ResponseData() {
+        private MyResult result;
+
+        private AdditionalInformation additionalInformation;
+
+
+        public ResponseData() {
             // Default constructor for Jackson
         }
-		
-		public MyResult getResult() {
-			return result;
-		}
 
-		public void setResult(MyResult result) {
-			this.result = result;
-		}
+        public MyResult getResult() {
+            return result;
+        }
+
+        public void setResult(MyResult result) {
+            this.result = result;
+        }
 
         // getters and setters
     }
 
-	@Getter
-	@Setter
-	@AllArgsConstructor
-	@Builder
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @Builder
     public static class MyResult {
 
-    	@JsonProperty("customerIO")
-    	private CustomerIO customerIO;
-    	
-    	@JsonProperty("customerFull")
-    	private CustomerFull customerFull;
-    	
-    	public MyResult() {
+        @JsonProperty("customerIO")
+        private CustomerIO customerIO;
+
+        @JsonProperty("customerFull")
+        private CustomerFull customerFull;
+
+        public MyResult() {
             // Default constructor for Jackson
         }
 
-		public CustomerIO getCustomerIO() {
-			return customerIO;
-		}
+        public CustomerIO getCustomerIO() {
+            return customerIO;
+        }
 
-		public void setCustomerIO(CustomerIO customerIO) {
-			this.customerIO = customerIO;
-		}
+        public void setCustomerIO(CustomerIO customerIO) {
+            this.customerIO = customerIO;
+        }
 
-		public CustomerFull getCustomerFull() {
-			return customerFull;
-		}
+        public CustomerFull getCustomerFull() {
+            return customerFull;
+        }
 
-		public void setCustomerFull(CustomerFull customerFull) {
-			this.customerFull = customerFull;
-		}
-		
+        public void setCustomerFull(CustomerFull customerFull) {
+            this.customerFull = customerFull;
+        }
+
     }
 
-	@Getter
-	@Setter
-	@AllArgsConstructor
-	@Builder
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @Builder
+    public static class AdditionalInformation {
+
+        @JsonProperty("id_expiry_date")
+        private String idExpiryDate;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @Builder
     public static class CustomerFull {
 
         @JsonProperty("custno")
         private String custNo;
 
-		@JsonProperty("fullname")
-		private String fullname;
+        @JsonProperty("fullname")
+        private String fullname;
 
-		@JsonProperty("custpersonal")
-		private CustPersonalDTO custpersonal;
+        @JsonProperty("custpersonal")
+        private CustPersonalDTO custpersonal;
+
         public CustomerFull() {
             // Default constructor for Jackson
         }
@@ -117,22 +135,22 @@ public class CivilIdAPIResponse {
         }
     }
 
-	@Getter
-	@Setter
-	@AllArgsConstructor
-	@Builder
-	public static class CustPersonalDTO {
-		@JsonProperty("emailid")
-		private String emailid;
-		@JsonProperty("mobnum")
-		private String mobnum;
-		@JsonProperty("mobisdno")
-		private int mobisdno;
-	}
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @Builder
+    public static class CustPersonalDTO {
+        @JsonProperty("emailid")
+        private String emailid;
+        @JsonProperty("mobnum")
+        private String mobnum;
+        @JsonProperty("mobisdno")
+        private int mobisdno;
+    }
 
-    
+
     public static class CustomerIO {
-    	public CustomerIO() {
+        public CustomerIO() {
             // Default constructor for Jackson
         }
     }

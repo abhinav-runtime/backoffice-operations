@@ -1,32 +1,52 @@
 package com.backoffice.operations.utils;
+import com.backoffice.operations.payloads.AccessTokenResponse;
+import com.backoffice.operations.payloads.CivilIdAPIResponse;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Objects;
+
 @Component
 public class ApiCaller {
 
     @Value("${external.api.check.available.balance}")
     private String apiUrl;
 
+    @Autowired
+    private CommonUtils commonUtils;
+
+    @Autowired
+    @Qualifier("jwtAuth")
+    private RestTemplate jwtAuthRestTemplate;
+
     // Method to fetch avlbal from the API response
     public double getAvailableBalance(String accountNumber) {
-        // Define the API URL
-        RestTemplate restTemplate = new RestTemplate();
-        ApiResponse response = restTemplate.getForObject(apiUrl + accountNumber, ApiResponse.class);
-        // Check if the response is successful and contains payload
-        if (response != null && response.isSuccess() && response.getResponse() != null) {
-            // Extract avlbal from the response payload
-            return response.getResponse().getPayload().getAccbalance().getAccbal().get(0).getAvlbal();
-        } else {
-            return -1; // or throw an exception
+        ResponseEntity<AccessTokenResponse> tokenResponse = commonUtils.getToken();
+        if (Objects.nonNull(tokenResponse.getBody())) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(tokenResponse.getBody().getAccessToken());
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<ApiResponse> response = jwtAuthRestTemplate.exchange(apiUrl + accountNumber, HttpMethod.GET, entity,
+                    ApiResponse.class);
+            // Check if the response is successful and contains payload
+            if (Objects.nonNull(response) && Objects.nonNull(response.getBody()) && response.getBody().isSuccess() && response.getBody().getResponse() != null) {
+                // Extract avlbal from the response payload
+                return response.getBody().getResponse().getPayload().getAccbalance().getAccbal().get(0).getAvlbal();
+            }
         }
+        return -1;
     }
 }
 
-// Define classes to map API response JSON
 @Data
 class ApiResponse {
     private boolean success;
