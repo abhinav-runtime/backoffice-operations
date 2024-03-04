@@ -110,7 +110,8 @@ public class ProfileServiceImpl implements ProfileService {
                             }
                             profile.setUniqueKeyCivilId(uniqueKey);
                             profile.setFullName(customerFull.getFullname());
-                            if (!profileRepository.findByUniqueKeyCivilId(uniqueKey).isPresent()) {
+                            Optional<Profile> profileDb = profileRepository.findByUniqueKeyCivilId(uniqueKey);
+                            if (profileDb.isEmpty()) {
                                 profileRepository.save(profile);
                             }
                             responseDTO.setStatus("Success");
@@ -118,6 +119,7 @@ public class ProfileServiceImpl implements ProfileService {
                             data.put("uniqueKey", uniqueKey);
                             data.put("fullName", customerFull.getFullname());
                             data.put("nId", nId);
+                            data.put("emailStatementFlag", profileDb.get().isEmailStatementFlag());
                             responseDTO.setData(data);
                             return responseDTO;
                         }
