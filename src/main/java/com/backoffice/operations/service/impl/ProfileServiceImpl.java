@@ -158,17 +158,40 @@ public class ProfileServiceImpl implements ProfileService {
                             StringUtils.hasLength(updateProfileRequest.getCivilId())
 //                            && civilIdEntity.get().getEntityId().equalsIgnoreCase(updateProfileRequest.getCivilId())
                     ) {
-                        profile.setCivilId(updateProfileRequest.getCivilId());
-                        profile.setExpiryDate(updateProfileRequest.getExpiryDate());
-                        profile.setMobNum(updateProfileRequest.getMobileNumber());
-                        profileRepository.save(profile);
+                        ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+                        if (Objects.nonNull(response.getBody())) {
+                            HttpHeaders headers = new HttpHeaders();
+                            headers.setBearerAuth(response.getBody().getAccessToken());
+                            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+                            String apiUrl = civilId + profile.getNId();
+                            ResponseEntity<CivilIdAPIResponse> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity,
+                                    CivilIdAPIResponse.class);
+
+                            CivilIdAPIResponse apiResponse = responseEntity.getBody();
+                            if (apiResponse != null && apiResponse.isSuccess()) {
+                                CivilIdAPIResponse.AdditionalInformation additionalInformation = apiResponse.getResponse().getAdditionalInformation();
+                                if (Objects.nonNull(additionalInformation) && additionalInformation.getIdExpiryDate().equalsIgnoreCase(updateProfileRequest.getExpiryDate())) {
+                                    profile.setCivilId(updateProfileRequest.getCivilId());
+                                    profile.setExpiryDate(updateProfileRequest.getExpiryDate());
+                                    profile.setMobNum(updateProfileRequest.getMobileNumber());
+                                    profileRepository.save(profile);
 //                        GenericResponseDTO<Object> newOtp =
-                                civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
-                        responseDTO.setStatus("Success");
-                        responseDTO.setMessage("Success");
-                        data.put("uniqueKey", uniqueKey);
-                        responseDTO.setData(data);
-                        return responseDTO;
+                                    civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
+                                    responseDTO.setStatus("Success");
+                                    responseDTO.setMessage("Success");
+                                    data.put("uniqueKey", uniqueKey);
+                                    responseDTO.setData(data);
+                                    return responseDTO;
+                                } else {
+                                    responseDTO.setStatus("Failure");
+                                    responseDTO.setMessage("Invalid Expiry Date.");
+                                    data.put("uniqueKey", uniqueKey);
+                                    responseDTO.setData(data);
+                                    return responseDTO;
+                                }
+                            }
+                        }
 //                        if (Objects.nonNull(newOtp) && newOtp.getStatus().equalsIgnoreCase("Success")) {
 //                            profile.setUserId(user.get().getId());
 //                            profile.setEmailStatementFlag(updateProfileRequest.getEmailStatementFlag());
