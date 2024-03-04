@@ -1,5 +1,6 @@
 package com.backoffice.operations.service;
 
+import com.backoffice.operations.payloads.BoCategoriesAndSubCategoriesUpdateDTO;
 import com.backoffice.operations.payloads.BoProductCategoriesRequestDTO;
 import com.backoffice.operations.payloads.ProductRequestDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
@@ -14,6 +15,7 @@ public interface BoProductCategorieService {
 	GenericResponseDTO<Object> deleteSubCatagories(String subCategoriesId);
 	GenericResponseDTO<Object> deleteCatagories(String categoriesId);
 	GenericResponseDTO<Object> getProductSubCategoriesForBO(String categoriesId);
-	GenericResponseDTO<Object> dateExpiryUpdate(BoProductCategoriesRequestDTO requestDTO);
 	GenericResponseDTO<Object> getProductCategories();
+	GenericResponseDTO<Object> categoriesUpdate(BoCategoriesAndSubCategoriesUpdateDTO requestDTO);
+	GenericResponseDTO<Object> subCategoriesUpdate(BoCategoriesAndSubCategoriesUpdateDTO requestDTO);
 }
