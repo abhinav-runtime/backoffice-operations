@@ -49,5 +49,4 @@ public class SetCardControlsDTO {
 	public void setContactlessFlag(boolean contactlessFlag) {
 		this.contactlessFlag = contactlessFlag;
 	}	
-	
 }
