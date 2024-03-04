@@ -180,16 +180,13 @@ public class ProfileServiceImpl implements ProfileService {
                                     civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
                                     responseDTO.setStatus("Success");
                                     responseDTO.setMessage("Success");
-                                    data.put("uniqueKey", uniqueKey);
-                                    responseDTO.setData(data);
-                                    return responseDTO;
                                 } else {
                                     responseDTO.setStatus("Failure");
                                     responseDTO.setMessage("Invalid Expiry Date.");
-                                    data.put("uniqueKey", uniqueKey);
-                                    responseDTO.setData(data);
-                                    return responseDTO;
                                 }
+                                data.put("uniqueKey", uniqueKey);
+                                responseDTO.setData(data);
+                                return responseDTO;
                             }
                         }
 //                        if (Objects.nonNull(newOtp) && newOtp.getStatus().equalsIgnoreCase("Success")) {
