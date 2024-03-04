@@ -77,7 +77,7 @@ public class TransferServiceImpl implements TransferService {
 
             // below code commented for testing
             Optional<AccountDetails> senderAccountInfo = getTokenAndApiResponse(senderCifNo);
-            String senderAccName = senderAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAccdesc();
+            String senderAccName = senderAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAdesc();
             sender.setAccount_name(senderAccName);
             AccountCurrency accountCurrency = AccountCurrencyRepository.findByAccountCurrencyCode("omr");
             sender.setAccount_currency(accountCurrency.getAccountCurrency());
@@ -91,7 +91,7 @@ public class TransferServiceImpl implements TransferService {
             String receiverCifNo = selfTransferDTO.getToAccountNumber().substring(3, 10);
             // below code commented for testing
             Optional<AccountDetails> receiverAccountInfo = getTokenAndApiResponse(receiverCifNo);
-            String receiverCifNoAccName = receiverAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAccdesc();
+            String receiverCifNoAccName = receiverAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAdesc();
             receiver.setAccount_name(receiverCifNoAccName);
             receiver.setBank_code("IZZB");
             receiver.setBank_name("Alizz Islamic Bank");
