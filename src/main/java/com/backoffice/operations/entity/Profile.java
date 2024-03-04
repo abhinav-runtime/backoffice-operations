@@ -27,5 +27,8 @@ public class Profile {
     private String mobNum;
     private int mobisdno;
     private boolean emailStatementFlag;
+    private String civilId;
+    private String expiryDate;
+    private String userId;
 
 }

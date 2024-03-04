@@ -8,7 +8,7 @@ import com.backoffice.operations.payloads.common.GenericResponseDTO;
 
 public interface OtpService {
 	
-	GenericResponseDTO<Object> validateOtp(OtpRequestDTO otpRequest) throws OtpValidationException;
+	GenericResponseDTO<Object> validateOtp(OtpRequestDTO otpRequest, String token) throws OtpValidationException;
 	
 	GenericResponseDTO<Object> resendOtp(String uniqueKeyCivilId) throws MaxResendAttemptsException;
     

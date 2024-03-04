@@ -1,9 +1,12 @@
 package com.backoffice.operations.payloads;
 
+import jakarta.persistence.Column;
+
 public class ReportAnIssueDto {
 	
 	private String id;
     private String typeOfIssue;
+    @Column(length=255)
     private String message;
     private String name;
     private String type;

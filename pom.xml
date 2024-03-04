@@ -118,13 +118,15 @@
 			<artifactId>logback-classic</artifactId>
 		</dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-text -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
 			<version>1.10.0</version> <!-- Or the latest version -->
 		</dependency>
-
 		<!-- <dependency>
         	<groupId>com.oracle.database.jdbc</groupId>
         	<artifactId>ojdbc8</artifactId>

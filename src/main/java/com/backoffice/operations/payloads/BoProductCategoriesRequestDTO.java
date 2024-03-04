@@ -14,5 +14,10 @@ import lombok.NoArgsConstructor;
 public class BoProductCategoriesRequestDTO {
 	String categoriesName;
 	String subCategoriesName;
+	String productTitle;
+	Date issueDate;
 	Date expireDate;
+	String benefits;
+	String description;
+	String features;
 }

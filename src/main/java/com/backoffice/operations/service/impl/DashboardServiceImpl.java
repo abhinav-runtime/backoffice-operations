@@ -59,6 +59,10 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final AccountTypeRepository accountTypeRepository;
 
+    private final String account = "account";
+
+    private static final String creditCard = "card";
+
     public DashboardServiceImpl(RestTemplate restTemplate, CivilIdRepository civilIdRepository, DashboardRepository dashboardRepository, DashboardInfoRepository dashboardInfoRepository, AccountTransactionsEntityRepository accountTransactionsEntityRepository, CardTransactionsEntityRepository cardTransactionsEntityRepository, AccountTypeRepository accountTypeRepository) {
         this.restTemplate = restTemplate;
         this.civilIdRepository = civilIdRepository;
@@ -76,13 +80,17 @@ public class DashboardServiceImpl implements DashboardService {
                 .map(apiResponse -> {
                     List<AccountsDetailsResponseDTO> accountsDetailsResponseDTOList = apiResponse.getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().stream()
                             .map(islamicAccount -> {
+                                AccountType accountType = getAccountDescription(islamicAccount.getAccls());
+                                String accountCodeDesc = Objects.nonNull(accountType) && Objects.nonNull(accountType.getDescription()) ? accountType.getDescription() : "";
+                                String accNickName = Objects.nonNull(accountType) && Objects.nonNull(accountType.getAccountNickName()) ? accountType.getAccountNickName() : "";
                                 DashboardEntity dashboardEntity = DashboardEntity.builder()
                                         .id(uniqueKey)
                                         .accountNumber(islamicAccount.getAcc())
                                         .availableBalance(islamicAccount.getAcyavlbal())
                                         .currency(islamicAccount.getCcy())
-                                        .accountCodeDesc(getAccountDescription(islamicAccount.getAccls()))
+                                        .accountCodeDesc(accountCodeDesc)
                                         .accountType(islamicAccount.getAcctype())
+                                        .accountNickName(accNickName)
                                         .build();
                                 dashboardRepository.save(dashboardEntity);
                                 return AccountsDetailsResponseDTO.builder()
@@ -90,7 +98,9 @@ public class DashboardServiceImpl implements DashboardService {
                                         .accountNumber(Objects.nonNull(dashboardEntity.getAccountNumber()) ? dashboardEntity.getAccountNumber() : "")
                                         .accountType(Objects.nonNull(dashboardEntity.getAccountType()) ? dashboardEntity.getAccountType() : "")
                                         .accountCodeDesc(Objects.nonNull(dashboardEntity.getAccountCodeDesc()) ? dashboardEntity.getAccountCodeDesc(): "")
-                                        .currency(Objects.nonNull(dashboardEntity.getCurrency()) ? dashboardEntity.getCurrency() : "").build();
+                                        .currency(Objects.nonNull(dashboardEntity.getCurrency()) ? dashboardEntity.getCurrency() : "")
+                                        .type(account)
+                                        .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "").build();
                             })
                             .collect(Collectors.toList());
 
@@ -106,9 +116,8 @@ public class DashboardServiceImpl implements DashboardService {
                 .orElseGet(() -> createFailureResponse(uniqueKey));
     }
 
-    private String getAccountDescription(String accls) {
-        AccountType response = accountTypeRepository.findByCbsProductCode(accls);
-        return Objects.nonNull(response) && Objects.nonNull(response.getDescription()) ? response.getDescription() : "";
+    private AccountType getAccountDescription(String accls) {
+        return accountTypeRepository.findByCbsProductCode(accls);
     }
 
     private Optional<AccountDetails> getTokenAndApiResponse(String civilId) {
@@ -119,7 +128,7 @@ public class DashboardServiceImpl implements DashboardService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String apiUrl = accountExternalAPI + civilId;
-            ResponseEntity<AccountDetails> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, AccountDetails.class);
+            ResponseEntity<AccountDetails> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity, AccountDetails.class);
             return Optional.ofNullable(responseEntity.getBody());
         }
         return Optional.empty();
@@ -181,6 +190,7 @@ public class DashboardServiceImpl implements DashboardService {
                             creditCardDetailsResponseDTO.setOutstandingBalance(outStandingAmount);
                             creditCardDetailsResponseDTO.setCustomerName(customerName);
                             creditCardDetailsResponseDTO.setCreditCardNumber(creditCardNumber);
+                            creditCardDetailsResponseDTO.setType(creditCard);
                             creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
 
                             DashboardInfoEntity dashboardInfoEntity = DashboardInfoEntity.builder().creditCardNumber(creditCardNumber)
@@ -230,7 +240,7 @@ public class DashboardServiceImpl implements DashboardService {
                     .append("\",\n" + "\"toDate\":\"").append(toDate).append("\"\n" + " }");
         }
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody.toString(), headers);
-        ResponseEntity<ExternalApiTransactionResponseDTO> accountsTransactionResponseEntity = restTemplate.exchange(externalAccountsTransactionApiUrl,
+        ResponseEntity<ExternalApiTransactionResponseDTO> accountsTransactionResponseEntity = jwtAuthRestTemplate.exchange(externalAccountsTransactionApiUrl,
                 HttpMethod.POST, requestEntity, ExternalApiTransactionResponseDTO.class);
         List<AccountTransactionsEntity> accountTransactionsEntityList = new ArrayList<>();
         if (Objects.nonNull(accountsTransactionResponseEntity.getBody()) && accountsTransactionResponseEntity.getBody().isSuccess()
@@ -367,6 +377,7 @@ public class DashboardServiceImpl implements DashboardService {
         creditCardDetailsResponseDTO.setOutstandingBalance(0.0);
         creditCardDetailsResponseDTO.setCustomerName("");
         creditCardDetailsResponseDTO.setCreditCardNumber("");
+        creditCardDetailsResponseDTO.setType(creditCard);
         List<CreditCardDetailsResponseDTO> creditCardDetailsResponseList = new ArrayList<>();
         creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();

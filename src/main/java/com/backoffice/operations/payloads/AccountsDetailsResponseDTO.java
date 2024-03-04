@@ -14,4 +14,6 @@ public class AccountsDetailsResponseDTO {
     private Double accountBalance;
     private String accountType;
     private String accountCodeDesc;
+    private String type;
+    private String accountNickName;
 }
