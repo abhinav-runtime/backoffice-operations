@@ -32,44 +32,56 @@ public class BoProductController {
 	private BoAccessHelper accessHelper;
 
 	@PostMapping("/categories")
-	public GenericResponseDTO<Object> createProductCategories(@RequestBody BoProductCategoriesRequestDTO requestDTO) {
+	public ResponseEntity<Object> createProductCategories(@RequestBody BoProductCategoriesRequestDTO requestDTO) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
-			response.setData(null);
-			return response;
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return boProductCategorieService.saveProductCategories(requestDTO);
+			if (boProductCategorieService.saveProductCategories(requestDTO).getStatus().equals("Failure")) {
+				return new ResponseEntity<>(boProductCategorieService.saveProductCategories(requestDTO),
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<>(boProductCategorieService.saveProductCategories(requestDTO),
+						HttpStatus.CREATED);
+			}
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
 		response.setData(new HashMap<>());
-		return response;
+		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 
 	@PostMapping("/sub-categories")
-	public GenericResponseDTO<Object> createProductSubCategories(
-			@RequestBody BoProductCategoriesRequestDTO requestDTO) {
+	public ResponseEntity<Object> createProductSubCategories(@RequestBody BoProductCategoriesRequestDTO requestDTO) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
-			response.setData(null);
-			return response;
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return boProductCategorieService.saveProductSubCategories(requestDTO);
+			if (boProductCategorieService.saveProductSubCategories(requestDTO).getStatus().equals("Failure")) {
+				return new ResponseEntity<>(boProductCategorieService.saveProductSubCategories(requestDTO),
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<>(boProductCategorieService.saveProductSubCategories(requestDTO),
+						HttpStatus.CREATED);
+			}
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
 		response.setData(new HashMap<>());
-		return response;
+		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 
+	// for mobile application to get all subcategories
 	@PreAuthorize(value = "authenticated")
 	@GetMapping("/get-sub-categories/{categoriesId}")
 	public GenericResponseDTO<Object> getProductSubCategoriesForUser(@PathVariable String categoriesId) {
@@ -77,23 +89,30 @@ public class BoProductController {
 	}
 
 	@GetMapping("/get-sub-categories-bo/{categoriesId}")
-	public GenericResponseDTO<Object> getSubCategoriesForBO(@PathVariable String categoriesId) {
+	public ResponseEntity<Object> getSubCategoriesForBO(@PathVariable String categoriesId) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
-			response.setData(null);
-			return response;
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "VIEW") || accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return boProductCategorieService.getProductSubCategoriesForBO(categoriesId);
+			if (boProductCategorieService.getProductSubCategoriesForBO(categoriesId).getStatus().equals("Failure")) {
+				return new ResponseEntity<>(boProductCategorieService.getProductSubCategoriesForBO(categoriesId),
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<>(boProductCategorieService.getProductSubCategoriesForBO(categoriesId),
+						HttpStatus.OK);
+			}
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
 		response.setData(new HashMap<>());
-		return response;
+		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 
+	// for mobile application to send request for product
 	@PreAuthorize(value = "authenticated")
 	@PostMapping("/request")
 	public ResponseEntity<Object> createProductRequest(@RequestBody ProductRequestDTO requestDTO) {
@@ -106,16 +125,21 @@ public class BoProductController {
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
-			response.setData(null);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "VIEW") || accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return new ResponseEntity<>(boProductCategorieService.getRequestDetails(), HttpStatus.OK);
+			if (boProductCategorieService.getRequestDetails().getStatus().equals("Failure")) {
+				return new ResponseEntity<>(boProductCategorieService.getRequestDetails(),
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<>(boProductCategorieService.getRequestDetails(), HttpStatus.OK);
+			}
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
 		response.setData(new HashMap<>());
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 
 	@DeleteMapping("/delete-sub-categories/{categoriesId}")
@@ -124,17 +148,22 @@ public class BoProductController {
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
-			response.setData(null);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return new ResponseEntity<>(boProductCategorieService.deleteSubCatagories(categoriesId), HttpStatus.OK);
+			if (boProductCategorieService.deleteSubCatagories(categoriesId).getStatus().equals("Failure")) {
+				return new ResponseEntity<>(boProductCategorieService.deleteSubCatagories(categoriesId),
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<>(boProductCategorieService.deleteSubCatagories(categoriesId), HttpStatus.OK);
+			}
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
 		response.setData(new HashMap<>());
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 
 	@DeleteMapping("/delete-catagories/{categoriesId}")
@@ -143,41 +172,75 @@ public class BoProductController {
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
-			response.setData(null);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return new ResponseEntity<>(boProductCategorieService.deleteCatagories(categoriesId), HttpStatus.OK);
+			if (boProductCategorieService.deleteCatagories(categoriesId).getStatus().equals("Failure")) {
+				return new ResponseEntity<>(boProductCategorieService.deleteCatagories(categoriesId),
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<>(boProductCategorieService.deleteCatagories(categoriesId), HttpStatus.OK);
+			}
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
 		response.setData(new HashMap<>());
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 
 	@PostMapping("/date-expiry-update")
-	public GenericResponseDTO<Object> expiryDateUpdate(@RequestBody BoProductCategoriesRequestDTO requestDTO) {
+	public ResponseEntity<Object> expiryDateUpdate(@RequestBody BoProductCategoriesRequestDTO requestDTO) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
 			response.setStatus("Failure");
-			response.setData(null);
-			return response;
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
 				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			return boProductCategorieService.dateExpiryUpdate(requestDTO);
+			if (boProductCategorieService.dateExpiryUpdate(requestDTO).getStatus().equals("Failure")) {
+				return new ResponseEntity<>(boProductCategorieService.dateExpiryUpdate(requestDTO),
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<>(boProductCategorieService.dateExpiryUpdate(requestDTO), HttpStatus.OK);
+			}
 		}
 		response.setMessage("Something went wrong.");
 		response.setStatus("Failure");
 		response.setData(new HashMap<>());
-		return response;
+		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 
+	// for mobile application to get all categories
 	@PreAuthorize(value = "authenticated")
 	@GetMapping("/get-categories")
 	public GenericResponseDTO<Object> getProductCategories() {
-			return boProductCategorieService.getProductCategories();
+		return boProductCategorieService.getProductCategories();
+	}
+
+	@GetMapping("/get-categories-bo")
+	public ResponseEntity<Object> getProductsCategoriesForBO() {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		if (boUserToken.getRolesFromToken().isEmpty()) {
+			response.setMessage("Something went wrong.");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+		}
+		if (accessHelper.isAccessible("PRODUCTS", "VIEW") || accessHelper.isAccessible("PRODUCTS", "EDIT")) {
+			if (boProductCategorieService.getProductCategories().getStatus().equals("Failure")) {
+				return new ResponseEntity<>(boProductCategorieService.getProductCategories(),
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			} else {
+				return new ResponseEntity<>(boProductCategorieService.getProductCategories(), HttpStatus.OK);
+			}
+		}
+		response.setMessage("Something went wrong.");
+		response.setStatus("Failure");
+		response.setData(new HashMap<>());
+		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 }

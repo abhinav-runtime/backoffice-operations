@@ -98,7 +98,7 @@ public class CivilIdServiceImpl implements CivilIdService {
     private static CardEntity getCardEntity(Card card, Optional<CivilIdEntity> civilIdEntity,
                                             ResponseEntity<ExternalApiResponseDTO> responseEntity) {
         CardEntity cardEntity = new CardEntity();
-        cardEntity.setUniqueKeyCivilId(civilIdEntity.get().getId().toString());
+        cardEntity.setUniqueKeyCivilId(civilIdEntity.get().getId());
         cardEntity.setCivilId(civilIdEntity.get().getCivilId());
         cardEntity.setCardKitNo(card.getKitNo());
         cardEntity.setExpiry(card.getExpiryDate());
@@ -308,8 +308,10 @@ public class CivilIdServiceImpl implements CivilIdService {
                                     responseDTO.setData(data);
                                     return responseDTO;
                                 } else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
-                                    GenericResponseDTO<Object> newOtp = sendOtp(civilIdEntity, responseDTO);
-                                    if (newOtp != null) return newOtp;
+                                    //send OTP
+                                    sendOtp(civilIdEntity, responseDTO);
+                                    CardEntity cardEntity = getCardEntity(card, civilIdEntity, responseEntity);
+                                    cardRepository.save(cardEntity);
                                     Map<String, String> data = new HashMap<>();
                                     responseDTO.setStatus("Success");
                                     responseDTO.setMessage("Success");
@@ -375,7 +377,13 @@ public class CivilIdServiceImpl implements CivilIdService {
                 otpEntity.setLastAttemptTime(LocalDateTime.now());
                 otpRepository.save(otpEntity);
 
-                return getSMSResponseObject(newOtp, responseDTO, civilIdEntity);
+                Map<String, String> data = new HashMap<>();
+                responseDTO.setStatus("Success");
+                responseDTO.setMessage("Success");
+                data.put("uniqueKey", civilIdEntity.get().getId());
+                responseDTO.setData(data);
+                return responseDTO;
+//                return getSMSResponseObject(newOtp, responseDTO, civilIdEntity);
             }
         } catch (Exception e) {
             logger.error("ERROR in class CivilIdServiceImpl method sendOtp", e);

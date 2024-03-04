@@ -42,6 +42,7 @@ public class AccountDetails {
                     private double acyavlbal;
                     private String accls;
                     private String acctype;
+                    private String adesc;
 
                 }
             }

@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+//TODO: Capital letters not allowed.
 @Table(name = "az_report_Issue_bk")
 public class ReportAnIssue {
 
@@ -36,13 +37,14 @@ public class ReportAnIssue {
 	
 	@Column(name="type")
     private String type;
+
 	
-	@Column(name="filepath")
+	@Column(name="filePath")
     private String filePath;
 	
-	@Column(name="date modified")
+	@Column(name="dateModified")
 	private LocalDateTime time;
-	
+
 	@Column(name="lang")
 	private String lang;
 	
@@ -102,4 +104,12 @@ public class ReportAnIssue {
 		this.time = time;
 	}
 	
+	public String getLang() {
+		return lang;
+	}
+
+	public void setLang(String lang) {
+		this.lang = lang;
+	}
+
 }
