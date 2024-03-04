@@ -37,11 +37,14 @@ public class ReportAnIssue {
 	@Column(name="type")
     private String type;
 	
-	@Column(name="filePath")
+	@Column(name="filepath")
     private String filePath;
 	
-	@Column(name="dateModified")
+	@Column(name="date modified")
 	private LocalDateTime time;
+	
+	@Column(name="lang")
+	private String lang;
 	
 	public String getId() {
 		return id;
@@ -98,4 +101,5 @@ public class ReportAnIssue {
 	public void setTime(LocalDateTime time) {
 		this.time = time;
 	}
+	
 }

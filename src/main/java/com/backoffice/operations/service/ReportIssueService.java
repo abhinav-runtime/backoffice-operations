@@ -37,7 +37,7 @@ public class ReportIssueService {
 	private ReportIssueRepository reportIssueRepository;
 
 	private final List<String> ALLOWED_FILE_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png");
-	private final long MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024; // 1MB
+	private final long MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024; // 3MB
 
 	public GenericResponseDTO<Object> postReportIssue(ReportAnIssueDto reportAnIssueDto, String path,
 			MultipartFile file, String token) throws IOException {
@@ -45,9 +45,12 @@ public class ReportIssueService {
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
-
+		ReportAnIssue reportAnIssue = new ReportAnIssue();
+		
 		if (user.isPresent()) {
-			if (file != null) {
+			
+			if (!file.isEmpty()) {
+
 				// file size validation
 				if (file.getSize() > MAX_FILE_SIZE_BYTES) {
 					throw new BlogAPIException(HttpStatus.BAD_REQUEST, "File size should be below 2MB!.");
@@ -71,35 +74,26 @@ public class ReportIssueService {
 				// file copy
 				Files.copy(file.getInputStream(), Paths.get(filePath));
 
-				ReportAnIssue reportAnIssue = new ReportAnIssue();
 				reportAnIssue.setName(file.getOriginalFilename());
 				reportAnIssue.setType(file.getContentType());
 				reportAnIssue.setFilePath(filePath);
-				reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
-				reportAnIssue.setMessage(reportAnIssueDto.getMessage());
-				reportAnIssue.setTime(LocalDateTime.now());
-				reportIssueRepository.save(reportAnIssue);
-
-				Map<String, Object> data = new HashMap<>();
-				responseDTO.setStatus("Success");
-				responseDTO.setMessage("Issue reported successfully!");
-				responseDTO.setData(data);
-				return responseDTO;
 			}
-			if (file == null) {
-				ReportAnIssue reportAnIssue = new ReportAnIssue();
-				reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
-				reportAnIssue.setMessage(reportAnIssueDto.getMessage());
-				reportAnIssue.setTime(LocalDateTime.now());
-				reportIssueRepository.save(reportAnIssue);
 
-				Map<String, Object> data = new HashMap<>();
-				responseDTO.setStatus("Success");
-				responseDTO.setMessage("Issue reported successfully!");
-				responseDTO.setData(data);
-				return responseDTO;
-			}
+			reportAnIssue.setTypeOfIssue(reportAnIssueDto.getTypeOfIssue());
+			reportAnIssue.setMessage(reportAnIssueDto.getMessage());
+			reportAnIssue.setTime(LocalDateTime.now());
+			reportAnIssue.setLang(reportAnIssueDto.getLang());
+			reportIssueRepository.save(reportAnIssue);
+
+			Map<String, Object> data = new HashMap<>();
+			responseDTO.setStatus("Success");
+			responseDTO.setMessage("Issue reported successfully!");
+			data.put("Report An Issues: ", reportAnIssue);
+			responseDTO.setData(data);
+
+			return responseDTO;
 		}
+
 		responseDTO.setStatus("Failure");
 		responseDTO.setMessage("Something went wrong");
 		return responseDTO;
