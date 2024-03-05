@@ -6,11 +6,8 @@ import com.backoffice.operations.payloads.common.GenericResponseDTO;
 
 public interface TransactionLimitService {
 	
-	GenericResponseDTO<Object> setMerchantOutletLimits(TransactionLimitsDTO transactionLimitsDTO, String token);
-	GenericResponseDTO<Object> setOnlineShoppingLimits(TransactionLimitsDTO.OnlineShopping onlineShoppingLimitDTO, String token);
-	GenericResponseDTO<Object> setAtmWithdrawalLimits(TransactionLimitsDTO.ATMwithdrawal atmWithdrawalLimitDTO, String token);
-	GenericResponseDTO<Object> setTapAndPayLimits(TransactionLimitsDTO.TapAndPay tapAndPayLimitDTO, String token);
-	
+	GenericResponseDTO<Object> setTransactionLimits(TransactionLimitsDTO transactionLimitsDTO, String token);
+
 	GenericResponseDTO<Object> getAllTransactionLimits(String token);	
-	GenericResponseDTO<Object> getTransactionLimitsByCustId(String customerId, String token);
+	GenericResponseDTO<Object> getTransactionLimitsByCustId(String uniqueKey, String token);
 }
