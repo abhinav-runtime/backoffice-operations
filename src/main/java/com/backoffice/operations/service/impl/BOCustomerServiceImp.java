@@ -257,6 +257,7 @@ public class BOCustomerServiceImp implements BOCustomerService {
 			String jsonResponse = responseEntity.getBody();
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode jsonNode = mapper.readTree(jsonResponse);
+			customerResponseDTO.setCustNo(jsonNode.at("/response/result/customerFull/custno").asText());
 			customerResponseDTO.setCusId(custId);
 			customerResponseDTO.setStatus("Active");
 			customerResponseDTO.setUname("");

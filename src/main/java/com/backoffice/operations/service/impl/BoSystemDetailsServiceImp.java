@@ -47,57 +47,52 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 	@Override
 	public List<BoSystemDetailsResponseDTO> getSystemDetails() {
 		List<BoSystemDetailsResponseDTO> responseDTO = new ArrayList<>();
-		try {
 
-			systemDetailRepository.findAll().forEach(Item -> {
-				BoSystemDetailsResponseDTO systemDetailsResponseDTO = new BoSystemDetailsResponseDTO();
-				String accessToken = null;
-				try {
-//				ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-//				logger.info("response: {}", response.getBody());
-//
-//				accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
-//				logger.info("accessToken: {}", accessToken);
+		systemDetailRepository.findAll().forEach(Item -> {
+			BoSystemDetailsResponseDTO systemDetailsResponseDTO = new BoSystemDetailsResponseDTO();
+			String accessToken = null;
+			try {
+				// ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+				// logger.info("response: {}", response.getBody());
+				// accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
+				// logger.info("accessToken: {}", accessToken);
+				
+				String uniqueKey = Item.getUniqueKey();
+				String CivilId = civilIdRepository.findById(uniqueKey).get().getEntityId();
+				// String apiUrl = externalApiUrl + CivilId;
+				String apiUrl = "http://182.18.138.199/chandan/api/v1/customer/nid/" + CivilId;
+				HttpHeaders headers = new HttpHeaders();
+				headers.setBearerAuth(accessToken);
+				headers.setContentType(MediaType.APPLICATION_JSON);
+				HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+				// ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl,
+				// HttpMethod.GET,
+				// requestEntity, String.class);
+				ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
+						String.class);
 
-					String uniqueKey = Item.getUniqueKey();
-					String CivilId = civilIdRepository.findById(uniqueKey).get().getEntityId();
-//				String apiUrl = externalApiUrl + CivilId;
-					String apiUrl = "http://182.18.138.199/chandan/api/v1/customer/nid/" + CivilId;
-					HttpHeaders headers = new HttpHeaders();
-					headers.setBearerAuth(accessToken);
-					headers.setContentType(MediaType.APPLICATION_JSON);
-					HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-//				ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET,
-//						requestEntity, String.class);
-					ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
-							String.class);
-					
-					String jsonResponse = responseEntity.getBody();
-					ObjectMapper mapper = new ObjectMapper();
-					JsonNode jsonNode;
+				String jsonResponse = responseEntity.getBody();
+				ObjectMapper mapper = new ObjectMapper();
+				JsonNode jsonNode;
 
-					jsonNode = mapper.readTree(jsonResponse);
-					String name = jsonNode.at("/response/result/customerFull/name").asText();
-					systemDetailsResponseDTO.setName(name);
-				} catch (JsonProcessingException e) {
-					logger.error("Error : {}", e.getMessage());
-					systemDetailsResponseDTO.setName("NA");
-				}
-				systemDetailsResponseDTO.setDeviceId(Item.getDeviceId());
-				systemDetailsResponseDTO.setType(Item.getType());
-				systemDetailsResponseDTO.setModel(Item.getModel());
-				systemDetailsResponseDTO.setStatus(Item.getStatus());
-				systemDetailsResponseDTO.setAppVersion(Item.getAppVersion());
-				systemDetailsResponseDTO.setCarrier(Item.getCarrier());
-				systemDetailsResponseDTO.setLocation(Item.getLocation());
-				systemDetailsResponseDTO.setIPAddress(Item.getIpAddress());
-				responseDTO.add(systemDetailsResponseDTO);
-			});
+				jsonNode = mapper.readTree(jsonResponse);
+				String name = jsonNode.at("/response/result/customerFull/name").asText();
+				systemDetailsResponseDTO.setName(name);
+			} catch (Exception e) {
+				logger.error("Error : {}", e.getMessage());
+				systemDetailsResponseDTO.setName("NA");
+			}
+			systemDetailsResponseDTO.setDeviceId(Item.getDeviceId());
+			systemDetailsResponseDTO.setType(Item.getType());
+			systemDetailsResponseDTO.setModel(Item.getModel());
+			systemDetailsResponseDTO.setStatus(Item.getStatus());
+			systemDetailsResponseDTO.setAppVersion(Item.getAppVersion());
+			systemDetailsResponseDTO.setCarrier(Item.getCarrier());
+			systemDetailsResponseDTO.setLocation(Item.getLocation());
+			systemDetailsResponseDTO.setIPAddress(Item.getIpAddress());
+			responseDTO.add(systemDetailsResponseDTO);
+		});
 
-			return responseDTO;
-		} catch (Exception e) {
-			logger.error("Error : {}", e.getMessage());
-			return null;
-		}
+		return responseDTO;
 	}
 }
