@@ -211,7 +211,7 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 
 				response.setStatus("Success");
 				response.setMessage("Request Saved Successfully");
-				response.setData(new HashMap<>());
+				response.setData(requestProduct);
 			} else {
 				response.setStatus("Failure");
 				response.setMessage("Something went wrong.");
