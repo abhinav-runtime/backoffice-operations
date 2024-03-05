@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backoffice.operations.payloads.BoCategoriesAndSubCategoriesUpdateDTO;
 import com.backoffice.operations.payloads.BoProductCategoriesRequestDTO;
 import com.backoffice.operations.payloads.ProductRequestDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
@@ -186,9 +188,9 @@ public class BoProductController {
 		response.setData(new HashMap<>());
 		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
-
-	@PostMapping("/date-expiry-update")
-	public ResponseEntity<Object> expiryDateUpdate(@RequestBody BoProductCategoriesRequestDTO requestDTO) {
+	
+	@PutMapping("/sub-categories-update")
+	public ResponseEntity<Object> subCategoriesUpdate(@RequestBody BoCategoriesAndSubCategoriesUpdateDTO requestDTO) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -196,9 +198,31 @@ public class BoProductController {
 			response.setData(new HashMap<>());
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
-		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "VIEW")
-				|| accessHelper.isAccessible("PRODUCTS", "EDIT")) {
-			response = boProductCategorieService.dateExpiryUpdate(requestDTO);
+		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "EDIT")) {
+			response = boProductCategorieService.subCategoriesUpdate(requestDTO);
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+			} else {
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+		}
+		response.setMessage("Something went wrong.");
+		response.setStatus("Failure");
+		response.setData(new HashMap<>());
+		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
+	}
+
+	@PutMapping("/categories-update")
+	public ResponseEntity<Object> categoriesUpdate(@RequestBody BoCategoriesAndSubCategoriesUpdateDTO requestData) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		if (boUserToken.getRolesFromToken().isEmpty()) {
+			response.setMessage("Something went wrong.");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+		}
+		if (accessHelper.isAccessible("PRODUCTS", "PUBLISH") || accessHelper.isAccessible("PRODUCTS", "EDIT")) {
+			response = boProductCategorieService.categoriesUpdate(requestData);
 			if (response.getStatus().equals("Failure")) {
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {

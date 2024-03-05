@@ -25,6 +25,9 @@ public class AccountTransactionResponseDTO {
         private LocalDate transactionDate;
         private String indicator;
         private String referenceNumber;
+        private String transactionFrom;
+        private Double availableBalance;
+        private String transactionTo;
 
     }
 }

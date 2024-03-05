@@ -16,4 +16,6 @@ public class ProductResponseDTO {
 	String subCategories;
 	String categories;
 	String requestDate;
+	String referenceId;
+	String id;
 }
