@@ -21,7 +21,7 @@ public class AccountsDetailsResponseDTO {
     private String branchName;
     private String jointType;
     private String customerName;
-    private String blockedAmount;
+    private Double blockedAmount;
     private Double currentAccountBalance;
     private boolean isAccountVisible;
     private boolean isAlertOnTrnx;

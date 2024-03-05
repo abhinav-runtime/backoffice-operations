@@ -1,6 +1,7 @@
 package com.backoffice.operations.service.impl;
 
 import com.backoffice.operations.entity.*;
+import com.backoffice.operations.enums.JointTypeEnum;
 import com.backoffice.operations.payloads.*;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.*;
@@ -64,7 +65,9 @@ public class DashboardServiceImpl implements DashboardService {
 
     private static final String creditCard = "card";
 
-    public DashboardServiceImpl(RestTemplate restTemplate, CivilIdRepository civilIdRepository, DashboardRepository dashboardRepository, DashboardInfoRepository dashboardInfoRepository, AccountTransactionsEntityRepository accountTransactionsEntityRepository, CardTransactionsEntityRepository cardTransactionsEntityRepository, AccountTypeRepository accountTypeRepository) {
+    private final ProfileRepository profileRepository;
+
+    public DashboardServiceImpl(RestTemplate restTemplate, CivilIdRepository civilIdRepository, DashboardRepository dashboardRepository, DashboardInfoRepository dashboardInfoRepository, AccountTransactionsEntityRepository accountTransactionsEntityRepository, CardTransactionsEntityRepository cardTransactionsEntityRepository, AccountTypeRepository accountTypeRepository, ProfileRepository profileRepository) {
         this.restTemplate = restTemplate;
         this.civilIdRepository = civilIdRepository;
         this.dashboardRepository = dashboardRepository;
@@ -72,6 +75,7 @@ public class DashboardServiceImpl implements DashboardService {
         this.accountTransactionsEntityRepository = accountTransactionsEntityRepository;
         this.cardTransactionsEntityRepository = cardTransactionsEntityRepository;
         this.accountTypeRepository = accountTypeRepository;
+        this.profileRepository = profileRepository;
     }
 
     @Override
@@ -79,11 +83,18 @@ public class DashboardServiceImpl implements DashboardService {
         return civilIdRepository.findById(uniqueKey)
                 .flatMap(civilIdEntity -> getTokenAndApiResponse(civilIdEntity.getCivilId()))
                 .map(apiResponse -> {
+
+                    Optional<Profile> profileOptional = profileRepository.findByUniqueKeyCivilId(uniqueKey);
+                    Profile profile = profileOptional.orElse(null);
+                    String custFullName = Objects.nonNull(profile) ? profile.getFullName() : "";
+
                     List<AccountsDetailsResponseDTO> accountsDetailsResponseDTOList = apiResponse.getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().stream()
                             .map(islamicAccount -> {
                                 AccountType accountType = getAccountDescription(islamicAccount.getAccls());
                                 String accountCodeDesc = Objects.nonNull(accountType) && Objects.nonNull(accountType.getDescription()) ? accountType.getDescription() : "";
                                 String accNickName = Objects.nonNull(accountType) && Objects.nonNull(accountType.getAccountNickName()) ? accountType.getAccountNickName() : "";
+                                DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndId(islamicAccount.getAcc(),uniqueKey);
+
                                 DashboardEntity dashboardEntity = DashboardEntity.builder()
                                         .id(uniqueKey)
                                         .accountNumber(islamicAccount.getAcc())
@@ -92,14 +103,25 @@ public class DashboardServiceImpl implements DashboardService {
                                         .accountCodeDesc(accountCodeDesc)
                                         .accountType(islamicAccount.getAcctype())
                                         .accountNickName(accNickName)
+                                        .isAccountVisible(Objects.nonNull(dashboard) && dashboard.isAccountVisible()).currentAccountBalance(islamicAccount.getCurrbal())
+                                        .branchName(islamicAccount.getBrn()).blockedAmount(islamicAccount.getAcyblkamt())
+                                        .customerName(custFullName).isAlertOnLowBal(Objects.nonNull(dashboard) && dashboard.isAlertOnLowBal())
+                                        .isAlertOnTrnx(Objects.nonNull(dashboard) && dashboard.isAlertOnTrnx())
+                                        .jointType(JointTypeEnum.getValueByCode(islamicAccount.getAcctype()))
+                                        .lowBalLimit(Objects.nonNull(dashboard) ? dashboard.getLowBalLimit() : 0).openDate(islamicAccount.getStatsince()).shariaContract("")
                                         .build();
-                                dashboardRepository.save(dashboardEntity);
+                                dashboardEntity = dashboardRepository.save(dashboardEntity);
                                 return AccountsDetailsResponseDTO.builder()
                                         .accountBalance(Objects.nonNull(dashboardEntity.getAvailableBalance()) ? dashboardEntity.getAvailableBalance() : 0.0)
                                         .accountNumber(Objects.nonNull(dashboardEntity.getAccountNumber()) ? dashboardEntity.getAccountNumber() : "")
                                         .accountType(Objects.nonNull(dashboardEntity.getAccountType()) ? dashboardEntity.getAccountType() : "")
                                         .accountCodeDesc(Objects.nonNull(dashboardEntity.getAccountCodeDesc()) ? dashboardEntity.getAccountCodeDesc(): "")
                                         .currency(Objects.nonNull(dashboardEntity.getCurrency()) ? dashboardEntity.getCurrency() : "")
+                                        .isAccountVisible(dashboardEntity.isAccountVisible()).currentAccountBalance(dashboardEntity.getCurrentAccountBalance())
+                                        .branchName(dashboardEntity.getBranchName()).blockedAmount(dashboardEntity.getBlockedAmount())
+                                        .customerName(custFullName).isAlertOnLowBal(dashboardEntity.isAlertOnLowBal())
+                                        .isAlertOnTrnx(dashboardEntity.isAlertOnTrnx()).jointType(dashboardEntity.getJointType())
+                                        .lowBalLimit(dashboardEntity.getLowBalLimit()).openDate(dashboardEntity.getOpenDate()).shariaContract("")
                                         .type(account)
                                         .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "").build();
                             })
@@ -110,6 +132,9 @@ public class DashboardServiceImpl implements DashboardService {
                                 AccountType accountType = getAccountDescription(istdDetails.getAccclass());
                                 String accountCodeDesc = Objects.nonNull(accountType) && Objects.nonNull(accountType.getDescription()) ? accountType.getDescription() : "";
                                 String accNickName = Objects.nonNull(accountType) && Objects.nonNull(accountType.getAccountNickName()) ? accountType.getAccountNickName() : "";
+
+                                DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndId(istdDetails.getCustacno(),uniqueKey);
+
                                 DashboardEntity dashboardEntity = DashboardEntity.builder()
                                         .id(uniqueKey)
                                         .accountNumber(istdDetails.getCustacno())
@@ -118,6 +143,12 @@ public class DashboardServiceImpl implements DashboardService {
                                         .accountCodeDesc(accountCodeDesc)
                                         .accountType(istdDetails.getAcctype())
                                         .accountNickName(accNickName)
+                                        .isAccountVisible(Objects.nonNull(dashboard) && dashboard.isAccountVisible()).currentAccountBalance(istdDetails.getTdamt())
+                                        .branchName(istdDetails.getBranch()).blockedAmount(0)
+                                        .customerName(custFullName).isAlertOnLowBal(Objects.nonNull(dashboard) && dashboard.isAlertOnLowBal())
+                                        .isAlertOnTrnx(Objects.nonNull(dashboard) && dashboard.isAlertOnTrnx())
+                                        .jointType(JointTypeEnum.getValueByCode(istdDetails.getAcctype()))
+                                        .lowBalLimit(Objects.nonNull(dashboard) ? dashboard.getLowBalLimit() : 0).openDate(istdDetails.getStatsince()).shariaContract("")
                                         .build();
                                 dashboardRepository.save(dashboardEntity);
                                 return AccountsDetailsResponseDTO.builder()
@@ -127,15 +158,32 @@ public class DashboardServiceImpl implements DashboardService {
                                         .accountCodeDesc(Objects.nonNull(dashboardEntity.getAccountCodeDesc()) ? dashboardEntity.getAccountCodeDesc(): "")
                                         .currency(Objects.nonNull(dashboardEntity.getCurrency()) ? dashboardEntity.getCurrency() : "")
                                         .type(account)
+                                        .isAccountVisible(dashboardEntity.isAccountVisible()).currentAccountBalance(dashboardEntity.getCurrentAccountBalance())
+                                        .branchName(dashboardEntity.getBranchName()).blockedAmount(dashboardEntity.getBlockedAmount())
+                                        .customerName(custFullName).isAlertOnLowBal(dashboardEntity.isAlertOnLowBal())
+                                        .isAlertOnTrnx(dashboardEntity.isAlertOnTrnx()).jointType(dashboardEntity.getJointType())
+                                        .lowBalLimit(dashboardEntity.getLowBalLimit()).openDate(dashboardEntity.getOpenDate()).shariaContract("")
+                                        .type(account)
                                         .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "").build();
                             })
                             .toList();
+
+                    List<AccountDetails.Response.Payload.CustSummaryDetails.AmountBlocks> amountBlocks = apiResponse.getResponse().getPayload().getCustSummaryDetails().getAmountBlocks();
+                    List<BlockedAmountResponseDto> blockedAmountList = amountBlocks.stream()
+                            .map(amtBlock -> BlockedAmountResponseDto.builder()
+                                    .amount(amtBlock.getAmount()).account(amtBlock.getAccount()).blktype(amtBlock.getBlktype())
+                                    .branch(amtBlock.getBranch()).effdate(amtBlock.getEffdate())
+                                    .amtblkno(amtBlock.getAmtblkno()).expdate(amtBlock.getExpdate())
+                                    .build())
+                            .toList();
+
                     accountsDetailsResponseDTOList.addAll(accountsDetailsResponse);
 
                     GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
                     Map<String, Object> data = new HashMap<>();
                     data.put("uniqueKey", uniqueKey);
                     data.put("accountDetails", accountsDetailsResponseDTOList);
+                    data.put("blockedAmounts", blockedAmountList);
                     responseDTO.setStatus("Success");
                     responseDTO.setMessage("Success");
                     responseDTO.setData(data);
@@ -463,6 +511,37 @@ public class DashboardServiceImpl implements DashboardService {
                 })
                 .orElseGet(() -> createFailureResponse(uniqueKey));
 
+    }
+
+    @Override
+    public GenericResponseDTO<Object> editInfo(EditInfoRequestDto editInfoRequestDto) {
+        DashboardEntity dashboardEntity =dashboardRepository.findByAccountNumberAndId(editInfoRequestDto.getAccountNumber(), editInfoRequestDto.getUniqueKey());
+        if(Objects.nonNull(dashboardEntity)){
+            dashboardEntity.setAccountVisible(editInfoRequestDto.getIsAccountVisible());
+            dashboardEntity.setAlertOnLowBal(editInfoRequestDto.getIsAlertOnLowBal());
+            dashboardEntity.setAlertOnTrnx(editInfoRequestDto.getIsAlertOnTrnx());
+            dashboardEntity.setAccountNickName(Objects.nonNull(editInfoRequestDto.getAccountNickName()) ? editInfoRequestDto.getAccountNickName() : "");
+            dashboardEntity.setLowBalLimit(editInfoRequestDto.getLowBalLimit());
+            dashboardRepository.save(dashboardEntity);
+            GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+            Map<String, Object> data = new HashMap<>();
+            data.put("accountNumber",editInfoRequestDto.getAccountNumber());
+            data.put("uniqueKey", editInfoRequestDto.getUniqueKey());
+            responseDTO.setStatus("Success");
+            responseDTO.setMessage("Success");
+            responseDTO.setData(data);
+            return responseDTO;
+
+        }
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        Map<String, Object> data = new HashMap<>();
+        data.put("accountNumber",editInfoRequestDto.getAccountNumber());
+        data.put("uniqueKey", editInfoRequestDto.getUniqueKey());
+        data.put("message", "Account Not Found");
+        responseDTO.setStatus("failure");
+        responseDTO.setMessage("failure");
+        responseDTO.setData(data);
+        return responseDTO;
     }
 
     private static GenericResponseDTO<Object> getErrorResponseObject(String uniqueKey) {
