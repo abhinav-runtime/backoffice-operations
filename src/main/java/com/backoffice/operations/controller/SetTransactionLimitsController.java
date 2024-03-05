@@ -11,41 +11,42 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backoffice.operations.payloads.SetCardControlsDTO;
 import com.backoffice.operations.payloads.TransactionLimitsDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.service.SetCardControlService;
 import com.backoffice.operations.service.TransactionLimitService;
 
 @RestController
-@RequestMapping("/api/transaction")
+@RequestMapping("/api/cards")
 public class SetTransactionLimitsController {
 	
 	@Autowired
 	private TransactionLimitService transactionLimitService;
+	
+	@Autowired
+	private SetCardControlService setCardControlService;
 
-	@PostMapping("/setMerchantOutletLimits")
-	public ResponseEntity<GenericResponseDTO<Object>> setMerchantOutletLimits(@RequestBody TransactionLimitsDTO transactionLimitsDTO, 
+	@PostMapping("/setTransactionLimits")
+	public ResponseEntity<GenericResponseDTO<Object>> setTransactionLimits(@RequestBody TransactionLimitsDTO transactionLimitsDTO, 
 																			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		GenericResponseDTO<Object> validationResultDTO = transactionLimitService.setMerchantOutletLimits(transactionLimitsDTO, token.substring("Bearer ".length()));
+		GenericResponseDTO<Object> validationResultDTO = transactionLimitService.setTransactionLimits(transactionLimitsDTO, token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
-	@PostMapping("/setOnlineShoppingLimits")
-	public ResponseEntity<GenericResponseDTO<Object>> setOnlineShoppingLimits(@RequestBody TransactionLimitsDTO.OnlineShopping onlineShoppingLimitDTO,
+	
+	@PostMapping("/setControls")
+	public ResponseEntity<GenericResponseDTO<Object>> setControls(@RequestBody SetCardControlsDTO setCardControlsDTO, 
 																			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		GenericResponseDTO<Object> validationResultDTO = transactionLimitService.setOnlineShoppingLimits(onlineShoppingLimitDTO, token.substring("Bearer ".length()));
+		GenericResponseDTO<Object> validationResultDTO = setCardControlService.setControls(setCardControlsDTO, token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
-	@PostMapping("/setAtmWithdrawalLimits")
-	public ResponseEntity<GenericResponseDTO<Object>> setAtmWithdrawalLimits(@RequestBody TransactionLimitsDTO.ATMwithdrawal atmWithdrawalLimitDTO,
-																			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		GenericResponseDTO<Object> validationResultDTO = transactionLimitService.setAtmWithdrawalLimits(atmWithdrawalLimitDTO, token.substring("Bearer ".length()));
-		return ResponseEntity.ok(validationResultDTO);
+	
+	@GetMapping("/getControls")
+	public ResponseEntity<GenericResponseDTO<Object>> getCardControlsLists(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> validationResultDTO = setCardControlService.getCardControlsLists(token.substring("Bearer ".length()));
+		return ResponseEntity.ok(validationResultDTO);	
 	}
-	@PostMapping("/setTapAndPayLimits")
-	public ResponseEntity<GenericResponseDTO<Object>> setTapAndPayLimits(@RequestBody TransactionLimitsDTO.TapAndPay tapAndPayLimitDTO,
-																		@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		GenericResponseDTO<Object> validationResultDTO = transactionLimitService.setTapAndPayLimits(tapAndPayLimitDTO, token.substring("Bearer ".length()));
-		return ResponseEntity.ok(validationResultDTO);
-	}
+
 	
 	@GetMapping("/getTransactionLimits")
 	public ResponseEntity<GenericResponseDTO<Object>> getTransactionLimitsLists(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {	
@@ -53,10 +54,10 @@ public class SetTransactionLimitsController {
 		return ResponseEntity.ok(validationResultDTO);
 	}
 	
-	@GetMapping("/getLimits/{customerId}")
-	public ResponseEntity<GenericResponseDTO<Object>> getTransactionLimitsByCustId(@PathVariable String customerId,
+	@GetMapping("/getTransactionLimits/{uniqueKey}")
+	public ResponseEntity<GenericResponseDTO<Object>> getTransactionLimitsByCustId(@PathVariable String uniqueKey,
 																				@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		GenericResponseDTO<Object> validationResultDTO = transactionLimitService.getTransactionLimitsByCustId(customerId, token.substring("Bearer ".length()));
+		GenericResponseDTO<Object> validationResultDTO = transactionLimitService.getTransactionLimitsByCustId(uniqueKey, token.substring("Bearer ".length()));
 		return ResponseEntity.ok(validationResultDTO);
 	}
 }

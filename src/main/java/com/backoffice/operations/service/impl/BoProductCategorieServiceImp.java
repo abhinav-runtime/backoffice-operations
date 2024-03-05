@@ -1,5 +1,6 @@
 package com.backoffice.operations.service.impl;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -8,7 +9,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -207,11 +211,12 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 				requestProduct.setEmail(request.getEmail());
 				requestProduct.setSubCategories(subCategories.getSubCategoriesName());
 				requestProduct.setCategories(subCategories.getCategories().getCategoriesName());
+				requestProduct.setReferenceId(generateReferenceId());
 				requestProduct = boProductRequestRepo.save(requestProduct);
 
 				response.setStatus("Success");
 				response.setMessage("Request Saved Successfully");
-				response.setData(new HashMap<>());
+				response.setData(requestProduct);
 			} else {
 				response.setStatus("Failure");
 				response.setMessage("Something went wrong.");
@@ -367,5 +372,14 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			response.setData(new HashMap<>());
 		}
 		return response;
+	}
+
+	private String generateReferenceId() {
+		String PREFIX = "PR";
+		AtomicLong counter = new AtomicLong(System.currentTimeMillis() % 1000000);
+
+		long value = counter.getAndIncrement();
+		String referenceId = String.format("%s%06d", PREFIX, value);
+		return referenceId;
 	}
 }
