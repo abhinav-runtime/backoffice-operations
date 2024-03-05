@@ -81,7 +81,7 @@ public class PromotionServiceImpl implements PromotionService {
         if (Objects.nonNull(promotion)) {
             PromotionUser promotionUser = promotionUserRepository.findByUniqueKeyAndPromotionId(uniqueKey, promotionId);
             if (Objects.nonNull(promotionUser)) {
-                promotionUser.setSeenCount(+1);
+                promotionUser.setSeenCount(promotionUser.getSeenCount()+1);
             } else {
                 promotionUser = new PromotionUser();
                 promotionUser.setPromotionId(promotion.getId());
