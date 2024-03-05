@@ -31,6 +31,7 @@ public class AccountDetails {
             public static class CustSummaryDetails {
 
                 private List<IslamicAccount> islamicAccounts;
+                private List<Istddetails> istddetails;
 
                 @Getter
                 @Setter
@@ -44,6 +45,18 @@ public class AccountDetails {
                     private String acctype;
                     private String adesc;
 
+                }
+
+                @Getter
+                @Setter
+                public static class Istddetails{
+
+                    public String custacno;
+                    public String ccy;
+                    public String acdesc;
+                    public String acctype;
+                    public double tdamt;
+                    public String accclass;
                 }
             }
         }
