@@ -23,7 +23,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class BoAccountServiceImp implements BoAccountService {
 	private final Logger logger = LoggerFactory.getLogger(BoAccountServiceImp.class);
 	@Value("${external.api.accounts}")
-	private String externalApiUrl;
+	private String externalAccountApiUrl;
+	@Value("${external.api.accounts.transaction}")
+	private String externalTransactionApiUrl;
 	@Autowired
 	@Qualifier("jwtAuth")
 	private RestTemplate jwtAuthRestTemplate;
@@ -44,7 +46,7 @@ public class BoAccountServiceImp implements BoAccountService {
 			// accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
 			// logger.info("accessToken: {}", accessToken);
 
-			// String apiUrl = externalApiUrl + custNo;
+			// String apiUrl = externalAccountApiUrl + custNo;
 			String apiUrl = "http://182.18.138.199/chandan/api/v1/accounts/" + custNo;
 			HttpHeaders headers = new HttpHeaders();
 			headers.setBearerAuth(accessToken);
@@ -75,4 +77,6 @@ public class BoAccountServiceImp implements BoAccountService {
 			return responseDTO;
 		}
 	}
+	
+	
 }
