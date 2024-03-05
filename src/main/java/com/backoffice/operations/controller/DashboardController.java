@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import com.backoffice.operations.payloads.EditInfoRequestDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.DashboardService;
 import org.springframework.http.HttpHeaders;
@@ -125,5 +126,10 @@ public class DashboardController {
     @GetMapping("/upcomingBills")
     public ResponseEntity<GenericResponseDTO<Object>> getUpComingBills(@RequestParam String uniqueKey){
         return ResponseEntity.ok(dashboardService.getUpComingBills(uniqueKey));
+    }
+
+    @PostMapping("/editInfo")
+    public ResponseEntity<GenericResponseDTO<Object>> editInfo(@RequestBody EditInfoRequestDto editInfoRequestDto){
+        return ResponseEntity.ok(dashboardService.editInfo(editInfoRequestDto));
     }
 }
