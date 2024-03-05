@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -15,32 +14,20 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "az_promotions_bk")
-public class Promotion {
+@Table(name = "az_promotions_user_bk")
+public class PromotionUser {
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "id", unique = true, nullable = false)
     private String id;
 
-    @Column(nullable = false)
-    private String imageUrl;
+    private String uniqueKey;
 
-    private String urlType;
+    private String promotionId;
 
-    private String url;
+    private int seenCount;
 
-    private int priority;
+    private LocalDateTime seenAt;
 
-    private String text1;
-
-    private String text2;
-
-    private LocalDateTime createdAt;
-
-    private String createdBy;
-
-    private LocalDateTime lastUpdatedAt;
-
-    private String updatedBy;
 }

@@ -14,8 +14,11 @@ public class PromotionDTO {
 
     private String id;
     private String imageUrl;
-    private boolean seenByUser;
-    @NotBlank(message = "Unique Key cannot be blank")
     private String uniqueKey;
+    private String text1;
+    private String text2;
+    private int priority;
+    private String urlType;
+    private String url;
 
 }
