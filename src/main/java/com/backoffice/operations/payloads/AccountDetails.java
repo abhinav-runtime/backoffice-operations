@@ -36,7 +36,7 @@ public class AccountDetails {
                 @Setter
                 public static class IslamicAccount {
                     private String acc;
-                    private String accdesc;
+                    //private String accdesc;
                     private String ccy;
                     private double currbal;
                     private double acyavlbal;
