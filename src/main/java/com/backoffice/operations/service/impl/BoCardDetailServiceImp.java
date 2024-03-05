@@ -20,7 +20,6 @@ import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.BoCarddetailService;
 import com.backoffice.operations.utils.CommonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class BoCardDetailServiceImp implements BoCarddetailService {
@@ -28,23 +27,14 @@ public class BoCardDetailServiceImp implements BoCarddetailService {
 	@Value("${external.api.url}")
 	private String externalApiUrl;
 	@Autowired
-	@Qualifier("jwtAuth")
-	private RestTemplate jwtAuthRestTemplate;
-	@Autowired
 	private RestTemplate restTemplate;
-	@Autowired
-	private CommonUtils commonUtils;
+	
 
 	@Override
 	public GenericResponseDTO<Object> fetchCardDeatils(String custNo) {
 		logger.info("Fetching account details for customer number: {}", custNo);
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		String accessToken = null;
 		try {
-			// ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-			// logger.info("response: {}", response.getBody());
-			// accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
-			// logger.info("accessToken: {}", accessToken);
 
 			String requestBody = "{\r\n    \"customerId\": \"" + custNo + "\"\r\n}";
 
@@ -53,9 +43,6 @@ public class BoCardDetailServiceImp implements BoCarddetailService {
 			headers.add("TENANT", "ALIZZ_UAT");
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
-			// ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl,
-			// HttpMethod.GET,
-			// requestEntity, String.class);
 			ResponseEntity<JsonNode> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity,
 					JsonNode.class);
 			responseDTO.setData(responseEntity.getBody());
