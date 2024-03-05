@@ -12,18 +12,21 @@ import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.BoAccountService;
 
 @RestController
-@RequestMapping("/bo/v1/Customer-account")
+@RequestMapping("/bo/v1/customer-account")
 public class BoAccountController {
 	@Autowired
 	private BoAccountService boAccountService;
-	
+
 	@GetMapping("/details/{custNo}")
 	private ResponseEntity<Object> getAccountDetails(@PathVariable String custNo) {
 		GenericResponseDTO<Object> responseDTO = boAccountService.getAccountDetails(custNo);
-		if (responseDTO.getStatus().equals("Failure")) {
-			return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
-		}else {
-			return new ResponseEntity<>(responseDTO, HttpStatus.OK);
-		}
+//		if (responseDTO.getStatus().equals("Failure")) {
+//		return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+		return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+//		}else {
+//			return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+//		}
 	}
+
+//	@GetMapping("/summary/{custNo}")
 }
