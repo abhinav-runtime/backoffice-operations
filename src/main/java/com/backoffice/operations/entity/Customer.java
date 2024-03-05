@@ -24,6 +24,7 @@ public class Customer {
     private String branch;
     private String country;
     private Date dateRegistered;
+    private String custNo;
 	public String getCustId() {
 		return custId;
 	}
