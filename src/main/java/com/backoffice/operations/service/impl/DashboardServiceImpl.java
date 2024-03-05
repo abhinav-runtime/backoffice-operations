@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
@@ -430,6 +431,38 @@ public class DashboardServiceImpl implements DashboardService {
             responseDTO.setData(data);
             return responseDTO;
         }
+    }
+
+    @Override
+    public GenericResponseDTO<Object> getUpComingBills(String uniqueKey) {
+        return civilIdRepository.findById(uniqueKey)
+                .flatMap(civilIdEntity -> getTokenAndApiResponse(civilIdEntity.getCivilId()))
+                .map(apiResponse -> {
+                    UpcomingBillsResponseDto upcomingBillsResponseDtos = new UpcomingBillsResponseDto();
+                    AtomicReference<Double> totalAmt = new AtomicReference<>((double) 0);
+                    List<UpcomingBillsResponseDto.Events> eventsList = apiResponse.getResponse().getPayload().getCustSummaryDetails().getUpcomingEvents().stream()
+                            .map(upcomingEvents -> {
+                                totalAmt.updateAndGet(currentTotal -> currentTotal + upcomingEvents.getAmount());
+                                 return UpcomingBillsResponseDto.Events.builder().event(upcomingEvents.getEvent())
+                                        .amount(upcomingEvents.getAmount()).dueOn(upcomingEvents.getEventdt())
+                                        .currency(upcomingEvents.getCcy()).build();
+
+                            })
+                            .toList();
+
+                    upcomingBillsResponseDtos.setEventsList(eventsList);
+                    upcomingBillsResponseDtos.setTotalAmt(totalAmt.get());
+                    GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("uniqueKey", uniqueKey);
+                    data.put("upcomingEventsDetails", upcomingBillsResponseDtos);
+                    responseDTO.setStatus("Success");
+                    responseDTO.setMessage("Success");
+                    responseDTO.setData(data);
+                    return responseDTO;
+                })
+                .orElseGet(() -> createFailureResponse(uniqueKey));
+
     }
 
     private static GenericResponseDTO<Object> getErrorResponseObject(String uniqueKey) {

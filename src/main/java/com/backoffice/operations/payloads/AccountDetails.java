@@ -32,6 +32,7 @@ public class AccountDetails {
 
                 private List<IslamicAccount> islamicAccounts;
                 private List<Istddetails> istddetails;
+                private List<UpcomingEvents> upcomingEvents;
 
                 @Getter
                 @Setter
@@ -57,6 +58,17 @@ public class AccountDetails {
                     public String acctype;
                     public double tdamt;
                     public String accclass;
+                }
+
+                @Getter
+                @Setter
+                public static class UpcomingEvents{
+                        public String event;
+                        public String branch;
+                        public String refno;
+                        public double amount;
+                        public String eventdt;
+                        public String ccy;
                 }
             }
         }
