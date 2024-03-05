@@ -121,4 +121,9 @@ public class DashboardController {
             , @RequestParam(required = false) String toDate,@RequestParam String uniqueKey){
         return ResponseEntity.ok(dashboardService.getCreditCardTransactions(fromDate, toDate, uniqueKey));
     }
+
+    @GetMapping("/upcomingBills")
+    public ResponseEntity<GenericResponseDTO<Object>> getUpComingBills(@RequestParam String uniqueKey){
+        return ResponseEntity.ok(dashboardService.getUpComingBills(uniqueKey));
+    }
 }
