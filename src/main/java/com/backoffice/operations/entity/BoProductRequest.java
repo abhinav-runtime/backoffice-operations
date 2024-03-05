@@ -31,6 +31,9 @@ public class BoProductRequest {
 	@Column(name = "id", unique = true, nullable = false)
 	private String id;
 
+    @Column(name = "reference_id", nullable = false, unique = true)
+	private String referenceId;
+	
 	@Column(name = "name", nullable = false)
 	private String name;
 	@Column(name = "mobile_number", nullable = false)
