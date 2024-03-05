@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,8 +56,10 @@ public class BOCustomerServiceImp implements BOCustomerService {
 	@Override
 	public GenericResponseDTO<List<Customer>> getAllCustomers() {
 		GenericResponseDTO<List<Customer>> customerResponse = new GenericResponseDTO<>();
+		Map<String, String> customerData = new HashMap<>();
 		try {
 			List<Customer> allCustomers = customerRepository.findAll();
+
 			if (allCustomers.size() != 0) {
 				customerResponse.setStatus("success");
 				customerResponse.setMessage("All customers List");
@@ -154,6 +157,7 @@ public class BOCustomerServiceImp implements BOCustomerService {
 			String branch = jsonNode.at("/response/result/customerFull/custaccdet/reverseRelationship/0/branch")
 					.asText();
 			String country = jsonNode.at("/response/result/customerFull/country").asText();
+			String costNoString = jsonNode.at("/response/result/customerFull/custno").asText();
 
 			Customer customer = new Customer();
 			customer.setCustId(CivilId);
@@ -161,6 +165,7 @@ public class BOCustomerServiceImp implements BOCustomerService {
 			customer.setBranch(branch);
 			customer.setCountry(country);
 			customer.setDateRegistered(new Date(System.currentTimeMillis()));
+			customer.setCustNo(costNoString);
 			customerRepository.save(customer);
 
 		} catch (Exception e) {
