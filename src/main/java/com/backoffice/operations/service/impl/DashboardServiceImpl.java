@@ -104,6 +104,33 @@ public class DashboardServiceImpl implements DashboardService {
                             })
                             .collect(Collectors.toList());
 
+                    List<AccountsDetailsResponseDTO> accountsDetailsResponse = apiResponse.getResponse().getPayload().getCustSummaryDetails().getIstddetails().stream()
+                            .map(istdDetails -> {
+                                AccountType accountType = getAccountDescription(istdDetails.getAccclass());
+                                String accountCodeDesc = Objects.nonNull(accountType) && Objects.nonNull(accountType.getDescription()) ? accountType.getDescription() : "";
+                                String accNickName = Objects.nonNull(accountType) && Objects.nonNull(accountType.getAccountNickName()) ? accountType.getAccountNickName() : "";
+                                DashboardEntity dashboardEntity = DashboardEntity.builder()
+                                        .id(uniqueKey)
+                                        .accountNumber(istdDetails.getCustacno())
+                                        .availableBalance(istdDetails.getTdamt())
+                                        .currency(istdDetails.getCcy())
+                                        .accountCodeDesc(accountCodeDesc)
+                                        .accountType(istdDetails.getAcctype())
+                                        .accountNickName(accNickName)
+                                        .build();
+                                dashboardRepository.save(dashboardEntity);
+                                return AccountsDetailsResponseDTO.builder()
+                                        .accountBalance(Objects.nonNull(dashboardEntity.getAvailableBalance()) ? dashboardEntity.getAvailableBalance() : 0.0)
+                                        .accountNumber(Objects.nonNull(dashboardEntity.getAccountNumber()) ? dashboardEntity.getAccountNumber() : "")
+                                        .accountType(Objects.nonNull(dashboardEntity.getAccountType()) ? dashboardEntity.getAccountType() : "")
+                                        .accountCodeDesc(Objects.nonNull(dashboardEntity.getAccountCodeDesc()) ? dashboardEntity.getAccountCodeDesc(): "")
+                                        .currency(Objects.nonNull(dashboardEntity.getCurrency()) ? dashboardEntity.getCurrency() : "")
+                                        .type(account)
+                                        .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "").build();
+                            })
+                            .toList();
+                    accountsDetailsResponseDTOList.addAll(accountsDetailsResponse);
+
                     GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
                     Map<String, Object> data = new HashMap<>();
                     data.put("uniqueKey", uniqueKey);
@@ -249,6 +276,39 @@ public class DashboardServiceImpl implements DashboardService {
             List<ExternalApiTransactionResponseDTO.Response.Transaction> transactionList = accountsTransactionResponseEntity.getBody().getResponse().getTransactions();
             AccountTransactionResponseDTO accountTransactionResponseDTOS = new AccountTransactionResponseDTO();
             List<AccountTransactionResponseDTO.AccountTransaction> accountTransactionsEntities = new ArrayList<>();
+
+            String actualFirstFourDigits = accountNumber.substring(0, 4);
+            String actualLastFourDigits = accountNumber.substring(accountNumber.length() - 4);
+            String creditCardNumber = actualFirstFourDigits + "********" + actualLastFourDigits;
+
+            String receiverCifNo = accountNumber.substring(3, 10);
+            Optional<AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount> islamicAccountOptional = getTokenAndApiResponse(receiverCifNo)
+                    .map(AccountDetails::getResponse)
+                    .map(AccountDetails.Response::getPayload)
+                    .map(AccountDetails.Response.Payload::getCustSummaryDetails)
+                    .map(AccountDetails.Response.Payload.CustSummaryDetails::getIslamicAccounts)
+                    .orElseGet(Collections::emptyList)
+                    .stream()
+                    .filter(acc -> acc.getAcc().equals(accountNumber))
+                    .findFirst();
+
+            Optional<AccountDetails.Response.Payload.CustSummaryDetails.Istddetails> istddetailsOptional = islamicAccountOptional
+                    .filter(islamicAccount -> islamicAccount != null)
+                    .map(unused -> getTokenAndApiResponse(receiverCifNo)
+                            .map(AccountDetails::getResponse)
+                            .map(AccountDetails.Response::getPayload)
+                            .map(AccountDetails.Response.Payload::getCustSummaryDetails)
+                            .map(AccountDetails.Response.Payload.CustSummaryDetails::getIstddetails)
+                            .orElseGet(Collections::emptyList)
+                            .stream()
+                            .filter(acc -> acc.getCustacno().equals(accountNumber))
+                            .findFirst()
+                            .orElse(null) // Extract the value from the Optional
+                    );
+
+            AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount islamicAccount = islamicAccountOptional.orElse(null);
+            AccountDetails.Response.Payload.CustSummaryDetails.Istddetails istddetailsAccount = istddetailsOptional.orElse(null);
+
             transactionList.forEach(txn -> {
                 String indicator = txn.getIndicator();
                 String desc = txn.getTransactionDesc();
@@ -262,7 +322,8 @@ public class DashboardServiceImpl implements DashboardService {
 
                 AccountTransactionResponseDTO.AccountTransaction transactionResponseDTO = AccountTransactionResponseDTO.AccountTransaction.builder()
                         .indicator(indicator).transactionAmount(amount).transactionDescription(desc).transactionDate(localDate)
-                        .referenceNumber(referenceNo).build();
+                        .transactionFrom(creditCardNumber).availableBalance(Objects.nonNull(islamicAccount) ? islamicAccount.getAcyavlbal() : Objects.nonNull(istddetailsAccount) ? istddetailsAccount.getTdamt() : 0.0)
+                        .referenceNumber(referenceNo).transactionTo("").build();
                 accountTransactionsEntities.add(transactionResponseDTO);
                 accountTransactionsEntityList.add(accountTransactionsEntity);
             });
