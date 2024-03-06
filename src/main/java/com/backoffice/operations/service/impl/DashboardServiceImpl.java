@@ -168,22 +168,12 @@ public class DashboardServiceImpl implements DashboardService {
                             })
                             .toList();
 
-                    List<AccountDetails.Response.Payload.CustSummaryDetails.AmountBlocks> amountBlocks = apiResponse.getResponse().getPayload().getCustSummaryDetails().getAmountBlocks();
-                    List<BlockedAmountResponseDto> blockedAmountList = amountBlocks.stream()
-                            .map(amtBlock -> BlockedAmountResponseDto.builder()
-                                    .amount(amtBlock.getAmount()).account(amtBlock.getAccount()).blktype(amtBlock.getBlktype())
-                                    .branch(amtBlock.getBranch()).effdate(amtBlock.getEffdate())
-                                    .amtblkno(amtBlock.getAmtblkno()).expdate(amtBlock.getExpdate())
-                                    .build())
-                            .toList();
-
                     accountsDetailsResponseDTOList.addAll(accountsDetailsResponse);
 
                     GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
                     Map<String, Object> data = new HashMap<>();
                     data.put("uniqueKey", uniqueKey);
                     data.put("accountDetails", accountsDetailsResponseDTOList);
-                    data.put("blockedAmounts", blockedAmountList);
                     responseDTO.setStatus("Success");
                     responseDTO.setMessage("Success");
                     responseDTO.setData(data);
@@ -542,6 +532,34 @@ public class DashboardServiceImpl implements DashboardService {
         responseDTO.setMessage("failure");
         responseDTO.setData(data);
         return responseDTO;
+    }
+
+    @Override
+    public GenericResponseDTO<Object> getBlockedAmounts(String uniqueKey) {
+
+        return civilIdRepository.findById(uniqueKey)
+                .flatMap(civilIdEntity -> getTokenAndApiResponse(civilIdEntity.getCivilId()))
+                .map(apiResponse -> {
+                    List<AccountDetails.Response.Payload.CustSummaryDetails.AmountBlocks> amountBlocks = apiResponse.getResponse().getPayload().getCustSummaryDetails().getAmountBlocks();
+                    List<BlockedAmountResponseDto> blockedAmountList = amountBlocks.stream()
+                            .map(amtBlock -> BlockedAmountResponseDto.builder()
+                                    .amount(amtBlock.getAmount()).account(amtBlock.getAccount()).blktype(amtBlock.getBlktype())
+                                    .branch(amtBlock.getBranch()).effdate(amtBlock.getEffdate())
+                                    .amtblkno(amtBlock.getAmtblkno()).expdate(amtBlock.getExpdate())
+                                    .build())
+                            .toList();
+
+                    GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("uniqueKey", uniqueKey);
+                    data.put("blockedAmounts", blockedAmountList);
+                    responseDTO.setStatus("Success");
+                    responseDTO.setMessage("Success");
+                    responseDTO.setData(data);
+                    return responseDTO;
+
+                })
+                .orElseGet(() -> createFailureResponse(uniqueKey));
     }
 
     private static GenericResponseDTO<Object> getErrorResponseObject(String uniqueKey) {
