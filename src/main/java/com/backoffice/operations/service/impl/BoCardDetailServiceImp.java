@@ -26,9 +26,13 @@ public class BoCardDetailServiceImp implements BoCarddetailService {
 	private static final Logger logger = LoggerFactory.getLogger(BoCardDetailServiceImp.class);
 	@Value("${external.api.url}")
 	private String externalApiUrl;
+	@Value("${external.api.fetchPreferenceUrl}")
+	private String fetchPrefarenceApiUrl;
+	@Value("${external.api.setPreferenceUrl}")
+	private String setPrefarenceApiUrl;
+
 	@Autowired
 	private RestTemplate restTemplate;
-	
 
 	@Override
 	public GenericResponseDTO<Object> fetchCardDeatils(String custNo) {
@@ -53,6 +57,59 @@ public class BoCardDetailServiceImp implements BoCarddetailService {
 			logger.error("Error occurred while fetching account details: {}", e.getMessage());
 			responseDTO.setData(new HashMap<>());
 			responseDTO.setMessage("Something went wrong while fetching account details");
+			responseDTO.setStatus("Failure");
+			return responseDTO;
+		}
+	}
+
+	@Override
+	public GenericResponseDTO<Object> fetchPreference(String custNo) {
+		logger.info("Fetching preferance : {}", custNo);
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		try {
+
+			String requestBody = "{\r\n   \"entityId\": \"" + custNo + "\"\r\n}";
+
+			String apiUrl = fetchPrefarenceApiUrl;
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("TENANT", "ALIZZ_UAT");
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+			ResponseEntity<JsonNode> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity,
+					JsonNode.class);
+			responseDTO.setData(responseEntity.getBody());
+			responseDTO.setMessage("Preference fetched successfully");
+			responseDTO.setStatus("Success");
+			return responseDTO;
+		} catch (Exception e) {
+			logger.error("Error occurred while fetching preference: {}", e.getMessage());
+			responseDTO.setData(new HashMap<>());
+			responseDTO.setMessage("Something went wrong while fetching details");
+			responseDTO.setStatus("Failure");
+			return responseDTO;
+		}
+	}
+
+	@Override
+	public GenericResponseDTO<Object> setPreference(JsonNode preference) {
+		logger.info("setting preference details : {}", preference);
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		try {
+			String apiUrl = setPrefarenceApiUrl;
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("TENANT", "ALIZZ_UAT");
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(preference.toString(), headers);
+			ResponseEntity<JsonNode> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity,
+					JsonNode.class);
+			responseDTO.setData(responseEntity.getBody());
+			responseDTO.setMessage("Preference set successfully");
+			responseDTO.setStatus("Success");
+			return responseDTO;
+		} catch (Exception e) {
+			logger.error("Error occurred while fetching account details: {}", e.getMessage());
+			responseDTO.setData(new HashMap<>());
+			responseDTO.setMessage("Something went wrong setting preference details");
 			responseDTO.setStatus("Failure");
 			return responseDTO;
 		}
