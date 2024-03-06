@@ -84,12 +84,12 @@ public class BoProductController {
 	// for mobile application to get all subcategories
 	@PreAuthorize(value = "authenticated")
 	@GetMapping("/get-sub-categories/{categoriesId}")
-	public GenericResponseDTO<Object> getProductSubCategoriesForUser(@PathVariable String categoriesId) {
+	public GenericResponseDTO<Object> getProductSubCategoriesForUser(@PathVariable(name = "categoriesId") String categoriesId) {
 		return boProductCategorieService.getProductSubCategories(categoriesId);
 	}
 
 	@GetMapping("/get-sub-categories-bo/{categoriesId}")
-	public ResponseEntity<Object> getSubCategoriesForBO(@PathVariable String categoriesId) {
+	public ResponseEntity<Object> getSubCategoriesForBO(@PathVariable(name = "categoriesId") String categoriesId) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -142,7 +142,7 @@ public class BoProductController {
 	}
 
 	@DeleteMapping("/delete-sub-categories/{categoriesId}")
-	public ResponseEntity<Object> deleteSubCatagories(@PathVariable String categoriesId) {
+	public ResponseEntity<Object> deleteSubCatagories(@PathVariable(name = "categoriesId") String categoriesId) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -166,7 +166,7 @@ public class BoProductController {
 	}
 
 	@DeleteMapping("/delete-catagories/{categoriesId}")
-	public ResponseEntity<Object> deleteCatagories(@PathVariable String categoriesId) {
+	public ResponseEntity<Object> deleteCatagories(@PathVariable(name = "categoriesId") String categoriesId) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");

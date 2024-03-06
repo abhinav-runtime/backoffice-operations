@@ -25,7 +25,7 @@ public class BoCardController {
 	private BoCarddetailService boCardDetailService;
 
 	@GetMapping("/details/{custNo}")
-	public ResponseEntity<Object> fetchCardDetails(@PathVariable String custNo) {
+	public ResponseEntity<Object> fetchCardDetails(@PathVariable(value = "custNo") String custNo) {
 		GenericResponseDTO<Object> responseDTO = boCardDetailService.fetchCardDeatils(custNo);
 		if (responseDTO.getStatus().equals("Failure")) {
 			return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -35,7 +35,7 @@ public class BoCardController {
 	}
 
 	@GetMapping("/get-preference/{custNo}")
-	public ResponseEntity<Object> fetchPreference(@PathVariable String custNo) {
+	public ResponseEntity<Object> fetchPreference(@PathVariable(value = "custNo") String custNo) {
 		GenericResponseDTO<Object> responseDTO = boCardDetailService.fetchPreference(custNo);
 		if (responseDTO.getStatus().equals("Failure")) {
 			return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
