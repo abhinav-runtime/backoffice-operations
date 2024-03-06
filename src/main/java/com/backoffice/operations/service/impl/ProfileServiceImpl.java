@@ -178,8 +178,8 @@ public class ProfileServiceImpl implements ProfileService {
                                     String inputDate = formatter.format(updateProfileRequest.getExpiryDate());
                                     logger.info("bankDate--- {} ", bankDate);
                                     logger.info("inputDate --- {} ", inputDate);
-                                    Date date1 = formatter.parse("16/03/2025");
-                                    Date date2 = bankFormatter.parse("16-APR-2024");
+                                    Date date1 = formatter.parse(bankDate);
+                                    Date date2 = bankFormatter.parse(inputDate);
                                     logger.info("date1--- {} ", date1);
                                     logger.info("date2 --- {} ", date2);
                                     if (date1.equals(date2)) {
