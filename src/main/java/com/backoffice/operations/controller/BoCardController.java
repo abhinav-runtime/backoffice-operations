@@ -8,29 +8,33 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backoffice.operations.payloads.BoTransactionsParemsDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.BoCarddetailService;
 import com.fasterxml.jackson.databind.JsonNode;
+
+import jakarta.annotation.Nullable;
 
 @RestController
 @RequestMapping("/bo/v1/card")
 public class BoCardController {
 	@Autowired
 	private BoCarddetailService boCardDetailService;
-	
+
 	@GetMapping("/details/{custNo}")
 	public ResponseEntity<Object> fetchCardDetails(@PathVariable String custNo) {
 		GenericResponseDTO<Object> responseDTO = boCardDetailService.fetchCardDeatils(custNo);
 		if (responseDTO.getStatus().equals("Failure")) {
 			return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
-		}else {
+		} else {
 			return new ResponseEntity<>(responseDTO, HttpStatus.OK);
 		}
 	}
-	
-	@GetMapping("/preference/{custNo}")
+
+	@GetMapping("/get-preference/{custNo}")
 	public ResponseEntity<Object> fetchPreference(@PathVariable String custNo) {
 		GenericResponseDTO<Object> responseDTO = boCardDetailService.fetchPreference(custNo);
 		if (responseDTO.getStatus().equals("Failure")) {
@@ -39,10 +43,29 @@ public class BoCardController {
 			return new ResponseEntity<>(responseDTO, HttpStatus.OK);
 		}
 	}
-	
-	@PostMapping("/preference")
+
+	@PostMapping("/set-preference")
 	public ResponseEntity<Object> setPreference(@RequestBody JsonNode requestBody) {
 		GenericResponseDTO<Object> responseDTO = boCardDetailService.setPreference(requestBody);
+		if (responseDTO.getStatus().equals("Failure")) {
+			return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+		} else {
+			return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+		}
+	}
+
+	@PostMapping("/transactions")
+	public ResponseEntity<Object> getTransection(@RequestBody JsonNode preference,
+			@Nullable @RequestParam(required = false) Long pageNo,
+			@Nullable @RequestParam(required = false) Long pageSize,
+			@Nullable @RequestParam(required = false) String fromDate,
+			@Nullable @RequestParam(required = false) String toDate,
+			@RequestParam String txnCategory) {
+		BoTransactionsParemsDto boTransactionsParemsDto = BoTransactionsParemsDto.builder()
+				.pageNo(pageNo != null ? pageNo : 0).pageSize(pageSize != null ? pageSize : 20).fromDate(fromDate)
+				.toDate(toDate).txnCategory(txnCategory).build();
+		GenericResponseDTO<Object> responseDTO = boCardDetailService.getTransections(boTransactionsParemsDto,
+				preference);
 		if (responseDTO.getStatus().equals("Failure")) {
 			return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
 		} else {

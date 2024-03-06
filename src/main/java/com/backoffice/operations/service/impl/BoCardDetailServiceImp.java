@@ -14,8 +14,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 
+import com.backoffice.operations.payloads.BoTransactionsParemsDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.BoCarddetailService;
 import com.backoffice.operations.utils.CommonUtils;
@@ -30,7 +32,8 @@ public class BoCardDetailServiceImp implements BoCarddetailService {
 	private String fetchPrefarenceApiUrl;
 	@Value("${external.api.setPreferenceUrl}")
 	private String setPrefarenceApiUrl;
-
+	@Value("${external.api.credit.card.transaction}")
+	private String getTransections;
 	@Autowired
 	private RestTemplate restTemplate;
 
@@ -110,6 +113,36 @@ public class BoCardDetailServiceImp implements BoCarddetailService {
 			logger.error("Error occurred while fetching account details: {}", e.getMessage());
 			responseDTO.setData(new HashMap<>());
 			responseDTO.setMessage("Something went wrong setting preference details");
+			responseDTO.setStatus("Failure");
+			return responseDTO;
+		}
+	}
+	
+	@Override
+	public GenericResponseDTO<Object> getTransections(BoTransactionsParemsDto erquestParams, JsonNode requestBody) {
+		logger.info("getTransections params : {}", erquestParams);
+		logger.info("getTransections body : {}", requestBody);
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		try {
+			String apiUrl = getTransections + "?pageNo="
+					+ erquestParams.getPageNo() + "&pageSize=" + erquestParams.getPageSize() + "&fromDate="
+					+ erquestParams.getFromDate() + "&toDate=" + erquestParams.getToDate() + "&txnCategory="
+					+ erquestParams.getTxnCategory();
+			
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("TENANT", "ALIZZ_UAT");
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(requestBody.toString(), headers);
+			ResponseEntity<JsonNode> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity,
+					JsonNode.class);
+			responseDTO.setData(responseEntity.getBody());
+			responseDTO.setMessage("Preference set successfully");
+			responseDTO.setStatus("Success");
+			return responseDTO;
+		} catch (Exception e) {
+			logger.error("Error occurred while fetching details: {}", e.getMessage());
+			responseDTO.setData(new HashMap<>());
+			responseDTO.setMessage("Something went wrong");
 			responseDTO.setStatus("Failure");
 			return responseDTO;
 		}
