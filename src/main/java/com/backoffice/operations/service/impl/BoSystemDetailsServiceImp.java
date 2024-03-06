@@ -45,10 +45,10 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 	private CommonUtils commonUtils;
 
 	@Override
-	public List<BoSystemDetailsResponseDTO> getSystemDetails() {
+	public List<BoSystemDetailsResponseDTO> getSystemDetails(String custNo) {
 		List<BoSystemDetailsResponseDTO> responseDTO = new ArrayList<>();
 
-		systemDetailRepository.findAll().forEach(Item -> {
+		systemDetailRepository.findAllByCivilId(custNo).forEach(Item -> {
 			BoSystemDetailsResponseDTO systemDetailsResponseDTO = new BoSystemDetailsResponseDTO();
 			String accessToken = null;
 			try {

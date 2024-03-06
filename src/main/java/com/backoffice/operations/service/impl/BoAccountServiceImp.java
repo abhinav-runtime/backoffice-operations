@@ -64,7 +64,6 @@ public class BoAccountServiceImp implements BoAccountService {
 
 			jsonNode = mapper.readTree(jsonResponse);
 			JsonNode name = jsonNode.at("/response/payload/custSummaryDetails/islamicAccounts");
-			System.out.println(name);
 			responseDTO.setData(name);
 			responseDTO.setMessage("Account details fetched successfully");
 			responseDTO.setStatus("Success");

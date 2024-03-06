@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,10 +21,10 @@ public class BoSystemDetailsController {
 	@Autowired
 	private BoSystemDetailsService boSystemDetailsService;
 
-	@GetMapping
-	private ResponseEntity<Object> getSystemDetails() {
+	@GetMapping("/{custNo}")
+	private ResponseEntity<Object> getSystemDetails(@PathVariable(name = "custNo") String custNo) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
-		List<BoSystemDetailsResponseDTO> data = boSystemDetailsService.getSystemDetails();
+		List<BoSystemDetailsResponseDTO> data = boSystemDetailsService.getSystemDetails(custNo);
 		if (data != null) {
 			if (data.size() == 0) {
 				response.setMessage("System details not found");

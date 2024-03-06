@@ -177,8 +177,11 @@ public class BOAuthServiceImp implements BOAuthService {
 				response.setData(new HashMap<>());
 			}
 		} else {
-			response.setMessage("Something went wrong.");
-			response.setStatus("Failure");
+			BOLoginLog loginLog = boLoginLogRepo.findByUserToken(boUserToken.getUserToken());
+			loginLog.setLogoutTime(nowDate);
+			boLoginLogRepo.save(loginLog);
+			response.setMessage("Logout Successfully.");
+			response.setStatus("Success");
 			response.setData(new HashMap<>());
 		}
 		return response;

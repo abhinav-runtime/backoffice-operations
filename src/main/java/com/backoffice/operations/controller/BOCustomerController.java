@@ -70,7 +70,7 @@ public class BOCustomerController {
 	}
 
 	@PostMapping("/edit/{custId}")
-	public ResponseEntity<Object> editCustomer(@PathVariable String custId, @RequestBody CustomerRequestDTO customer) {
+	public ResponseEntity<Object> editCustomer(@PathVariable(value = "custId") String custId, @RequestBody CustomerRequestDTO customer) {
 		logger.info("Edit customer id: {} ", custId);
 		logger.info("Customer data: {} ", customer);
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
