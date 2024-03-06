@@ -32,7 +32,7 @@ public class BoCardDetailServiceImp implements BoCarddetailService {
 	private String fetchPrefarenceApiUrl;
 	@Value("${external.api.setPreferenceUrl}")
 	private String setPrefarenceApiUrl;
-	@Value("${external.api.accounts.transaction}")
+	@Value("${external.api.credit.card.transaction}")
 	private String getTransections;
 	@Autowired
 	private RestTemplate restTemplate;
@@ -119,16 +119,16 @@ public class BoCardDetailServiceImp implements BoCarddetailService {
 	}
 	
 	@Override
-	public GenericResponseDTO<Object> getTransections(BoTransactionsParemsDto requestdata, JsonNode requestBody) {
-		logger.info("setting preference details : {}", requestdata);
+	public GenericResponseDTO<Object> getTransections(BoTransactionsParemsDto erquestParams, JsonNode requestBody) {
+		logger.info("getTransections params : {}", erquestParams);
+		logger.info("getTransections body : {}", requestBody);
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		try {
-			String apiUrl = getTransections + "? &pageNo="
-					+ requestdata.getPageNo() + "&pageSize=" + requestdata.getPageSize() + "&fromDate="
-					+ requestdata.getFromDate() + "&toDate=" + requestdata.getToDate() + "&txnCategory="
-					+ requestdata.getTxnCategory();
+			String apiUrl = getTransections + "?pageNo="
+					+ erquestParams.getPageNo() + "&pageSize=" + erquestParams.getPageSize() + "&fromDate="
+					+ erquestParams.getFromDate() + "&toDate=" + erquestParams.getToDate() + "&txnCategory="
+					+ erquestParams.getTxnCategory();
 			
-			System.out.println(apiUrl);
 			HttpHeaders headers = new HttpHeaders();
 			headers.add("TENANT", "ALIZZ_UAT");
 			headers.setContentType(MediaType.APPLICATION_JSON);

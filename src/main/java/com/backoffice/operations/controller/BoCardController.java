@@ -16,6 +16,8 @@ import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.BoCarddetailService;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import jakarta.annotation.Nullable;
+
 @RestController
 @RequestMapping("/bo/v1/card")
 public class BoCardController {
@@ -53,11 +55,15 @@ public class BoCardController {
 	}
 
 	@PostMapping("/transactions")
-	public ResponseEntity<Object> getTransection(@RequestBody JsonNode preference, @RequestParam long pageNo,
-			@RequestParam long pageSize, @RequestParam String fromDate, @RequestParam String toDate,
+	public ResponseEntity<Object> getTransection(@RequestBody JsonNode preference,
+			@Nullable @RequestParam(required = false) Long pageNo,
+			@Nullable @RequestParam(required = false) Long pageSize,
+			@Nullable @RequestParam(required = false) String fromDate,
+			@Nullable @RequestParam(required = false) String toDate,
 			@RequestParam String txnCategory) {
-		BoTransactionsParemsDto boTransactionsParemsDto = BoTransactionsParemsDto.builder().pageNo(pageNo)
-				.pageSize(pageSize).fromDate(fromDate).toDate(toDate).txnCategory(txnCategory).build();
+		BoTransactionsParemsDto boTransactionsParemsDto = BoTransactionsParemsDto.builder()
+				.pageNo(pageNo != null ? pageNo : 0).pageSize(pageSize != null ? pageSize : 20).fromDate(fromDate)
+				.toDate(toDate).txnCategory(txnCategory).build();
 		GenericResponseDTO<Object> responseDTO = boCardDetailService.getTransections(boTransactionsParemsDto,
 				preference);
 		if (responseDTO.getStatus().equals("Failure")) {
