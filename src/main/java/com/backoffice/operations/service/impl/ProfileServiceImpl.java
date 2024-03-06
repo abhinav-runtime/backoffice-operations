@@ -26,10 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
@@ -148,6 +146,8 @@ public class ProfileServiceImpl implements ProfileService {
         String userEmail = jwtTokenProvider.getUsername(token);
         Optional<User> user = userRepository.findByEmail(userEmail);
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat bankFormatter = new SimpleDateFormat("dd-MMM-yyyy");
         try {
             if (user.isPresent()) {
                 Map<String, Object> data = new HashMap<>();
@@ -171,18 +171,30 @@ public class ProfileServiceImpl implements ProfileService {
                             CivilIdAPIResponse apiResponse = responseEntity.getBody();
                             if (apiResponse != null && apiResponse.isSuccess()) {
                                 CivilIdAPIResponse.AdditionalInformation additionalInformation = apiResponse.getResponse().getAdditionalInformation();
-                                if (Objects.nonNull(additionalInformation) && additionalInformation.getIdExpiryDate().equalsIgnoreCase(updateProfileRequest.getExpiryDate())) {
-                                    profile.setCivilId(updateProfileRequest.getCivilId());
-                                    profile.setExpiryDate(updateProfileRequest.getExpiryDate());
-                                    profile.setMobNum(updateProfileRequest.getMobileNumber());
-                                    profileRepository.save(profile);
+                                logger.info("additionalInformation--- {} ", additionalInformation);
+                                if(Objects.nonNull(additionalInformation)){
+                                    logger.info("apiResponse.getResponse()--- {} ", apiResponse.getResponse());
+                                    String bankDate = bankFormatter.format(additionalInformation.getIdExpiryDate());
+                                    String inputDate = formatter.format(updateProfileRequest.getExpiryDate());
+                                    logger.info("bankDate--- {} ", bankDate);
+                                    logger.info("inputDate --- {} ", inputDate);
+                                    Date date1 = formatter.parse("16/03/2025");
+                                    Date date2 = bankFormatter.parse("16-APR-2024");
+                                    logger.info("date1--- {} ", date1);
+                                    logger.info("date2 --- {} ", date2);
+                                    if (date1.equals(date2)) {
+                                        profile.setCivilId(updateProfileRequest.getCivilId());
+                                        profile.setExpiryDate(updateProfileRequest.getExpiryDate());
+                                        profile.setMobNum(updateProfileRequest.getMobileNumber());
+                                        profileRepository.save(profile);
 //                        GenericResponseDTO<Object> newOtp =
-                                    civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
-                                    responseDTO.setStatus("Success");
-                                    responseDTO.setMessage("Success");
-                                } else {
-                                    responseDTO.setStatus("Failure");
-                                    responseDTO.setMessage("Invalid Expiry Date.");
+                                        civilIdServiceImpl.sendOtp(civilIdEntity, responseDTO);
+                                        responseDTO.setStatus("Success");
+                                        responseDTO.setMessage("Success");
+                                    } else {
+                                        responseDTO.setStatus("Failure");
+                                        responseDTO.setMessage("Invalid Expiry Date.");
+                                    }
                                 }
                                 data.put("uniqueKey", uniqueKey);
                                 responseDTO.setData(data);
