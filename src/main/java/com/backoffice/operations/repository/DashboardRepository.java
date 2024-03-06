@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DashboardRepository extends JpaRepository<DashboardEntity, String> {
+
+    DashboardEntity findByAccountNumberAndId(String accNo, String uniqueKey);
 }
