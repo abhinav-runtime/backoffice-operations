@@ -18,4 +18,6 @@ public interface DashboardService {
 	GenericResponseDTO<Object> getUpComingBills(String uniqueKey);
 
 	GenericResponseDTO<Object> editInfo(EditInfoRequestDto editInfoRequestDto);
+
+	GenericResponseDTO<Object> getBlockedAmounts(String uniqueKey);
 }
