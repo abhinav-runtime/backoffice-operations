@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class EditInfoRequestDto {
 
-    private String accountNickName;
+    private String customerNickName;
     private Boolean isAccountVisible;
     private Boolean isAlertOnTrnx;
     private Boolean isAlertOnLowBal;
