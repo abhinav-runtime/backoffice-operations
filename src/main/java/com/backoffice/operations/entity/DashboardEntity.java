@@ -31,4 +31,6 @@ public class DashboardEntity {
     private boolean isAlertOnTrnx;
     private boolean isAlertOnLowBal;
     private double lowBalLimit;
+
+    private String customerNickName;
 }

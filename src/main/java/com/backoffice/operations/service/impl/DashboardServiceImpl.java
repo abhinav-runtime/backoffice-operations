@@ -108,7 +108,9 @@ public class DashboardServiceImpl implements DashboardService {
                                         .customerName(custFullName).isAlertOnLowBal(!Objects.nonNull(dashboard) || dashboard.isAlertOnLowBal())
                                         .isAlertOnTrnx(!Objects.nonNull(dashboard) || dashboard.isAlertOnTrnx())
                                         .jointType(JointTypeEnum.getValueByCode(islamicAccount.getAcctype()))
-                                        .lowBalLimit(Objects.nonNull(dashboard) ? dashboard.getLowBalLimit() : 0).openDate(islamicAccount.getStatsince()).shariaContract("")
+                                        .lowBalLimit(Objects.nonNull(dashboard) ? dashboard.getLowBalLimit() : 0)
+                                        .openDate(islamicAccount.getStatsince()).shariaContract("")
+                                        .customerNickName(Objects.nonNull(dashboard) ? dashboard.getCustomerNickName() : "")
                                         .build();
                                 dashboardEntity = dashboardRepository.save(dashboardEntity);
                                 return AccountsDetailsResponseDTO.builder()
@@ -122,6 +124,7 @@ public class DashboardServiceImpl implements DashboardService {
                                         .customerName(custFullName).isAlertOnLowBal(dashboardEntity.isAlertOnLowBal())
                                         .isAlertOnTrnx(dashboardEntity.isAlertOnTrnx()).jointType(dashboardEntity.getJointType())
                                         .lowBalLimit(dashboardEntity.getLowBalLimit()).openDate(dashboardEntity.getOpenDate()).shariaContract("")
+                                        .customerNickName(dashboardEntity.getCustomerNickName())
                                         .type(account)
                                         .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "").build();
                             })
@@ -148,7 +151,9 @@ public class DashboardServiceImpl implements DashboardService {
                                         .customerName(custFullName).isAlertOnLowBal(!Objects.nonNull(dashboard) || dashboard.isAlertOnLowBal())
                                         .isAlertOnTrnx(!Objects.nonNull(dashboard) || dashboard.isAlertOnTrnx())
                                         .jointType(JointTypeEnum.getValueByCode(istdDetails.getAcctype()))
-                                        .lowBalLimit(Objects.nonNull(dashboard) ? dashboard.getLowBalLimit() : 0).openDate(istdDetails.getStatsince()).shariaContract("")
+                                        .lowBalLimit(Objects.nonNull(dashboard) ? dashboard.getLowBalLimit() : 0)
+                                        .openDate(istdDetails.getStatsince()).shariaContract("")
+                                        .customerNickName(Objects.nonNull(dashboard) ? dashboard.getCustomerNickName() : "")
                                         .build();
                                 dashboardRepository.save(dashboardEntity);
                                 return AccountsDetailsResponseDTO.builder()
@@ -163,6 +168,7 @@ public class DashboardServiceImpl implements DashboardService {
                                         .customerName(custFullName).isAlertOnLowBal(dashboardEntity.isAlertOnLowBal())
                                         .isAlertOnTrnx(dashboardEntity.isAlertOnTrnx()).jointType(dashboardEntity.getJointType())
                                         .lowBalLimit(dashboardEntity.getLowBalLimit()).openDate(dashboardEntity.getOpenDate()).shariaContract("")
+                                        .customerNickName(dashboardEntity.getCustomerNickName())
                                         .type(account)
                                         .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "").build();
                             })
@@ -510,7 +516,7 @@ public class DashboardServiceImpl implements DashboardService {
             dashboardEntity.setAccountVisible(editInfoRequestDto.getIsAccountVisible());
             dashboardEntity.setAlertOnLowBal(editInfoRequestDto.getIsAlertOnLowBal());
             dashboardEntity.setAlertOnTrnx(editInfoRequestDto.getIsAlertOnTrnx());
-            dashboardEntity.setAccountNickName(Objects.nonNull(editInfoRequestDto.getAccountNickName()) ? editInfoRequestDto.getAccountNickName() : "");
+            dashboardEntity.setCustomerNickName(Objects.nonNull(editInfoRequestDto.getCustomerNickName()) ? editInfoRequestDto.getCustomerNickName() : "");
             dashboardEntity.setLowBalLimit(editInfoRequestDto.getLowBalLimit());
             dashboardRepository.save(dashboardEntity);
             GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
@@ -535,13 +541,14 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public GenericResponseDTO<Object> getBlockedAmounts(String uniqueKey) {
+    public GenericResponseDTO<Object> getBlockedAmounts(String uniqueKey, String accountNumber) {
 
         return civilIdRepository.findById(uniqueKey)
                 .flatMap(civilIdEntity -> getTokenAndApiResponse(civilIdEntity.getCivilId()))
                 .map(apiResponse -> {
                     List<AccountDetails.Response.Payload.CustSummaryDetails.AmountBlocks> amountBlocks = apiResponse.getResponse().getPayload().getCustSummaryDetails().getAmountBlocks();
                     List<BlockedAmountResponseDto> blockedAmountList = amountBlocks.stream()
+                            .filter(blkAmt -> blkAmt.getAccount().equals(accountNumber))
                             .map(amtBlock -> BlockedAmountResponseDto.builder()
                                     .amount(amtBlock.getAmount()).account(amtBlock.getAccount()).blktype(amtBlock.getBlktype())
                                     .branch(amtBlock.getBranch()).effdate(amtBlock.getEffdate())

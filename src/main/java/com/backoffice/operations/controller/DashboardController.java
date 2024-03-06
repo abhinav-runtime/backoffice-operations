@@ -134,7 +134,7 @@ public class DashboardController {
     }
 
     @GetMapping("/blockedAmounts")
-    public ResponseEntity<GenericResponseDTO<Object>> getBlockedAmounts(@RequestParam String uniqueKey){
-        return ResponseEntity.ok(dashboardService.getBlockedAmounts(uniqueKey));
+    public ResponseEntity<GenericResponseDTO<Object>> getBlockedAmounts(@RequestParam String uniqueKey, @RequestParam String accountNumber){
+        return ResponseEntity.ok(dashboardService.getBlockedAmounts(uniqueKey, accountNumber));
     }
 }
