@@ -133,7 +133,7 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.editInfo(editInfoRequestDto));
     }
 
-    @PostMapping("/blockedAmounts")
+    @GetMapping("/blockedAmounts")
     public ResponseEntity<GenericResponseDTO<Object>> getBlockedAmounts(@RequestParam String uniqueKey){
         return ResponseEntity.ok(dashboardService.getBlockedAmounts(uniqueKey));
     }
