@@ -243,6 +243,8 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 				responseDTO.setRequestDate(item.getRequestDate().toString());
 				responseDTO.setCategories(item.getCategories());
 				responseDTO.setSubCategories(item.getSubCategories());
+				responseDTO.setId(item.getId());
+				responseDTO.setReferenceId(item.getReferenceId());
 				responseData.add(responseDTO);
 			});
 
