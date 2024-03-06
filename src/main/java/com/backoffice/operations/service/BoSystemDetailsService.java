@@ -5,5 +5,5 @@ import java.util.List;
 import com.backoffice.operations.payloads.BoSystemDetailsResponseDTO;
 
 public interface BoSystemDetailsService {
-	List<BoSystemDetailsResponseDTO> getSystemDetails();
+	List<BoSystemDetailsResponseDTO> getSystemDetails(String custNo);
 }
