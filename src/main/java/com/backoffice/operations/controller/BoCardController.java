@@ -30,7 +30,7 @@ public class BoCardController {
 		}
 	}
 	
-	@GetMapping("/preference/{custNo}")
+	@GetMapping("/get-preference/{custNo}")
 	public ResponseEntity<Object> fetchPreference(@PathVariable String custNo) {
 		GenericResponseDTO<Object> responseDTO = boCardDetailService.fetchPreference(custNo);
 		if (responseDTO.getStatus().equals("Failure")) {
@@ -40,7 +40,7 @@ public class BoCardController {
 		}
 	}
 	
-	@PostMapping("/preference")
+	@PostMapping("/set-preference")
 	public ResponseEntity<Object> setPreference(@RequestBody JsonNode requestBody) {
 		GenericResponseDTO<Object> responseDTO = boCardDetailService.setPreference(requestBody);
 		if (responseDTO.getStatus().equals("Failure")) {
