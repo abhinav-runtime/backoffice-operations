@@ -93,10 +93,10 @@ public class DashboardServiceImpl implements DashboardService {
                                 AccountType accountType = getAccountDescription(islamicAccount.getAccls());
                                 String accountCodeDesc = Objects.nonNull(accountType) && Objects.nonNull(accountType.getDescription()) ? accountType.getDescription() : "";
                                 String accNickName = Objects.nonNull(accountType) && Objects.nonNull(accountType.getAccountNickName()) ? accountType.getAccountNickName() : "";
-                                DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndId(islamicAccount.getAcc(),uniqueKey);
+                                DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndUniqueKey(islamicAccount.getAcc(),uniqueKey);
 
                                 DashboardEntity dashboardEntity = DashboardEntity.builder()
-                                        .id(uniqueKey)
+                                        .uniqueKey(uniqueKey)
                                         .accountNumber(islamicAccount.getAcc())
                                         .availableBalance(islamicAccount.getAcyavlbal())
                                         .currency(islamicAccount.getCcy())
@@ -112,6 +112,9 @@ public class DashboardServiceImpl implements DashboardService {
                                         .openDate(islamicAccount.getStatsince()).shariaContract("")
                                         .customerNickName(Objects.nonNull(dashboard) ? dashboard.getCustomerNickName() : "")
                                         .build();
+                                if(Objects.nonNull(dashboard)){
+                                    dashboardEntity.setId(dashboard.getId());
+                                }
                                 dashboardEntity = dashboardRepository.save(dashboardEntity);
                                 return AccountsDetailsResponseDTO.builder()
                                         .accountBalance(Objects.nonNull(dashboardEntity.getAvailableBalance()) ? dashboardEntity.getAvailableBalance() : 0.0)
@@ -136,10 +139,10 @@ public class DashboardServiceImpl implements DashboardService {
                                 String accountCodeDesc = Objects.nonNull(accountType) && Objects.nonNull(accountType.getDescription()) ? accountType.getDescription() : "";
                                 String accNickName = Objects.nonNull(accountType) && Objects.nonNull(accountType.getAccountNickName()) ? accountType.getAccountNickName() : "";
 
-                                DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndId(istdDetails.getCustacno(),uniqueKey);
+                                DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndUniqueKey(istdDetails.getCustacno(),uniqueKey);
 
                                 DashboardEntity dashboardEntity = DashboardEntity.builder()
-                                        .id(uniqueKey)
+                                        .uniqueKey(uniqueKey)
                                         .accountNumber(istdDetails.getCustacno())
                                         .availableBalance(istdDetails.getTdamt())
                                         .currency(istdDetails.getCcy())
@@ -155,6 +158,9 @@ public class DashboardServiceImpl implements DashboardService {
                                         .openDate(istdDetails.getStatsince()).shariaContract("")
                                         .customerNickName(Objects.nonNull(dashboard) ? dashboard.getCustomerNickName() : "")
                                         .build();
+                                if(Objects.nonNull(dashboard)){
+                                    dashboardEntity.setId(dashboard.getId());
+                                }
                                 dashboardRepository.save(dashboardEntity);
                                 return AccountsDetailsResponseDTO.builder()
                                         .accountBalance(Objects.nonNull(dashboardEntity.getAvailableBalance()) ? dashboardEntity.getAvailableBalance() : 0.0)
@@ -409,8 +415,22 @@ public class DashboardServiceImpl implements DashboardService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.add("TENANT", "ALIZZ_UAT");
             String apiUrl = externalCardTransactionApiUrl + "?pageNo=0&pageSize=999&txnCategory=spend";
-            String requestBody = "{ \"entityId\": \"" + civilIdEntity.get().getCivilId() + "\" }";
-            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+            StringBuilder requestBody = new StringBuilder();
+            if (Objects.isNull(fromDate) && Objects.isNull(toDate)) {
+                requestBody.append("{\n" + "\"entityId\": \"").append(civilIdEntity.get().getCivilId()).append("\"\n" + " }");
+            } else if (Objects.isNull(fromDate)) {
+                requestBody.append("{\n" + "\"entityId\": \"").append(civilIdEntity.get().getCivilId())
+                        .append("\",\n" + "\"toDate\":\"").append(toDate).append("\"\n" + " }");
+            } else if (Objects.isNull(toDate)) {
+                requestBody.append("{\n" + "\"entityId\": \"").append(civilIdEntity.get().getCivilId())
+                        .append("\",\n" + "\"fromDate\":\"").append(fromDate).append("\"\n" + " }");
+            }else {
+                requestBody.append("{\n" + "\"entityId\": \"").append(civilIdEntity.get().getCivilId())
+                        .append("\",\n" + "\"fromDate\":\"").append(fromDate)
+                        .append("\",\n" + "\"toDate\":\"").append(toDate).append("\"\n" + " }");
+            }
+
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody.toString(), headers);
             ResponseEntity<ExternalApiCardTransactionResponseDTO> cardTransactionResponseEntity = restTemplate.exchange(apiUrl,
                     HttpMethod.POST, requestEntity, ExternalApiCardTransactionResponseDTO.class);
             if (Objects.nonNull(cardTransactionResponseEntity.getBody()) && Objects.nonNull(cardTransactionResponseEntity.getBody().getResult())
@@ -511,8 +531,9 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public GenericResponseDTO<Object> editInfo(EditInfoRequestDto editInfoRequestDto) {
-        DashboardEntity dashboardEntity =dashboardRepository.findByAccountNumberAndId(editInfoRequestDto.getAccountNumber(), editInfoRequestDto.getUniqueKey());
+        DashboardEntity dashboardEntity =dashboardRepository.findByAccountNumberAndUniqueKey(editInfoRequestDto.getAccountNumber(), editInfoRequestDto.getUniqueKey());
         if(Objects.nonNull(dashboardEntity)){
+            dashboardEntity.setId(dashboardEntity.getId());
             dashboardEntity.setAccountVisible(editInfoRequestDto.getIsAccountVisible());
             dashboardEntity.setAlertOnLowBal(editInfoRequestDto.getIsAlertOnLowBal());
             dashboardEntity.setAlertOnTrnx(editInfoRequestDto.getIsAlertOnTrnx());
