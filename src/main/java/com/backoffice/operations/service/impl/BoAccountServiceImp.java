@@ -1,5 +1,7 @@
 package com.backoffice.operations.service.impl;
 
+import java.util.HashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,8 +72,8 @@ public class BoAccountServiceImp implements BoAccountService {
 			return responseDTO;
 		} catch (Exception e) {
 			logger.error("Error occurred while fetching account details: {}", e.getMessage());
-			responseDTO.setData(null);
-			responseDTO.setMessage("Something went wrong while fetching account details");
+			responseDTO.setData(new HashMap<>());
+			responseDTO.setMessage("Something went wrong while fetching details");
 			responseDTO.setStatus("Failure");
 			return responseDTO;
 		}
