@@ -106,7 +106,6 @@ public class BOCustomerController {
 	@PostMapping("/search")
 	public ResponseEntity<Object> seachEngin(@RequestBody Map<String, String> search) {
 		logger.info("Search value: {} ", search);
-		logger.info("Search value: {} ", search.get("search"));
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
 			if (boUserToken.getRolesFromToken().isEmpty()) {
