@@ -20,13 +20,10 @@ public class BoAccountController {
 	@GetMapping("/details/{custNo}")
 	private ResponseEntity<Object> getAccountDetails(@PathVariable(name = "custNo") String custNo) {
 		GenericResponseDTO<Object> responseDTO = boAccountService.getAccountDetails(custNo);
-//		if (responseDTO.getStatus().equals("Failure")) {
-//		return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
-		return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-//		}else {
-//			return new ResponseEntity<>(responseDTO, HttpStatus.OK);
-//		}
+		if (responseDTO.getStatus().equals("Failure")) {
+			return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+		} else {
+			return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+		}
 	}
-
-//	@GetMapping("/summary/{custNo}")
 }
