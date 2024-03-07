@@ -27,4 +27,5 @@ public class AccountsDetailsResponseDTO {
     private boolean isAlertOnTrnx;
     private boolean isAlertOnLowBal;
     private double lowBalLimit;
+    private String customerNickName;
 }
