@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class FundTransferResponseDto {
     private boolean success;
     private String message;
-    Response ResponseObject;
+    Response response;
 
 
 
@@ -21,7 +21,7 @@ public class FundTransferResponseDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Response {
-    Result ResultObject;
+    Result result;
 }
 
     @Getter
@@ -29,7 +29,7 @@ public class FundTransferResponseDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Result {
-    CstmrCdtTrfInitn CstmrCdtTrfInitnObject;
+    CstmrCdtTrfInitn cstmrCdtTrfInitn;
     ArrayList<Object> fcubserrorresp = new ArrayList<>();
     ArrayList<Object> fcubswarningresp = new ArrayList<>();
 
@@ -40,7 +40,7 @@ public class FundTransferResponseDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CstmrCdtTrfInitn {
-    GrpTlr GrpTlrObject;
+    GrpTlr grpTlr;
 
 }
 

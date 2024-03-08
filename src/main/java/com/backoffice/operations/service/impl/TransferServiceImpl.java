@@ -161,8 +161,8 @@ public class TransferServiceImpl implements TransferService {
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
                 logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
-                Integer responseTxnRefNo = fundTransferResponseDto.getResponseObject().getResultObject().getCstmrCdtTrfInitnObject().getGrpTlrObject().getTxnRefNo();
-                String errorResponse = objectMapper.writeValueAsString(Objects.nonNull(fundTransferResponseDto.getResponseObject().getResultObject().getFcubserrorresp()) ? fundTransferResponseDto.getResponseObject().getResultObject().getFcubserrorresp() : "");
+                Integer responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
+                String errorResponse = objectMapper.writeValueAsString(Objects.nonNull(fundTransferResponseDto.getResponse().getResult().getFcubserrorresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubserrorresp() : "");
                 Transaction transactionObj = Transaction.builder()
                         .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
                         .txnStatus(fundTransferResponseDto.isSuccess() ? "Success" : "Pending")
