@@ -180,10 +180,11 @@ public class BOCustomerServiceImp implements BOCustomerService {
 
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		List<Customer> searchResult = new ArrayList<>();
-		if (searchValue == "") {
-			response.setStatus("Failure");
-			response.setMessage("Something went wrong");
-			response.setData(null);
+		if (searchValue == "" || searchValue == null) {
+			List<Customer> customersBySearchValue = customerRepository.findAll();
+			response.setStatus("Success");
+			response.setMessage("Search result");
+			response.setData(customersBySearchValue);
 		} else {
 			List<Customer> customersBySearchValue = customerRepository.findAll();
 			int accuracyThreshold = 1;

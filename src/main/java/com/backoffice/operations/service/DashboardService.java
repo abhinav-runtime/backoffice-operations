@@ -19,5 +19,5 @@ public interface DashboardService {
 
 	GenericResponseDTO<Object> editInfo(EditInfoRequestDto editInfoRequestDto);
 
-	GenericResponseDTO<Object> getBlockedAmounts(String uniqueKey);
+	GenericResponseDTO<Object> getBlockedAmounts(String uniqueKey, String accountNumber);
 }

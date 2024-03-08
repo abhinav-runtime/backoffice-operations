@@ -9,6 +9,7 @@ import java.util.ArrayList;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString
 public class FundTransferResponseDto {
     private boolean success;
     private String message;
@@ -20,6 +21,7 @@ public class FundTransferResponseDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
+    @ToString
     public static class Response {
     Result result;
 }
@@ -28,6 +30,7 @@ public class FundTransferResponseDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
+    @ToString
     public static class Result {
     CstmrCdtTrfInitn cstmrCdtTrfInitn;
     ArrayList<Object> fcubserrorresp = new ArrayList<>();
@@ -39,6 +42,7 @@ public class FundTransferResponseDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
+    @ToString
     public static class CstmrCdtTrfInitn {
     GrpTlr grpTlr;
 
@@ -48,6 +52,7 @@ public class FundTransferResponseDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
+    @ToString
     public static class GrpTlr {
     private Integer txnRefNo;
 }

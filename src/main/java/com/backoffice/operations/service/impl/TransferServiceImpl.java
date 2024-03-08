@@ -83,7 +83,7 @@ public class TransferServiceImpl implements TransferService {
             sender.setAccount_currency(accountCurrency.getAccountCurrency());
             sender.setBank_code("IZZB");
             sender.setBank_name("Alizz Islamic Bank");
-            sender.setBranch_code(selfTransferDTO.getFromAccountNumber().substring(0, 2));
+            sender.setBranch_code(selfTransferDTO.getFromAccountNumber().substring(0, 3));
 
             //set Receiver details
             TransferRequestDto.Receiver receiver = transferRequestDto.new Receiver();
@@ -95,7 +95,7 @@ public class TransferServiceImpl implements TransferService {
             receiver.setAccount_name(receiverCifNoAccName);
             receiver.setBank_code("IZZB");
             receiver.setBank_name("Alizz Islamic Bank");
-            receiver.setBranch_code(selfTransferDTO.getFromAccountNumber().substring(0, 2));
+            receiver.setBranch_code(selfTransferDTO.getFromAccountNumber().substring(0, 3));
             receiver.setIban_account_number("");
             receiver.setBank_address1("Muscat");
             receiver.setBank_address2("Muscat");
@@ -106,6 +106,7 @@ public class TransferServiceImpl implements TransferService {
             receiver.setBene_address3("Muscat");
             receiver.setBene_address4("Muscat");
             receiver.setNotes_to_receiver(selfTransferDTO.getNotesToReceiver());
+            receiver.setBank_country("Oman");
 
             //set header
             TransferRequestDto.Header header = transferRequestDto.new Header();
