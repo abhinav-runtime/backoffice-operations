@@ -22,7 +22,7 @@ public class BoSystemDetailsController {
 	private BoSystemDetailsService boSystemDetailsService;
 
 	@GetMapping("/{custNo}")
-	private ResponseEntity<Object> getSystemDetails(@PathVariable(name = "custNo") String custNo) {
+	public ResponseEntity<Object> getSystemDetails(@PathVariable(name = "custNo") String custNo) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		List<BoSystemDetailsResponseDTO> data = boSystemDetailsService.getSystemDetails(custNo);
 		if (data != null) {
@@ -40,6 +40,16 @@ public class BoSystemDetailsController {
 			response.setMessage("System details not found");
 			response.setStatus("Failure");
 			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@GetMapping("/system-log")
+	public ResponseEntity<Object> getSystemLog() {
+		GenericResponseDTO<Object> response = boSystemDetailsService.getSystemLogs();
+		if (response.getStatus().equals("Success")) {
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} else {
 			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
