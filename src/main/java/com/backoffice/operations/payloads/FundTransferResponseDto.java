@@ -1,5 +1,6 @@
 package com.backoffice.operations.payloads;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 @NoArgsConstructor
 @Builder
 @ToString
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FundTransferResponseDto {
     private boolean success;
     private String message;
@@ -22,6 +24,7 @@ public class FundTransferResponseDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Response {
     Result result;
 }
@@ -31,6 +34,7 @@ public class FundTransferResponseDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Result {
     CstmrCdtTrfInitn cstmrCdtTrfInitn;
     ArrayList<Object> fcubserrorresp = new ArrayList<>();
@@ -43,6 +47,7 @@ public class FundTransferResponseDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CstmrCdtTrfInitn {
     GrpTlr grpTlr;
 
@@ -53,8 +58,9 @@ public class FundTransferResponseDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class GrpTlr {
-    private Integer txnRefNo;
+    private Long txnRefNo;
 }
 
 
