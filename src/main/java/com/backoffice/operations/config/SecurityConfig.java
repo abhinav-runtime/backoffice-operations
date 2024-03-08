@@ -2,6 +2,7 @@ package com.backoffice.operations.config;
 
 import java.util.Arrays;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,6 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import com.backoffice.operations.security.JwtAuthenticationEntryPoint;
 import com.backoffice.operations.security.JwtAuthenticationFilter;
@@ -35,6 +37,8 @@ import com.backoffice.operations.security.JwtAuthenticationFilter;
 //        scheme = "bearer"
 //)
 public class SecurityConfig {
+    private static final Long MAX_AGE = 3600L;
+    private static final int CORS_FILTER_ORDER = -102;
 
     private UserDetailsService userDetailsService;
 
@@ -85,18 +89,36 @@ public class SecurityConfig {
         return http.build();
     }
 
+//    @Bean
+//    CorsConfigurationSource corsConfigurationSource() {
+//        CorsConfiguration configuration = new CorsConfiguration();
+//        configuration.addAllowedOrigin("http://localhost:3000");
+//        configuration.addAllowedOrigin("https://back-office-production.netlify.app/");
+//        configuration.addAllowedOrigin("https://back-office-api-integration.netlify.app/");
+//        configuration.addAllowedHeader("*");
+////        configuration.setAllowedOrigins(Arrays.asList("https://18.61.204.189"));
+//        configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE"));
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", configuration);
+//        return source;
+//    }
+ 
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:3000");
-        configuration.addAllowedOrigin("https://back-office-production.netlify.app");
-        configuration.addAllowedOrigin("https://back-office-api-integration.netlify.app");
-        configuration.addAllowedHeader("*");
-//        configuration.setAllowedOrigins(Arrays.asList("https://18.61.204.189"));
-        configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE"));
+    public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.addAllowedOrigin("http://localhost:3000");
+        config.addAllowedOrigin("https://back-office-production.netlify.app");
+        config.addAllowedOrigin("https://back-office-api-integration.netlify.app");
+        config.addAllowedHeader("*");
+        config.setAllowedMethods(Arrays.asList(
+                HttpMethod.GET.name(),
+                HttpMethod.POST.name(),
+                HttpMethod.PUT.name(),
+                HttpMethod.DELETE.name()));
+        config.setMaxAge(MAX_AGE);
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
-
 }
