@@ -83,7 +83,7 @@ public class TransferServiceImpl implements TransferService {
             sender.setAccount_currency(accountCurrency.getAccountCurrency());
             sender.setBank_code("IZZB");
             sender.setBank_name("Alizz Islamic Bank");
-            sender.setBranch_code(selfTransferDTO.getFromAccountNumber().substring(0, 2));
+            sender.setBranch_code(selfTransferDTO.getFromAccountNumber().substring(0, 3));
 
             //set Receiver details
             TransferRequestDto.Receiver receiver = transferRequestDto.new Receiver();
