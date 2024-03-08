@@ -36,7 +36,7 @@ public class AlizzTransferDto {
         @JsonProperty("transaction_date")
         private String transactionDate;
         @JsonProperty("transaction_amount")
-        private String transactionAmount;
+        private Double transactionAmount;
         @JsonProperty("transaction_purpose")
         private String transactionPurpose;
         @JsonProperty("transaction_currency")
@@ -51,6 +51,10 @@ public class AlizzTransferDto {
         private String cbsModule;
         @JsonProperty("cbs_network")
         private String cbsNetwork;
+        @JsonProperty("payment_details_3")
+        private String paymentDetails3;
+        @JsonProperty("payment_details_4")
+        private String paymentDetails4;
     }
 
     @Getter
@@ -73,6 +77,9 @@ public class AlizzTransferDto {
 
         @JsonProperty("bank_code")
         private String bankCode;
+
+        @JsonProperty("bank_name")
+        private String bankName;
     }
 
     @Getter
@@ -90,6 +97,33 @@ public class AlizzTransferDto {
 
         @JsonProperty("notes_to_receiver")
         private String notesToReceiver;
+
+        @JsonProperty("bank_code")
+        private String bankCode;
+        @JsonProperty("bank_name")
+        private String bankName;
+        @JsonProperty("branch_code")
+        private String branchCode;
+        @JsonProperty("iban_account_number")
+        private String iBanAccountNumber;
+        @JsonProperty("bank_address1")
+        private String bankAddress1;
+        @JsonProperty("bank_address2")
+        private String bankAddress2;
+        @JsonProperty("bank_address3")
+        private String bankAddress3;
+        @JsonProperty("bank_address4")
+        private String bankAddress4;
+        @JsonProperty("bene_address1")
+        private String beneAddress1;
+        @JsonProperty("bene_address2")
+        private String beneAddress2;
+        @JsonProperty("bene_address3")
+        private String beneAddress3;
+        @JsonProperty("bene_address4")
+        private String beneAddress4;
+        @JsonProperty("bank_country")
+        private String bankCountry;
     }
 
     @Getter

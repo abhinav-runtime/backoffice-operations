@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AlizzTransferRequestDto {
 
-    private String transactionAmount;
+    private Double transactionAmount;
     private String transactionPurpose;
     private String fromAccountNumber;
     private String toAccountNumber;
