@@ -1,6 +1,7 @@
 package com.backoffice.operations.service.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,6 +20,9 @@ import org.springframework.web.client.RestTemplate;
 
 import com.backoffice.operations.payloads.AccessTokenResponse;
 import com.backoffice.operations.payloads.BoSystemDetailsResponseDTO;
+import com.backoffice.operations.payloads.BoSystemLogResponseDto;
+import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.repository.BoLogginglogRepository;
 import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.SystemDetailRepository;
 import com.backoffice.operations.service.BoSystemDetailsService;
@@ -36,6 +40,8 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 	private SystemDetailRepository systemDetailRepository;
 	@Autowired
 	private CivilIdRepository civilIdRepository;
+	@Autowired
+	private BoLogginglogRepository loggingRepository;
 	@Autowired
 	@Qualifier("jwtAuth")
 	private RestTemplate jwtAuthRestTemplate;
@@ -56,7 +62,7 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 				// logger.info("response: {}", response.getBody());
 				// accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
 				// logger.info("accessToken: {}", accessToken);
-				
+
 				String uniqueKey = Item.getUniqueKey();
 				String CivilId = civilIdRepository.findById(uniqueKey).get().getEntityId();
 				// String apiUrl = externalApiUrl + CivilId;
@@ -92,7 +98,35 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 			systemDetailsResponseDTO.setIPAddress(Item.getIpAddress());
 			responseDTO.add(systemDetailsResponseDTO);
 		});
-
 		return responseDTO;
+	}
+
+	@Override
+	public GenericResponseDTO<Object> getSystemLogs() {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		List<BoSystemLogResponseDto> logResponse  = new ArrayList<>();
+		try {
+			loggingRepository.findAllByOrderByTimestampDesc().forEach(element ->{
+			BoSystemLogResponseDto logDetails = new BoSystemLogResponseDto();
+			logDetails.setId(element.getId());
+			logDetails.setRequestUrl(element.getRequestUrl());
+			logDetails.setHttpMethod(element.getHttpMethod());
+			logDetails.setAuthType(element.getRequestBody());
+			logDetails.setResponseStatus(element.getResponseStatus());
+			logDetails.setError(element.getError());
+			logDetails.setTimestamp(element.getTimestamp().toLocaleString());
+			logResponse.add(logDetails);
+		});
+		
+			response.setStatus("Success");
+			response.setMessage("System Logs");
+			response.setData(logResponse);
+		} catch (Exception e) {
+			logger.error("Error : {}", e.getMessage());
+			response.setStatus("Faliure");
+			response.setMessage("Something went wrong.");
+			response.setData(new HashMap<>());
+		}
+		return response;
 	}
 }
