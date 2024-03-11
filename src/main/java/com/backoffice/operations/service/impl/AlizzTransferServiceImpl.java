@@ -155,12 +155,12 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
                 FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
                 logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
 
-                data = getResponseDto(alizzTransferRequestDto.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId);
+                data = getResponseDto(alizzTransferRequestDto.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId, transaction.getTransactionDate());
             }
             data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
             responseDTO.setStatus("Success");
             responseDTO.setMessage("Success");
-            responseDTO.setData(responseEntity);
+            responseDTO.setData(data);
             return responseDTO;
         }
         } catch (Exception e) {
@@ -171,7 +171,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
         return responseDTO;
     }
 
-    public Map<String, Object> getResponseDto(String uniqueKey, boolean isSuccessful, FundTransferResponseDto fundTransferResponseDto, String txnRefId) throws JsonProcessingException {
+    public Map<String, Object> getResponseDto(String uniqueKey, boolean isSuccessful, FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate) throws JsonProcessingException {
 
         Map<String, Object> data = new HashMap<>();
 
@@ -259,6 +259,36 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
             data.put("transactionDateTime",reqExctnDt);
             data.put("warning", warningResponse);
             data.put("error", errorResponse);
+        }else if (isSuccessful && Objects.nonNull(fundTransferResponseDto) && !fundTransferResponseDto.isSuccess()) {
+
+            if(Objects.nonNull(fundTransferResponseDto.getResponse())){
+                Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
+                String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
+
+                List<FundTransferResponseDto.Fcubswarningresp> warningResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                        .getFcubswarningresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubswarningresp() : new ArrayList<>();
+
+                List<FundTransferResponseDto.Fcubserrorresp> errorResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                        .getFcubserrorresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubserrorresp() : new ArrayList<>();
+
+                String warningResponseString = objectMapper.writeValueAsString(!warningResponse.isEmpty() ? warningResponse : "");
+                String errorResponseString = objectMapper.writeValueAsString(!errorResponse.isEmpty() ? errorResponse : "");
+
+                Transaction transactionObj = Transaction.builder()
+                        .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
+                        .txnStatus("Failure")
+                        .warningResponse(warningResponseString)
+                        .errorResponse(errorResponseString)
+                        .txnDate(reqExctnDt).uniqueKey(uniqueKey).build();
+                transactionRepository.save(transactionObj);
+            }else {
+                Transaction transactionObj = Transaction.builder().txnReferenceId(txnRefId)
+                        .txnStatus("Failure").uniqueKey(uniqueKey).build();
+                transactionRepository.save(transactionObj);
+            }
+            data.put("message", fundTransferResponseDto.getMessage());
+            data.put("transactionID", txnRefId);
+            data.put("transactionDateTime",txnDate);
         }
         return data;
     }
