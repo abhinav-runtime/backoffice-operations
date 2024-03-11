@@ -10,13 +10,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class BoSystemDetailsResponseDTO {
-	 String deviceId;
-	 String name;
-	 String type;
-	 String model;
-	 String status;
-	 String appVersion;
-	 String carrier;
-	 String location;
-	 String iPAddress;
+	String deviceId;
+	String name;
+	String type;
+	String model;
+	String status;
+	String appVersion;
+	String carrier;
+	String location;
+	String iPAddress;
+	String created;
+	String os_version;
+	String resolution;
 }

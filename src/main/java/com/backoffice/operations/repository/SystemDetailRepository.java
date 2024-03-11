@@ -9,6 +9,6 @@ import java.util.Optional;
 
 public interface SystemDetailRepository extends JpaRepository<SystemDetail, String> {
     Optional<SystemDetail> findByCivilId(String civilId);
-
     List<SystemDetail> findAllByCivilId(String civilId);
+    List<SystemDetail> findAllByCivilIdOrderByCreatedDesc(String civilId);
 }
