@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,7 +19,6 @@ public class FundTransferResponseDto {
     Response response;
 
 
-
     @Getter
     @Setter
     @AllArgsConstructor
@@ -26,8 +26,8 @@ public class FundTransferResponseDto {
     @ToString
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Response {
-    Result result;
-}
+        Result result;
+    }
 
     @Getter
     @Setter
@@ -36,11 +36,11 @@ public class FundTransferResponseDto {
     @ToString
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Result {
-    CstmrCdtTrfInitn cstmrCdtTrfInitn;
-    ArrayList<Object> fcubserrorresp = new ArrayList<>();
-    ArrayList<Object> fcubswarningresp = new ArrayList<>();
+        CstmrCdtTrfInitn cstmrCdtTrfInitn;
+        List<Fcubserrorresp> fcubserrorresp;
+        List<Fcubswarningresp> fcubswarningresp;
 
-}
+    }
 
     @Getter
     @Setter
@@ -49,9 +49,10 @@ public class FundTransferResponseDto {
     @ToString
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CstmrCdtTrfInitn {
-    GrpTlr grpTlr;
+        GrpTlr grpTlr;
+        PmtInf pmtInf;
 
-}
+    }
 
     @Getter
     @Setter
@@ -60,8 +61,58 @@ public class FundTransferResponseDto {
     @ToString
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class GrpTlr {
-    private Long txnRefNo;
-}
+        private Long txnRefNo;
+    }
 
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Fcubswarningresp {
+        public ArrayList<Warning> warning;
+    }
 
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Warning {
+        public String wcode;
+        public String wdesc;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PmtInf {
+        private String reqdExctnDt;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Fcubserrorresp {
+        public ArrayList<Error> error;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Error {
+        public String ecode;
+        public String edesc;
+    }
 }

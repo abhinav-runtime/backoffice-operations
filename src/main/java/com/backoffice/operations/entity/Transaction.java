@@ -27,5 +27,6 @@ public class Transaction {
     private String uniqueKey;
     private String txnDate;
     private String errorResponse;
+    private String warningResponse;
 }
 

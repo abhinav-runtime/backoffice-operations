@@ -1,9 +1,7 @@
 package com.backoffice.operations.utils;
 
-import java.util.Random;
-
 import com.backoffice.operations.payloads.AccessTokenResponse;
-import com.backoffice.operations.service.impl.CivilIdServiceImpl;
+import com.backoffice.operations.payloads.BankSystemDatesResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +13,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Objects;
+import java.util.Random;
+
 @Component
 public class CommonUtils {
 
@@ -22,6 +23,9 @@ public class CommonUtils {
 
     @Value("${external.api.m2p.token}")
     private String tokenApiUrl;
+
+    @Value("${external.api.check.bank.dates}")
+    private String bankDatesUrl;
 
     @Autowired
     @Qualifier("jwtAuth")
@@ -50,6 +54,21 @@ public class CommonUtils {
         ResponseEntity<AccessTokenResponse> response = jwtAuthRestTemplate.exchange(tokenApiUrl, HttpMethod.POST, requestEntity, AccessTokenResponse.class);
         logger.info("response: {}", response);
         return response;
+    }
+
+    public String getBankDate(String branchCode) {
+        ResponseEntity<AccessTokenResponse> response = getToken();
+        if (Objects.nonNull(response.getBody())) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(response.getBody().getAccessToken());
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            String apiUrl = bankDatesUrl + branchCode;
+            ResponseEntity<BankSystemDatesResponse> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity, BankSystemDatesResponse.class);
+            BankSystemDatesResponse responseObject = responseEntity.getBody();
+            return Objects.nonNull(responseObject) ? responseObject.getResponse().currentWorkingDay : "";
+        }
+        return "";
     }
 
 }

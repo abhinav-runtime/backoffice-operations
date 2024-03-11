@@ -19,11 +19,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class TransferServiceImpl implements TransferService {
@@ -119,8 +116,7 @@ public class TransferServiceImpl implements TransferService {
             TransferRequestDto.Transaction transaction = transferRequestDto.new Transaction();
             TransferAccountFields TransferAccountFields = transferAccountFieldsRepository.findByTransferType("SELF TRANSFER");
             transaction.setTransaction_reference(txnRefId);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            transaction.setTransaction_date(LocalDate.now().minusDays(1).format(formatter).toString());
+            transaction.setTransaction_date(commonUtils.getBankDate(selfTransferDTO.getFromAccountNumber().substring(0, 3)));
             TransactionPurpose transactionPurpose = transactionPurposeRepository.findByTransactionPurposeCode("ordinaryTransfer");
             transaction.setTransaction_purpose(transactionPurpose.getTransactionPurpose());
             transaction.setTransaction_currency(accountCurrency.getAccountCurrency());
@@ -159,22 +155,90 @@ public class TransferServiceImpl implements TransferService {
             HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
             ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(bankTransferUrl, HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
 
-            if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
-                logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
+            Map<String, Object> data = new HashMap<>();
+
+            FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
+            logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
+
+            if (responseEntity.getStatusCode().is2xxSuccessful() && Objects.nonNull(fundTransferResponseDto) && fundTransferResponseDto.isSuccess()
+                    && fundTransferResponseDto.getMessage().equals("Fund Transfer is successful at Core Banking")) {
+
+                List<FundTransferResponseDto.Fcubswarningresp> warningResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                        .getFcubswarningresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubswarningresp() : new ArrayList<>();
+
+                boolean isFutureDateError = false;
+                if(!warningResponse.isEmpty()){
+                   List<FundTransferResponseDto.Warning> warningObject = warningResponse.stream()
+                           .flatMap(fcubswarningresp -> fcubswarningresp.getWarning().stream())
+                           .filter(warning -> warning.getWdesc().equals("Value Date is in Future. Payment is Rescheduled."))
+                           .toList();
+                    if (!warningObject.isEmpty()) {
+                        isFutureDateError = true;
+                    }
+                }
+
                 Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
-                String errorResponse = objectMapper.writeValueAsString(Objects.nonNull(fundTransferResponseDto.getResponse().getResult().getFcubserrorresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubserrorresp() : "");
+                String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
+                String warningResponseString =  objectMapper.writeValueAsString(warningResponse);
                 Transaction transactionObj = Transaction.builder()
                         .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
-                        .txnStatus(fundTransferResponseDto.isSuccess() ? "Success" : "Pending")
-                        .errorResponse(errorResponse)
-                        .txnDate(txnDate).uniqueKey(selfTransferDTO.getUniqueKey()).build();
+                        .txnStatus("Success")
+                        .warningResponse(warningResponseString)
+                        .txnDate(reqExctnDt).uniqueKey(selfTransferDTO.getUniqueKey()).build();
+
+                if (isFutureDateError){
+                    data.put("message", "Payment successful and it will be settled on next working days!");
+                }else {
+                    data.put("message", "Payment successful!");
+                }
 
                 transactionRepository.save(transactionObj);
-                //alizzTransferResponseDto.setTransactionNumber(String.valueOf(responseTxnRefNo));
-                //alizzTransferResponseDto.setTransactionDate(txnDate);
+                data.put("transactionID", responseTxnRefNo);
+                data.put("transactionDateTime",reqExctnDt);
+                data.put("warning", warningResponse);
+            } else if (responseEntity.getStatusCode().is2xxSuccessful() && Objects.nonNull(fundTransferResponseDto) && fundTransferResponseDto.isSuccess()
+                    && fundTransferResponseDto.getMessage().isEmpty()) {
+                Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
+                String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
+
+                List<FundTransferResponseDto.Fcubserrorresp> errorResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                        .getFcubserrorresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubserrorresp() : new ArrayList<>();
+
+                String errorResponseString = objectMapper.writeValueAsString(errorResponse);
+                Transaction transactionObj = Transaction.builder()
+                        .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
+                        .txnStatus("Failure")
+                        .errorResponse(errorResponseString)
+                        .txnDate(reqExctnDt).uniqueKey(selfTransferDTO.getUniqueKey()).build();
+
+                transactionRepository.save(transactionObj);
+                List<FundTransferResponseDto.Fcubswarningresp> warning = fundTransferResponseDto.getResponse().getResult().getFcubswarningresp();
+                data.put("message", "Invalid account details!");
+                data.put("transactionID", responseTxnRefNo);
+                data.put("transactionDateTime",reqExctnDt);
+                data.put("error", errorResponse);
+            } else if (responseEntity.getStatusCode().is2xxSuccessful() && Objects.nonNull(fundTransferResponseDto) && !fundTransferResponseDto.isSuccess()
+                    && fundTransferResponseDto.getMessage().equals("Fund Transfer is not successful at Core Banking")) {
+                Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
+                String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
+                FundTransferResponseDto.Fcubswarningresp warningResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                        .getFcubswarningresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubswarningresp().get(0) : new FundTransferResponseDto.Fcubswarningresp();
+
+                String warningResponseString = objectMapper.writeValueAsString(warningResponse);
+                Transaction transactionObj = Transaction.builder()
+                        .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
+                        .txnStatus("Failure")
+                        .warningResponse(warningResponseString)
+                        .txnDate(reqExctnDt).uniqueKey(selfTransferDTO.getUniqueKey()).build();
+
+                transactionRepository.save(transactionObj);
+                data.put("message", "Payment failed!");
+                data.put("transactionID", responseTxnRefNo);
+                data.put("transactionDateTime",reqExctnDt);
+                data.put("warning", warningResponseString);
 
             }
+            data.put("uniqueKey", selfTransferDTO.getUniqueKey());
             responseDTO.setStatus("Success");
             responseDTO.setMessage("Success");
             responseDTO.setData(responseEntity);
