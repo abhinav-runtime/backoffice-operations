@@ -54,7 +54,7 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 	public List<BoSystemDetailsResponseDTO> getSystemDetails(String custNo) {
 		List<BoSystemDetailsResponseDTO> responseDTO = new ArrayList<>();
 
-		systemDetailRepository.findAllByCivilId(custNo).forEach(Item -> {
+		systemDetailRepository.findAllByCivilIdOrderByCreatedDesc(custNo).forEach(Item -> {
 			BoSystemDetailsResponseDTO systemDetailsResponseDTO = new BoSystemDetailsResponseDTO();
 			String accessToken = null;
 			try {
@@ -96,6 +96,9 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 			systemDetailsResponseDTO.setCarrier(Item.getCarrier());
 			systemDetailsResponseDTO.setLocation(Item.getLocation());
 			systemDetailsResponseDTO.setIPAddress(Item.getIpAddress());
+			systemDetailsResponseDTO.setOs_version(Item.getOsVersion());
+			systemDetailsResponseDTO.setResolution(Item.getResolution());
+			systemDetailsResponseDTO.setCreated(Item.getCreated().toLocaleString());
 			responseDTO.add(systemDetailsResponseDTO);
 		});
 		return responseDTO;
