@@ -51,7 +51,7 @@ public class OtpParameter {
 	}
 
 	public void setOtpCooldownInMin(int otpCooldownInMIn) {
-		this.otpCooldownInMin = otpCooldownInMin;
+		this.otpCooldownInMin = otpCooldownInMIn;
 	}
 
 }
