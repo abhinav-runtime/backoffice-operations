@@ -1,8 +1,10 @@
 package com.backoffice.operations.entity;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.Date;
 
-import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.Column;
@@ -22,25 +24,29 @@ import lombok.Setter;
 @Entity
 @Table(name = "az_system_details_bk")
 public class SystemDetail {
-	
+
 	@Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "id", unique = true, nullable = false)
-    private String id;
-    private String deviceId;
-    private String name;
-    private String type;
-    private String model;
+	@GeneratedValue(generator = "uuid")
+	@GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
+	@Column(name = "id", unique = true, nullable = false)
+	private String id;
+	private String deviceId;
+	private String name;
+	private String type;
+	private String model;
 	@NotNull
-    private String status;
-    private String osVersion;
-    private String appVersion;
-    private String carrier;
-    private String location;
-    private String ipAddress;
-   	private String uniqueKey;
+	private String status;
+	private String osVersion;
+	private String appVersion;
+	private String carrier;
+	private String location;
+	private String ipAddress;
+	private String uniqueKey;
 	private String civilId;
+	@CreationTimestamp
+	@Column(name = "created", updatable = false, nullable = true)
+	private Date created;
+	private String resolution;
 
 	public String getUniqueKey() {
 		return uniqueKey;

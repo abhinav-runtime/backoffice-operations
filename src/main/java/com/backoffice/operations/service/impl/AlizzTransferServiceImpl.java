@@ -6,11 +6,14 @@ import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.*;
 import com.backoffice.operations.service.AlizzTransferService;
 import com.backoffice.operations.service.BeneficiaryService;
+import com.backoffice.operations.utils.ApiCaller;
 import com.backoffice.operations.utils.CommonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,12 +21,12 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 public class AlizzTransferServiceImpl implements AlizzTransferService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AlizzTransferServiceImpl.class);
 
     @Value("${external.api.transfer.bank}")
     private String alizzBankTransfer;
@@ -52,7 +55,11 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
     private final BeneficiaryBankRepository beneficiaryBankRepository;
 
-    public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository, SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository, SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository, BeneficiaryBankRepository beneficiaryBankRepository) {
+    private final ApiCaller apiCaller;
+
+    private final ObjectMapper objectMapper;
+
+    public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository, SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository, SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository, BeneficiaryBankRepository beneficiaryBankRepository, ApiCaller apiCaller, ObjectMapper objectMapper) {
         this.commonUtils = commonUtils;
         this.restTemplate = restTemplate;
         this.beneficiaryService = beneficiaryService;
@@ -62,11 +69,15 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
         this.sequenceCounterRepository = sequenceCounterRepository;
         this.transactionRepository = transactionRepository;
         this.beneficiaryBankRepository = beneficiaryBankRepository;
+        this.apiCaller = apiCaller;
+        this.objectMapper = objectMapper;
     }
 
     @Override
     public GenericResponseDTO<Object> transferToAlizzAccount(AlizzTransferRequestDto alizzTransferRequestDto) throws JsonProcessingException {
 
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        try{
         ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
         if (Objects.nonNull(response.getBody())) {
 
@@ -75,7 +86,6 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
             String transactionRefcode = "TRWA";
             String refId = String.format("%012d", getNextSequence());
             String txnRefId = transactionRefcode + refId;
-            String txnDate = LocalDateTime.now().toString();
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(response.getBody().getAccessToken());
@@ -85,7 +95,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
             SourceOperation sourceOperation = sourceOperationRepository.findAll().get(0);
 
             AccountCurrency accountCurrency = accountCurrencyRepository.findAll().get(0);
-            BeneficiaryBank beneficiaryBank = beneficiaryBankRepository.findByBankName("Alizz bank");
+            BeneficiaryBank beneficiaryBank = beneficiaryBankRepository.findByBankName("Alizz Islamic Bank");
 
             AlizzTransferDto alizzTransferDto = new AlizzTransferDto();
             AlizzTransferDto.Header header = new AlizzTransferDto.Header();
@@ -93,7 +103,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
             header.setSource_user(alizzTransferRequestDto.getUniqueKey());
             header.setSource_operation(sourceOperation.getSourceOperation());
 
-            AlizzTransferDto.Transaction transaction = getTransactionDetails(alizzTransferRequestDto, txnRefId, txnDate, accountCurrency, transferAccountFields);
+            AlizzTransferDto.Transaction transaction = getTransactionDetails(alizzTransferRequestDto, txnRefId, accountCurrency, transferAccountFields);
 
 
             AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount senderAccDetails = getIslamicAccount(alizzTransferRequestDto.getFromAccountNumber());
@@ -110,7 +120,14 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
             AlizzTransferDto.Sender sender = getSenderDetails(alizzTransferRequestDto, senderAccDetails, beneficiaryBank);
 
-            AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto, receiverAccDetails);
+            AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto, receiverAccDetails, beneficiaryBank);
+
+            double avlBalance = apiCaller.getAvailableBalance(alizzTransferRequestDto.getFromAccountNumber());
+            if (avlBalance > alizzTransferRequestDto.getTransactionAmount()) {
+                transaction.setTransactionAmount(alizzTransferRequestDto.getTransactionAmount());
+            } else {
+                throw new RuntimeException("Insufficient balance for the transaction");
+            }
 
             alizzTransferDto.setSender(sender);
             alizzTransferDto.setReceiver(receiver);
@@ -121,60 +138,190 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
                     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
                     .build();
             String jsonRequestBody = objectMapper.writeValueAsString(alizzTransferDto);
+            logger.info("jsonRequestBody: {}", jsonRequestBody);
 
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
             ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(alizzBankTransfer, HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
+
+            Map<String, Object> data = new HashMap<>();
+
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 Beneficiary beneficiary = beneficiaryService.addBeneficiary(alizzTransferDto.getReceiver());
                 alizzTransferResponseDto.setAccountName(beneficiary.getAccountName());
                 alizzTransferResponseDto.setAccountNumber(beneficiary.getAccountNumber());
                 alizzTransferResponseDto.setBankName("Alizz bank");
                 FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
+                logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
 
-                if (Objects.nonNull(fundTransferResponseDto)) {
-                    Integer responseTxnRefNo = fundTransferResponseDto.getResponseObject().getResultObject().getCstmrCdtTrfInitnObject().getGrpTlrObject().getTxnRefNo();
-                    String errorResponse = objectMapper.writeValueAsString(Objects.nonNull(fundTransferResponseDto.getResponseObject().getResultObject().getFcubserrorresp()) ? fundTransferResponseDto.getResponseObject().getResultObject().getFcubserrorresp() : "");
-                    Transaction transactionObj = Transaction.builder()
-                            .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
-                            .txnStatus(fundTransferResponseDto.isSuccess() ? "Success" : "Pending")
-                            .errorResponse(errorResponse)
-                            .txnDate(txnDate).uniqueKey(alizzTransferRequestDto.getUniqueKey()).build();
-
-                    transactionRepository.save(transactionObj);
-                    alizzTransferResponseDto.setTransactionNumber(String.valueOf(responseTxnRefNo));
-                    alizzTransferResponseDto.setTransactionDate(txnDate);
-                }
+                data = getResponseDto(alizzTransferRequestDto.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId, transaction.getTransactionDate());
             }
-            GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-            Map<String, Object> data = new HashMap<>();
-            data.put("alizzTransferResponseDto", responseEntity.getBody());
+            data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
             responseDTO.setStatus("Success");
             responseDTO.setMessage("Success");
             responseDTO.setData(data);
             return responseDTO;
         }
-        return null;
+        } catch (Exception e) {
+            logger.error("ERROR in class AlizzTransferServiceImpl method transferToAlizzAccount", e);
+            responseDTO.setMessage(e.getMessage());
+            responseDTO.setStatus("Failure");
+        }
+        return responseDTO;
     }
 
-    private static AlizzTransferDto.Receiver getReceiverDetails(AlizzTransferRequestDto alizzTransferRequestDto, AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails) {
+    public Map<String, Object> getResponseDto(String uniqueKey, boolean isSuccessful, FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate) throws JsonProcessingException {
+
+        Map<String, Object> data = new HashMap<>();
+
+        if (isSuccessful && Objects.nonNull(fundTransferResponseDto) && fundTransferResponseDto.isSuccess()
+                && fundTransferResponseDto.getMessage().equals("Fund Transfer is successful at Core Banking")) {
+
+
+            List<FundTransferResponseDto.Fcubswarningresp> warningResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                    .getFcubswarningresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubswarningresp() : new ArrayList<>();
+
+            boolean isFutureDateError = false;
+            if(!warningResponse.isEmpty()){
+                List<FundTransferResponseDto.Warning> warningObject = warningResponse.stream()
+                        .flatMap(fcubswarningresp -> fcubswarningresp.getWarning().stream())
+                        .filter(warning -> warning.getWdesc().equals("Value Date is in Future. Payment is Rescheduled."))
+                        .toList();
+                if (!warningObject.isEmpty()) {
+                    isFutureDateError = true;
+                }
+            }
+
+            Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
+            String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
+            String warningResponseString =  objectMapper.writeValueAsString(!warningResponse.isEmpty() ? warningResponse : "");
+            Transaction transactionObj = Transaction.builder()
+                    .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
+                    .txnStatus(fundTransferResponseDto.isSuccess() ? "Success" : "Pending")
+                    .warningResponse(warningResponseString)
+                    .txnDate(reqExctnDt).uniqueKey(uniqueKey).build();
+
+            if (isFutureDateError){
+                data.put("message", "Payment successful and it will be settled on next working days!");
+            }else {
+                data.put("message", "Payment successful!");
+            }
+
+            transactionRepository.save(transactionObj);
+            data.put("transactionID", responseTxnRefNo);
+            data.put("transactionDateTime",reqExctnDt);
+            data.put("warning", warningResponse);
+        } else if (isSuccessful && Objects.nonNull(fundTransferResponseDto) && fundTransferResponseDto.isSuccess()
+                && fundTransferResponseDto.getMessage().isEmpty()) {
+            Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
+            String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
+
+            List<FundTransferResponseDto.Fcubserrorresp> errorResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                    .getFcubserrorresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubserrorresp() : new ArrayList<>();
+
+
+            String errorResponseString = objectMapper.writeValueAsString(!errorResponse.isEmpty() ? errorResponse : "");
+            Transaction transactionObj = Transaction.builder()
+                    .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
+                    .txnStatus("Failure")
+                    .errorResponse(errorResponseString)
+                    .txnDate(reqExctnDt).uniqueKey(uniqueKey).build();
+
+            transactionRepository.save(transactionObj);
+            data.put("message", "Invalid account details!");
+            data.put("transactionID", responseTxnRefNo);
+            data.put("transactionDateTime",reqExctnDt);
+            data.put("error", errorResponse);
+        } else if (isSuccessful && Objects.nonNull(fundTransferResponseDto) && !fundTransferResponseDto.isSuccess()
+                && fundTransferResponseDto.getMessage().equals("Fund Transfer is not successful at Core Banking")) {
+            Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
+            String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
+
+            List<FundTransferResponseDto.Fcubswarningresp> warningResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                    .getFcubswarningresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubswarningresp() : new ArrayList<>();
+
+            List<FundTransferResponseDto.Fcubserrorresp> errorResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                    .getFcubserrorresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubserrorresp() : new ArrayList<>();
+
+            String warningResponseString = objectMapper.writeValueAsString(!warningResponse.isEmpty() ? warningResponse : "");
+            String errorResponseString = objectMapper.writeValueAsString(!errorResponse.isEmpty() ? errorResponse : "");
+            Transaction transactionObj = Transaction.builder()
+                    .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
+                    .txnStatus("Failure")
+                    .warningResponse(warningResponseString)
+                    .errorResponse(errorResponseString)
+                    .txnDate(reqExctnDt).uniqueKey(uniqueKey).build();
+
+            transactionRepository.save(transactionObj);
+            data.put("message", "Payment failed!");
+            data.put("transactionID", responseTxnRefNo);
+            data.put("transactionDateTime",reqExctnDt);
+            data.put("warning", warningResponse);
+            data.put("error", errorResponse);
+        }else if (isSuccessful && Objects.nonNull(fundTransferResponseDto) && !fundTransferResponseDto.isSuccess()) {
+
+            if(Objects.nonNull(fundTransferResponseDto.getResponse())){
+                Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
+                String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
+
+                List<FundTransferResponseDto.Fcubswarningresp> warningResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                        .getFcubswarningresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubswarningresp() : new ArrayList<>();
+
+                List<FundTransferResponseDto.Fcubserrorresp> errorResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+                        .getFcubserrorresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubserrorresp() : new ArrayList<>();
+
+                String warningResponseString = objectMapper.writeValueAsString(!warningResponse.isEmpty() ? warningResponse : "");
+                String errorResponseString = objectMapper.writeValueAsString(!errorResponse.isEmpty() ? errorResponse : "");
+
+                Transaction transactionObj = Transaction.builder()
+                        .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
+                        .txnStatus("Failure")
+                        .warningResponse(warningResponseString)
+                        .errorResponse(errorResponseString)
+                        .txnDate(reqExctnDt).uniqueKey(uniqueKey).build();
+                transactionRepository.save(transactionObj);
+            }else {
+                Transaction transactionObj = Transaction.builder().txnReferenceId(txnRefId)
+                        .txnStatus("Failure").uniqueKey(uniqueKey).build();
+                transactionRepository.save(transactionObj);
+            }
+            data.put("message", fundTransferResponseDto.getMessage());
+            data.put("transactionID", txnRefId);
+            data.put("transactionDateTime",txnDate);
+        }
+        return data;
+    }
+
+    private static AlizzTransferDto.Receiver getReceiverDetails(AlizzTransferRequestDto alizzTransferRequestDto, AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails, BeneficiaryBank beneficiaryBank) {
         return AlizzTransferDto.Receiver.builder()
                 .notesToReceiver(alizzTransferRequestDto.getNotesToReceiver())
-                .accountName(receiverAccDetails.getAdesc()).accountNumber(receiverAccDetails.getAcc()).build();
+                .accountName(receiverAccDetails.getAdesc()).accountNumber(receiverAccDetails.getAcc())
+                .bankCode(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankCode() : "")
+                .bankName(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankName() : "")
+                .branchCode(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3))
+                .iBanAccountNumber("")
+                .bankAddress1("Muscat").bankAddress2("Muscat").bankAddress3("Muscat").bankAddress4("Muscat")
+                .beneAddress1("Muscat").beneAddress2("Muscat").beneAddress3("Muscat").beneAddress4("Muscat")
+                .bankCountry("Oman")
+                .build();
     }
 
     private static AlizzTransferDto.Sender getSenderDetails(AlizzTransferRequestDto alizzTransferRequestDto, AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount senderAccDetails, BeneficiaryBank beneficiaryBank) {
         return AlizzTransferDto.Sender.builder().accountNumber(senderAccDetails.getAcc())
                 .accountCurrency(senderAccDetails.getCcy()).accountName(senderAccDetails.getAdesc())
-                .branchCode(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankCode() : "")
-                .bankCode(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3)).build();
+                .bankCode(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankCode() : "")
+                .branchCode(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3))
+                .bankName("Alizz Islamic Bank")
+                .build();
     }
 
-    private static AlizzTransferDto.Transaction getTransactionDetails(AlizzTransferRequestDto alizzTransferRequestDto, String txnRefId, String txnDate, AccountCurrency accountCurrency, TransferAccountFields transferAccountFields) {
+    private AlizzTransferDto.Transaction getTransactionDetails(AlizzTransferRequestDto alizzTransferRequestDto, String txnRefId, AccountCurrency accountCurrency, TransferAccountFields transferAccountFields) {
         return AlizzTransferDto.Transaction.builder()
                 .paymentDetails1(alizzTransferRequestDto.getNotesToReceiver()).paymentDetails2("")
-                .transactionReference(txnRefId).transactionDate(txnDate)
+                .paymentDetails3("").paymentDetails4("")
+                .transactionReference(txnRefId)
+                .transactionDate(commonUtils.getBankDate(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3)))
                 .transactionAmount(alizzTransferRequestDto.getTransactionAmount())
                 .transactionPurpose(alizzTransferRequestDto.getTransactionPurpose()).transactionCurrency(accountCurrency.getAccountCurrency())
                 .cbsModule(Objects.nonNull(transferAccountFields) && Objects.nonNull(transferAccountFields.getCbsModule()) ? transferAccountFields.getCbsModule() : "")

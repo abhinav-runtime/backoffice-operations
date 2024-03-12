@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import com.backoffice.operations.entity.BoProductCategories;
 import com.backoffice.operations.entity.BoProductRequest;
 import com.backoffice.operations.entity.BoProductSubCategories;
+import com.backoffice.operations.payloads.BoCategoriesAndSubCategoriesUpdateDTO;
 import com.backoffice.operations.payloads.BoProductCategoriesRequestDTO;
 import com.backoffice.operations.payloads.ProductRequestDTO;
 import com.backoffice.operations.payloads.ProductResponseDTO;
@@ -47,7 +49,7 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			response.setData(categories);
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
@@ -61,7 +63,7 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			BoProductCategories category = boCategoriesRepo.findByCategoriesName(requestDTO.getCategoriesName());
 			if (category == null) {
 				// Handle case when the category does not exist
-				response.setStatus("Failed");
+				response.setStatus("Failure");
 				response.setMessage("Something went wrong.");
 				response.setData(new HashMap<>());
 				return response;
@@ -83,7 +85,7 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			response.setData(subCategories);
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
@@ -128,14 +130,14 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 				response.setMessage("Sub Categories Fetched Successfully");
 				response.setData(responseSubCategories);
 			} else {
-				response.setStatus("Failed");
+				response.setStatus("Failure");
 				response.setMessage("Something went wrong.");
 				response.setData(new HashMap<>());
 			}
 
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
@@ -152,13 +154,13 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 				response.setMessage("Categories Fetched Successfully");
 				response.setData(categories);
 			} else {
-				response.setStatus("Failed");
+				response.setStatus("Failure");
 				response.setMessage("Something went wrong.");
 				response.setData(new HashMap<>());
 			}
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
@@ -179,13 +181,13 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 				response.setMessage("Sub Categories Fetched Successfully");
 				response.setData(responseSubCategories);
 			} else {
-				response.setStatus("Failed");
+				response.setStatus("Failure");
 				response.setMessage("Something went wrong.");
 				response.setData(new HashMap<>());
 			}
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
@@ -206,19 +208,20 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 				requestProduct.setEmail(request.getEmail());
 				requestProduct.setSubCategories(subCategories.getSubCategoriesName());
 				requestProduct.setCategories(subCategories.getCategories().getCategoriesName());
+				requestProduct.setReferenceId(generateReferenceId());
 				requestProduct = boProductRequestRepo.save(requestProduct);
 
 				response.setStatus("Success");
 				response.setMessage("Request Saved Successfully");
-				response.setData(new HashMap<>());
+				response.setData(requestProduct);
 			} else {
-				response.setStatus("Failed");
+				response.setStatus("Failure");
 				response.setMessage("Something went wrong.");
 				response.setData(new HashMap<>());
 			}
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
@@ -240,11 +243,13 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 				responseDTO.setRequestDate(item.getRequestDate().toString());
 				responseDTO.setCategories(item.getCategories());
 				responseDTO.setSubCategories(item.getSubCategories());
+				responseDTO.setId(item.getId());
+				responseDTO.setReferenceId(item.getReferenceId());
 				responseData.add(responseDTO);
 			});
 
 			if (responseData.size() == 0) {
-				response.setStatus("Failed");
+				response.setStatus("Failure");
 				response.setMessage("Something went wrong.");
 				response.setData(new HashMap<>());
 			} else {
@@ -254,7 +259,7 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			}
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
@@ -277,7 +282,7 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			response.setData(new HashMap<>());
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
@@ -296,7 +301,7 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 			response.setData(new HashMap<>());
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
@@ -304,28 +309,76 @@ public class BoProductCategorieServiceImp implements BoProductCategorieService {
 	}
 
 	@Override
-	public GenericResponseDTO<Object> dateExpiryUpdate(BoProductCategoriesRequestDTO requestDTO) {
+	public GenericResponseDTO<Object> subCategoriesUpdate(BoCategoriesAndSubCategoriesUpdateDTO requestDTO) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		logger.info("requestDTO: {}", requestDTO);
 		try {
-			BoProductSubCategories subCategories = boSubCategoriesRepo
-					.findBySubCategoriesName(requestDTO.getSubCategoriesName());
-			subCategories.setExpireDate(requestDTO.getExpireDate());
+			BoProductSubCategories subCategories = boSubCategoriesRepo.findById(requestDTO.getId()).get();
+			if (requestDTO.getSubCategoriesName() != null && requestDTO.getSubCategoriesName() != "")
+				subCategories.setSubCategoriesName(requestDTO.getSubCategoriesName());
+			if (requestDTO.getProductTitle() != null && requestDTO.getProductTitle() != "")
+				subCategories.setProductTitle(requestDTO.getProductTitle());
+			if (requestDTO.getBenefits() != null && requestDTO.getBenefits() != "")
+				subCategories.setBenefits(requestDTO.getBenefits());
+			if (requestDTO.getDescription() != null && requestDTO.getDescription() != "")
+				subCategories.setDescription(requestDTO.getDescription());
+			if (requestDTO.getFeatures() != null && requestDTO.getFeatures() != "")
+				subCategories.setFeatures(requestDTO.getFeatures());
+			if (requestDTO.getExpireDate() != null)
+				subCategories.setExpireDate(requestDTO.getExpireDate());
+			if (requestDTO.getIssueDate() != null)
+				subCategories.setIssueDate(requestDTO.getIssueDate());
+
 			subCategories = boSubCategoriesRepo.save(subCategories);
 
 			Map<String, String> subCategoriesResponse = new LinkedHashMap<>();
 			subCategoriesResponse.put("categories", subCategories.getCategories().getCategoriesName());
 			subCategoriesResponse.put("subCategoriesName", subCategories.getSubCategoriesName());
+			subCategoriesResponse.put("productTitle", subCategories.getProductTitle());
+			subCategoriesResponse.put("issueDate", subCategories.getIssueDate().toString());
 			subCategoriesResponse.put("expireDate", subCategories.getExpireDate().toString());
+			subCategoriesResponse.put("description", subCategories.getDescription());
+			subCategoriesResponse.put("benefits", subCategories.getBenefits());
+			subCategoriesResponse.put("features", subCategories.getFeatures());
+
 			response.setStatus("Success");
 			response.setMessage("Request Successfully Processed");
 			response.setData(subCategoriesResponse);
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
-			response.setStatus("Failed");
+			response.setStatus("Failure");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
 		}
 		return response;
+	}
+
+	@Override
+	public GenericResponseDTO<Object> categoriesUpdate(BoCategoriesAndSubCategoriesUpdateDTO requestDTO) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		try {
+			BoProductCategories categories = boCategoriesRepo.findById(requestDTO.getId()).get();
+			if (requestDTO.getCategoriesName() != null && requestDTO.getCategoriesName() != "")
+				categories.setCategoriesName(requestDTO.getCategoriesName());
+			categories = boCategoriesRepo.save(categories);
+			response.setStatus("Success");
+			response.setMessage("Request Successfully Processed");
+			response.setData(categories);
+		} catch (Exception e) {
+			logger.error("Error: {}", e.getMessage());
+			response.setStatus("Failure");
+			response.setMessage("Something went wrong.");
+			response.setData(new HashMap<>());
+		}
+		return response;
+	}
+
+	private String generateReferenceId() {
+		String PREFIX = "PR";
+		AtomicLong counter = new AtomicLong(System.currentTimeMillis() % 1000000);
+
+		long value = counter.getAndIncrement();
+		String referenceId = String.format("%s%06d", PREFIX, value);
+		return referenceId;
 	}
 }

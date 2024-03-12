@@ -2,16 +2,11 @@ package com.backoffice.operations.service;
 
 import com.backoffice.operations.payloads.PromotionDTO;
 
-import java.util.List;
-
 public interface PromotionService {
 
-    List<PromotionDTO> getAllPromotions();
+    void markPromotionAsSeen(String uniqueKey, String promotionId, String token);
 
-    PromotionDTO getPromotionById(String uniqueKey);
+    PromotionDTO savePromotion(PromotionDTO promotionDTO, String token);
 
-    void markPromotionAsSeen(String uniqueKey);
-
-    PromotionDTO savePromotion(PromotionDTO promotionDTO);
-
+    PromotionDTO getPromotion(String uniqueKey, String token);
 }

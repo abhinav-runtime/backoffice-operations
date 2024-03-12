@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BOCustomerDetailsResponseDTO {
-
+	
+	private String custNo;
 	public String cusId;
 	public String status;
 	public String uname;

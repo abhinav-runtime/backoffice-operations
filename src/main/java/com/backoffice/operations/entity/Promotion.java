@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,9 +26,21 @@ public class Promotion {
     @Column(nullable = false)
     private String imageUrl;
 
-    @Column(nullable = false)
-    private boolean seenByUser;
+    private String urlType;
 
-    @Column(nullable = false)
-    private String uniqueKey;
+    private String url;
+
+    private int priority;
+
+    private String text1;
+
+    private String text2;
+
+    private LocalDateTime createdAt;
+
+    private String createdBy;
+
+    private LocalDateTime lastUpdatedAt;
+
+    private String updatedBy;
 }

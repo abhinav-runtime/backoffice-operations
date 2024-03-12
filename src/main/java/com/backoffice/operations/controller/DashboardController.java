@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import com.backoffice.operations.payloads.EditInfoRequestDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.DashboardService;
 import org.springframework.http.HttpHeaders;
@@ -120,5 +121,20 @@ public class DashboardController {
     public ResponseEntity<GenericResponseDTO<Object>> getCreditCardTransactions(@RequestParam(required = false) String fromDate
             , @RequestParam(required = false) String toDate,@RequestParam String uniqueKey){
         return ResponseEntity.ok(dashboardService.getCreditCardTransactions(fromDate, toDate, uniqueKey));
+    }
+
+    @GetMapping("/upcomingBills")
+    public ResponseEntity<GenericResponseDTO<Object>> getUpComingBills(@RequestParam String uniqueKey){
+        return ResponseEntity.ok(dashboardService.getUpComingBills(uniqueKey));
+    }
+
+    @PostMapping("/editInfo")
+    public ResponseEntity<GenericResponseDTO<Object>> editInfo(@RequestBody EditInfoRequestDto editInfoRequestDto){
+        return ResponseEntity.ok(dashboardService.editInfo(editInfoRequestDto));
+    }
+
+    @GetMapping("/blockedAmounts")
+    public ResponseEntity<GenericResponseDTO<Object>> getBlockedAmounts(@RequestParam String uniqueKey, @RequestParam String accountNumber){
+        return ResponseEntity.ok(dashboardService.getBlockedAmounts(uniqueKey, accountNumber));
     }
 }

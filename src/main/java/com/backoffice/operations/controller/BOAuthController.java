@@ -33,10 +33,12 @@ public class BOAuthController {
 
 	@PostMapping(value = { "/login", "/signin" })
 	public ResponseEntity<Object> login(HttpServletRequest request, @RequestBody LoginDto loginDto) {
-		if (boAuthService.login(loginDto).getStatus().equals("Failure")) {
-			return new ResponseEntity<>(boAuthService.login(loginDto), HttpStatus.UNAUTHORIZED);
+		GenericResponseDTO<Object> response = boAuthService.login(loginDto);
+		if (response.getStatus().equals("Failure")) {
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+		}else {
+			return new ResponseEntity<>(response, HttpStatus.OK);			
 		}
-		return new ResponseEntity<>(boAuthService.login(loginDto), HttpStatus.OK);
 	}
 
 	@PostMapping(value = { "/register", "/signup" })
@@ -51,10 +53,11 @@ public class BOAuthController {
 				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 			}
 			if (accessHelper.isAccessible("ACCOUNT_TYPES", "PUBLISH")) {
-				if (boAuthService.register(registeruser).getStatus().equals("Failure")) {
-					return new ResponseEntity<>(boAuthService.register(registeruser), HttpStatus.BAD_REQUEST);
+				response = boAuthService.register(registeruser);
+				if (response.getStatus().equals("Failure")) {
+					return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 				}
-				return new ResponseEntity<>(boAuthService.register(registeruser), HttpStatus.CREATED);
+				return new ResponseEntity<>(response, HttpStatus.CREATED);
 			}
 			response.setMessage("User Not have permission.");
 			response.setStatus("Failure");
@@ -78,25 +81,27 @@ public class BOAuthController {
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 		if (accessHelper.isAccessible("AUTHORIZATION", "MODIFY")) {
-			if (boAuthService.suspendUser(userDto).getStatus().equals("Failure")) {
-				return new ResponseEntity<>(boAuthService.suspendUser(userDto), HttpStatus.BAD_REQUEST);
+			response = boAuthService.suspendUser(userDto);
+			if (response.getStatus().equals("Failure")) {
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
 			} else {
-				return new ResponseEntity<>(boAuthService.suspendUser(userDto), HttpStatus.OK);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		}
 		response.setMessage("User not have permission to operate this action");
 		response.setStatus("Failure");
-		response.setData(null);
+		response.setData(new HashMap<>());
 		return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
 	}
 
 	@PostMapping(value = { "/logout" })
 	public ResponseEntity<Object> logout() {
-		if (boAuthService.logout().getStatus().equals("Failure")) {
-			return new ResponseEntity<>(boAuthService.logout(), HttpStatus.INTERNAL_SERVER_ERROR);
+		GenericResponseDTO<Object> response = boAuthService.logout();
+		if (response.getStatus().equals("Failure")) {
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		} else {
-			return new ResponseEntity<>(boAuthService.logout(), HttpStatus.OK);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 }

@@ -25,8 +25,8 @@ public class SystemDetailDTO {
 	@NotBlank(message = "Unique Key cannot be blank")
 	private String uniqueKey;
 	private String lang;
-
 	private String civilId;
+	private String resolution;
 
 	public String getLang() {
 		return lang;

@@ -103,6 +103,7 @@ public class ReportAnIssue {
 	public void setTime(LocalDateTime time) {
 		this.time = time;
 	}
+	
 	public String getLang() {
 		return lang;
 	}
@@ -110,4 +111,5 @@ public class ReportAnIssue {
 	public void setLang(String lang) {
 		this.lang = lang;
 	}
+
 }
