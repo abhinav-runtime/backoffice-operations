@@ -1,6 +1,7 @@
 package com.backoffice.operations.payloads;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
@@ -19,11 +20,14 @@ public class BankSystemDatesResponse {
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Response{
+        @JsonProperty("branch_code")
         public String branchCode;
+        @JsonProperty("previous_working_day")
         public String previousWorkingDay;
+        @JsonProperty("current_working_day")
         public String currentWorkingDay;
+        @JsonProperty("next_working_day")
         public String nextWorkingDay;
     }
 }
