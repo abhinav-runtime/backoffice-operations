@@ -167,11 +167,9 @@ public class OtpServiceImpl implements OtpService {
     public GenericResponseDTO<Object> resendOtp(String uniqueKey) throws MaxResendAttemptsException {
         long id = 1;
         OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
-        int cooldownPeriodMinutes = otpParameter.getOtpCooldownInMin();
+        int cooldownPeriod = otpParameter.getOtpResentTime();
         OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(uniqueKey);
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-//		ValidationResultDTO validationResultDTO = new ValidationResultDTO();
-//		ValidationResultDTO.Data data = new ValidationResultDTO.Data();
         // TODO: return how many attempts
         if (otpEntity == null) {
             // First-time request, generate and save a new OTP
@@ -180,7 +178,7 @@ public class OtpServiceImpl implements OtpService {
             generateAndSaveOtp(otpEntity);
         } else {
             // Check cooldown period
-            LocalDateTime cooldownEndTime = otpEntity.getLastAttemptTime().plusMinutes(cooldownPeriodMinutes);
+            LocalDateTime cooldownEndTime = otpEntity.getLastAttemptTime().plusSeconds(cooldownPeriod);
             if (LocalDateTime.now().isBefore(cooldownEndTime)) {
                 Map<String, String> data = new HashMap<>();
                 responseDTO.setStatus("Failure");
