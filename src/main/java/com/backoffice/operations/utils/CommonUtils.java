@@ -66,7 +66,7 @@ public class CommonUtils {
             String apiUrl = bankDatesUrl + branchCode;
             ResponseEntity<BankSystemDatesResponse> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity, BankSystemDatesResponse.class);
             BankSystemDatesResponse responseObject = responseEntity.getBody();
-            return Objects.nonNull(responseObject) ? responseObject.getResponse().currentWorkingDay : "";
+            return Objects.nonNull(responseObject) ? responseObject.getResponse().getCurrentWorkingDay() : "";
         }
         return "";
     }

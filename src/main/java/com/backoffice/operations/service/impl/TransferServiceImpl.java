@@ -76,10 +76,21 @@ public class TransferServiceImpl implements TransferService {
             sender.setAccount_number(selfTransferDTO.getFromAccountNumber());
             String senderCifNo = selfTransferDTO.getFromAccountNumber().substring(3, 10);
 
-            // below code commented for testing
             Optional<AccountDetails> senderAccountInfo = getTokenAndApiResponse(senderCifNo);
-            String senderAccName = senderAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAdesc();
-            sender.setAccount_name(senderAccName);
+            senderAccountInfo.ifPresent(accountInfo -> {
+                if (accountInfo.getResponse() != null && accountInfo.getResponse().getPayload() != null &&
+                        accountInfo.getResponse().getPayload().getCustSummaryDetails() != null) {
+                    List<AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount> islamicAccounts = accountInfo.getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts();
+                    for (AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount islamicAccount : islamicAccounts) {
+                        if (islamicAccount.getAcc().equalsIgnoreCase(selfTransferDTO.getFromAccountNumber())) {
+                            sender.setAccount_name(islamicAccount.getAdesc());
+                            break;
+                        }
+                    }
+                }
+            });
+//            String senderAccName = senderAccountInfo.get().getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().get(0).getAdesc();
+//            sender.setAccount_name(senderAccName);
             AccountCurrency accountCurrency = AccountCurrencyRepository.findByAccountCurrencyCode("omr");
             sender.setAccount_currency(accountCurrency.getAccountCurrency());
             sender.setBank_code("IZZB");
