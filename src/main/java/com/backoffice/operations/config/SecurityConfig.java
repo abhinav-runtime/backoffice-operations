@@ -111,6 +111,9 @@ public class SecurityConfig {
         config.addAllowedOrigin("http://localhost:3000");
         config.addAllowedOrigin("https://back-office-production.netlify.app");
         config.addAllowedOrigin("https://back-office-api-integration.netlify.app");
+        config.addAllowedOrigin("https://alizz.nuzion.in");
+        config.addAllowedOrigin("http://217.21.91.165");
+        config.addAllowedOrigin("https://217.21.91.165");
         config.addAllowedHeader("*");
         config.setAllowedMethods(Arrays.asList(
                 HttpMethod.GET.name(),
