@@ -1,5 +1,7 @@
 package com.backoffice.operations.service.impl;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,19 +67,25 @@ public class PassCodeParameterServiceImp implements PassCodeParameterService {
 
 	@Override
 	public PassCodeParameterDTO createPassCodeParameter(PassCodeParameterDTO passcodeDto) {
+
 		try {
-			PasscodeParameter passcodeParameter = PasscodeParameter.builder()
-					.passcodeLength(passcodeDto.getPasscodeLength())
-					.passCodeMaxAttempt(passcodeDto.getPassCodeMaxAttempt())
-					.lockoutDurationInMin(passcodeDto.getLockoutDurationInMin())
-					.changePasscodeMaxAttempt(passcodeDto.getChangePasscodeMaxAttempt())
-					.changePasscodeDurationInDays(passcodeDto.getChangePasscodeDurationInDays()).build();
-			passcodeParameter = parameterRepo.save(passcodeParameter);
-			return PassCodeParameterDTO.builder().passcodeLength(passcodeParameter.getPasscodeLength())
-					.passCodeMaxAttempt(passcodeParameter.getPassCodeMaxAttempt())
-					.lockoutDurationInMin(passcodeParameter.getLockoutDurationInMin())
-					.changePasscodeMaxAttempt(passcodeParameter.getChangePasscodeMaxAttempt())
-					.changePasscodeDurationInDays(passcodeParameter.getChangePasscodeDurationInDays()).build();
+			List<PasscodeParameter> passcodeParameterList = parameterRepo.findAll();
+			if (passcodeParameterList.size() > 0) {
+				return null;
+			} else {
+				PasscodeParameter passcodeParameter = PasscodeParameter.builder()
+						.passcodeLength(passcodeDto.getPasscodeLength())
+						.passCodeMaxAttempt(passcodeDto.getPassCodeMaxAttempt())
+						.lockoutDurationInMin(passcodeDto.getLockoutDurationInMin())
+						.changePasscodeMaxAttempt(passcodeDto.getChangePasscodeMaxAttempt())
+						.changePasscodeDurationInDays(passcodeDto.getChangePasscodeDurationInDays()).build();
+				passcodeParameter = parameterRepo.save(passcodeParameter);
+				return PassCodeParameterDTO.builder().passcodeLength(passcodeParameter.getPasscodeLength())
+						.passCodeMaxAttempt(passcodeParameter.getPassCodeMaxAttempt())
+						.lockoutDurationInMin(passcodeParameter.getLockoutDurationInMin())
+						.changePasscodeMaxAttempt(passcodeParameter.getChangePasscodeMaxAttempt())
+						.changePasscodeDurationInDays(passcodeParameter.getChangePasscodeDurationInDays()).build();
+			}
 		} catch (Exception e) {
 			logger.error("Error : {}", e.getMessage());
 			return null;

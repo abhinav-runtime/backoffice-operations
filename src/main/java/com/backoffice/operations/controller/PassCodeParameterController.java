@@ -35,6 +35,12 @@ public class PassCodeParameterController {
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} else {
 			PassCodeParameterDTO data = parameterService.updatePasscodeParameter(requestDto);
+			if (data == null || data.equals(null)) {
+				response.setMessage("Card Number parameter not found");
+				response.setStatus("Failure");
+				response.setData(new HashMap<>());
+				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			}
 			response.setData(data);
 			response.setMessage("Card Number parameter updated successfully");
 			response.setStatus("Success");

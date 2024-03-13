@@ -21,7 +21,7 @@ import com.backoffice.operations.service.CardNumberParameterService;
 @RequestMapping("/bo/cardNumberParameter")
 public class CardNumberParameterController {
 	@Autowired
-	private CardNumberParameterService cardNumberParameterService ;
+	private CardNumberParameterService cardNumberParameterService;
 	@Autowired
 	private BOUserToken boUserToken;
 
@@ -35,6 +35,12 @@ public class CardNumberParameterController {
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} else {
 			CardNumberParameterDTO data = cardNumberParameterService.updateCardNumberParameter(requestDto);
+			if (data == null || data.equals(null)) {
+				response.setMessage("Card number parameter not found");
+				response.setStatus("Failure");
+				response.setData(new HashMap<>());
+				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			}
 			response.setData(data);
 			response.setMessage("Card number parameter updated successfully");
 			response.setStatus("Success");

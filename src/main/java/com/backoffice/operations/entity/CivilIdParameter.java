@@ -41,4 +41,8 @@ public class CivilIdParameter {
 	public Long getId() {
 		return id;
 	}
+
+	public CivilIdParameter orElse(Object object) {
+		return null;
+	}
 }

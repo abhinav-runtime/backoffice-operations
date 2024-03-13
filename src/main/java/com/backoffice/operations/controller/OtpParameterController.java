@@ -35,6 +35,12 @@ public class OtpParameterController {
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} else {
 			OtpParameterDTO data = otpParameterService.updateOtpParameter(requestDto);
+			if (data == null || data.equals(null)) {
+				response.setMessage("Otp parameter not found");
+				response.setStatus("Failure");
+				response.setData(new HashMap<>());
+				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			}
 			response.setData(data);
 			response.setMessage("Otp parameter updated successfully");
 			response.setStatus("Success");
