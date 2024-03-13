@@ -134,4 +134,27 @@ public class ProfileParameterServiceImp implements ProfileParameterService {
 		}
 	}
 
+	@Override
+	public ProfileParameterDto deleteProfileParameter() {
+		try {
+			ProfileParameter profileParameter = profileParameterRepository.findAll().get(0);
+			profileParameterRepository.delete(profileParameter);
+			return ProfileParameterDto.builder()
+					.mobileChangeAttemptLimit(profileParameter.getMobileChangeAttemptLimit())
+					.mobileChangeLockoutDurationInSec(profileParameter.getMobileChangeLockoutDurationInSec())
+					.mobileNumberChangedLockoutDurationInDay(
+							profileParameter.getMobileNumberChangedLockoutDurationInDay())
+					.emailIdChangeAttemptLimit(profileParameter.getEmailIdChangeAttemptLimit())
+					.emailIdVerificationLinkResendAttempts(profileParameter.getEmailIdVerificationLinkResendAttempts())
+					.emailIdVerificationLinkTimeoutInSec(profileParameter.getEmailIdVerificationLinkTimeoutInSec())
+					.emailIdChangeLockoutDurationInSec(profileParameter.getEmailIdChangeLockoutDurationInSec())
+					.emailIdChangedDurationInDay(profileParameter.getEmailIdChangedDurationInDay())
+					.emailStatementFlagAttempts(profileParameter.getEmailStatementFlagAttempts()).build();
+		} catch (Exception e) {
+			logger.error("Error : {}", e.getMessage());
+			return null;
+		}
+
+	}
+
 }

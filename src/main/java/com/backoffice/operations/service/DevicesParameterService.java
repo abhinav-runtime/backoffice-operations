@@ -6,4 +6,5 @@ public interface DevicesParameterService {
 	DevicesParameterDto getDevicesParameter();
 	DevicesParameterDto updateDevicesParameter(DevicesParameterDto devicesParameterDto);
 	DevicesParameterDto createDevicesParameter(DevicesParameterDto devicesParameterDto);
+	DevicesParameterDto deleteDevicesParameter();
 }
