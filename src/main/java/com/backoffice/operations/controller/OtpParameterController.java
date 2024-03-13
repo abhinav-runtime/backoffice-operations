@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,7 +22,7 @@ import com.backoffice.operations.service.OtpParameterService;
 @RequestMapping("bo/otp-parameter")
 public class OtpParameterController {
 	@Autowired
-	private OtpParameterService otpParameterService ;
+	private OtpParameterService otpParameterService;
 	@Autowired
 	private BOUserToken boUserToken;
 
@@ -89,6 +90,29 @@ public class OtpParameterController {
 			}
 			response.setData(data);
 			response.setMessage("Otp parameter inserted successfully");
+			response.setStatus("Success");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+	}
+
+	@DeleteMapping("/delete")
+	public ResponseEntity<Object> deleteOtpParameter() {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		if (boUserToken.getRolesFromToken().isEmpty()) {
+			response.setMessage("Something went wrong.");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+		} else {
+			OtpParameterDTO data = otpParameterService.deleteOtpParameter();
+			if (data == null || data.equals(null)) {
+				response.setMessage("Otp parameter not found");
+				response.setStatus("Failure");
+				response.setData(new HashMap<>());
+				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			}
+			response.setData(data);
+			response.setMessage("Otp parameter deleted successfully");
 			response.setStatus("Success");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}

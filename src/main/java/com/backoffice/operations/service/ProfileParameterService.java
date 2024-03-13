@@ -6,4 +6,5 @@ public interface ProfileParameterService {
 	ProfileParameterDto getProfileParameter();
 	ProfileParameterDto updateProfileParameter(ProfileParameterDto profileParameterDto);
 	ProfileParameterDto createProfileParameter(ProfileParameterDto profileParameterDto);
+	ProfileParameterDto deleteProfileParameter();
 }

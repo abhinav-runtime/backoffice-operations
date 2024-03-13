@@ -58,7 +58,8 @@ public class DevicesParameterServiceImp implements DevicesParameterService {
 				devicesParameter.setGooglePlayStoreLink(devicesParameterDto.getGooglePlayStoreLink());
 			}
 			if (devicesParameterDto.getMaxSimultaneousLoggedInDevices() != 0) {
-				devicesParameter.setMaxSimultaneousLoggedInDevices(devicesParameterDto.getMaxSimultaneousLoggedInDevices());
+				devicesParameter
+						.setMaxSimultaneousLoggedInDevices(devicesParameterDto.getMaxSimultaneousLoggedInDevices());
 			}
 			devicesParameter = devicesParameterRepo.save(devicesParameter);
 			return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.isUnsecureDevicesSupport())
@@ -78,9 +79,9 @@ public class DevicesParameterServiceImp implements DevicesParameterService {
 	public DevicesParameterDto createDevicesParameter(DevicesParameterDto devicesParameterDto) {
 		try {
 			List<DevicesParameter> devicesParameterList = devicesParameterRepo.findAll();
-			if (devicesParameterList.size()!=0) {
+			if (devicesParameterList.size() != 0) {
 				return null;
-			}else {
+			} else {
 				DevicesParameter devicesParameter = DevicesParameter.builder()
 						.unsecureDevicesSupport(devicesParameterDto.isUnsecureDevicesSupport())
 						.minRequiredAndroidAppVersion(devicesParameterDto.getMinRequiredAndroidAppVersion())
@@ -103,6 +104,25 @@ public class DevicesParameterServiceImp implements DevicesParameterService {
 			logger.error("Error : {}", e.getMessage());
 			return null;
 		}
+	}
+
+	@Override
+	public DevicesParameterDto deleteDevicesParameter() {
+		try {
+			DevicesParameter devicesParameter = devicesParameterRepo.findAll().get(0);
+			devicesParameterRepo.delete(devicesParameter);
+			return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.isUnsecureDevicesSupport())
+					.minRequiredAndroidAppVersion(devicesParameter.getMinRequiredAndroidAppVersion())
+					.minRequiredIosAppVersion(devicesParameter.getMinRequiredIosAppVersion())
+					.maxAllowedDevices(devicesParameter.getMaxAllowedDevices())
+					.appStoreLink(devicesParameter.getAppStoreLink())
+					.googlePlayStoreLink(devicesParameter.getGooglePlayStoreLink())
+					.maxSimultaneousLoggedInDevices(devicesParameter.getMaxSimultaneousLoggedInDevices()).build();
+		} catch (Exception e) {
+			logger.error("Error : {}", e.getMessage());
+			return null;
+		}
+
 	}
 
 }

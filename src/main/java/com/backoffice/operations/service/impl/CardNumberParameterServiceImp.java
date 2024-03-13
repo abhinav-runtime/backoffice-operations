@@ -87,4 +87,19 @@ public class CardNumberParameterServiceImp implements CardNumberParameterService
 
 	}
 
+	@Override
+	public CardNumberParameterDTO deleteCardNumberParameter() {
+		try {
+			CardNumberParameter cardNumberParameter = cardNumberParameterRepo.findAll().get(0);
+			return CardNumberParameterDTO.builder().cardFirstDigitLength(cardNumberParameter.getCardFirstDigitLength())
+					.cardLastDigitLength(cardNumberParameter.getCardLastDigitLength())
+					.entryTimeOut(cardNumberParameter.getEntryTimeOut()).scanOption(cardNumberParameter.getScanOption())
+					.inputRetryLimit(cardNumberParameter.getInputRetryLimit())
+					.sessionExpireTime(cardNumberParameter.getSessionExpireTime()).build();			
+		} catch (Exception e) {
+			logger.error("Error : {}", e.getMessage());
+			return null;
+		}
+	}
+
 }
