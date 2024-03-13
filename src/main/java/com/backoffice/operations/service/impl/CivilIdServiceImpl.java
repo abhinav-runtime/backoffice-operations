@@ -108,14 +108,25 @@ public class CivilIdServiceImpl implements CivilIdService {
 
     @Override
     public GenericResponseDTO<Object> validateCivilId(String entityId, String token) {
-        long id = 1;
-        CivilIdParameter civilIdParameter = civilIdParameterRepository.findById(id).orElse(null);
+    	GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+//        long id = 1;
+        List<CivilIdParameter> civilIdParameterList = civilIdParameterRepository.findAll();
+		if (civilIdParameterList.size() == 0) {
+            Map<String, String> data = new HashMap<>();
+            data.put("uniqueKey", null);
+            responseDTO.setStatus("Failure");
+            responseDTO.setMessage("Something went wrong");
+            responseDTO.setData(data);
+            return responseDTO;
+		}
+//		CivilIdParameter civilIdParameter = civilIdParameterRepository.findById(id).orElse(null);
+        CivilIdParameter civilIdParameter = civilIdParameterList.get(0);
+        
         int allowedAttempts = civilIdParameter.getCivilIdMaxAttempts();
         int timeoutSeconds = civilIdParameter.getCivilIdCooldownInSec();
 
         String userEmail = jwtTokenProvider.getUsername(token);
         Optional<User> user = userRepository.findByEmail(userEmail);
-        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         AccessToken accessToken;
         try {
             // GET Access token from M2P and save it into the DB.
