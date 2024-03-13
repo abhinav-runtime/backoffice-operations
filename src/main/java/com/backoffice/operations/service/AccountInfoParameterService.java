@@ -6,4 +6,5 @@ public interface AccountInfoParameterService {
 	AccountInfoParameterDto getAccountInfoParameter();
 	AccountInfoParameterDto updateAccountInfoParameter(AccountInfoParameterDto accountInfoParameterDto);
 	AccountInfoParameterDto createAccountInfoParameter(AccountInfoParameterDto accountInfoParameterDto);
+	AccountInfoParameterDto deleteAccountInfoParameter();
 }

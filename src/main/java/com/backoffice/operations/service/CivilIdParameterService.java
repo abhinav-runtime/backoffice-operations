@@ -6,4 +6,5 @@ public interface CivilIdParameterService {
 	CivilIdParameterDTO updateCivilIdParameter(CivilIdParameterDTO requestDto);
 	CivilIdParameterDTO insertCivilIdParameter(CivilIdParameterDTO requestDto);
 	CivilIdParameterDTO getCivilIdParameter();
+	CivilIdParameterDTO deleteCivilIdParameter();
 }

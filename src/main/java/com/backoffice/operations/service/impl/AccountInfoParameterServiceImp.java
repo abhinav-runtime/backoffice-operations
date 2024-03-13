@@ -100,4 +100,21 @@ public class AccountInfoParameterServiceImp implements AccountInfoParameterServi
 		}
 	}
 
+	@Override
+	public AccountInfoParameterDto deleteAccountInfoParameter() {
+		try {
+			AccountInfoParameter accountInfoParameter = accountInfoParameterRepo.findAll().get(0);
+			accountInfoParameterRepo.delete(accountInfoParameter);
+			return AccountInfoParameterDto.builder().nickNameMinLength(accountInfoParameter.getNickNameMinLength())
+					.nickNameMaxLength(accountInfoParameter.getNickNameMaxLength())
+					.noOfTimesUserCanChangeNickName(accountInfoParameter.getNoOfTimesUserCanChangeNickName())
+					.makeAccountVisibleAttempts(accountInfoParameter.getMakeAccountVisibleAttempts())
+					.alertOnTransactions(accountInfoParameter.getAlertOnTransactions())
+					.alertOnLowBalanceAttempts(accountInfoParameter.getAlertOnLowBalanceAttempts()).build();
+		} catch (Exception e) {
+			logger.error("Error : {}", e.getMessage());
+			return null;
+		}
+	}
+
 }

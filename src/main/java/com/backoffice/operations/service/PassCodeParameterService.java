@@ -6,4 +6,5 @@ public interface PassCodeParameterService {
 	public PassCodeParameterDTO getPasscodeParameter();
 	public PassCodeParameterDTO updatePasscodeParameter(PassCodeParameterDTO passcodeDto);
 	public PassCodeParameterDTO createPassCodeParameter(PassCodeParameterDTO passcodeDto);
+	public PassCodeParameterDTO deletePassCodeParameter();
 }

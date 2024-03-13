@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -89,6 +90,29 @@ public class ProfileParameterController {
 			}
 			response.setData(data);
 			response.setMessage("Profile parameter inserted successfully");
+			response.setStatus("Success");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+	}
+	
+	@DeleteMapping("/delete")
+	public ResponseEntity<Object> deleteProfileParameterParameter() {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+		if (boUserToken.getRolesFromToken().isEmpty()) {
+			response.setMessage("Something went wrong.");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+		} else {
+			ProfileParameterDto data = profileParameterService.deleteProfileParameter();
+			if (data == null || data.equals(null)) {
+				response.setMessage("Profile parameter not found");
+				response.setStatus("Failure");
+				response.setData(new HashMap<>());
+				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			}
+			response.setData(data);
+			response.setMessage("Profile parameter deleted successfully");
 			response.setStatus("Success");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}

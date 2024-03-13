@@ -92,4 +92,19 @@ public class PassCodeParameterServiceImp implements PassCodeParameterService {
 		}
 	}
 
+	@Override
+	public PassCodeParameterDTO deletePassCodeParameter() {
+		try {
+			PasscodeParameter passcodeParameter = parameterRepo.findAll().get(0);
+			parameterRepo.delete(passcodeParameter);
+			return PassCodeParameterDTO.builder().passcodeLength(passcodeParameter.getPasscodeLength())
+					.passCodeMaxAttempt(passcodeParameter.getPassCodeMaxAttempt())
+					.lockoutDurationInMin(passcodeParameter.getLockoutDurationInMin())
+					.changePasscodeMaxAttempt(passcodeParameter.getChangePasscodeMaxAttempt())
+					.changePasscodeDurationInDays(passcodeParameter.getChangePasscodeDurationInDays()).build();
+		} catch (Exception e) {
+			logger.error("Error : {}", e.getMessage());
+			return null;
+		}
+	}
 }
