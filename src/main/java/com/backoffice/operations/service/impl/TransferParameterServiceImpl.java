@@ -1,6 +1,7 @@
 package com.backoffice.operations.service.impl;
 
 import com.backoffice.operations.entity.TransferParameter;
+import com.backoffice.operations.exceptions.DuplicateEntryException;
 import com.backoffice.operations.payloads.TransferParameterDTO;
 import com.backoffice.operations.repository.TransferParameterRepository;
 import com.backoffice.operations.service.TransferParameterService;
@@ -9,6 +10,8 @@ import org.hibernate.service.spi.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -59,9 +62,12 @@ public class TransferParameterServiceImpl implements TransferParameterService {
             TransferParameter transferParameter = convertToEntity(transferParameterDTO);
             TransferParameter savedTransferParameter = transferParameterRepository.save(transferParameter);
             return convertToDTO(savedTransferParameter);
+        } catch (DataIntegrityViolationException e) {
+            LOGGER.error("Error occurred while saving TransferParameter", e);
+            throw new DuplicateEntryException("Duplicate entry for key 'az_transfer_parameter_bk.UK_fsuuvpwioaasaw5gju81sdeny'");
         } catch (Exception e) {
             LOGGER.error("Error occurred while saving TransferParameter", e);
-            return null;
+            throw new RuntimeException("Something went wrong");
         }
     }
 
@@ -83,11 +89,20 @@ public class TransferParameterServiceImpl implements TransferParameterService {
     }
 
     @Override
-    public void delete(String id) {
+    public boolean delete(String id) {
         try {
-            transferParameterRepository.deleteById(id);
+            Optional<TransferParameter> optionalTransferParameter = transferParameterRepository.findById(id);
+
+            if (optionalTransferParameter.isPresent()) {
+                transferParameterRepository.deleteById(id);
+                return true; // Deletion successful
+            } else {
+                LOGGER.warn("No TransferParameter found with ID: {}", id);
+                return false; // Entry not found for deletion
+            }
         } catch (Exception e) {
             LOGGER.error("Error occurred while deleting TransferParameter by ID: {}", id, e);
+            return false; // Deletion failed
         }
     }
 

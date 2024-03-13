@@ -15,5 +15,5 @@ public interface CmsControlParameterService {
 
     CmsControlParameterDTO updateParameter(String id, CmsControlParameterDTO parameterDTO);
 
-    void deleteParameter(String id);
+    boolean deleteParameter(String id);
 }

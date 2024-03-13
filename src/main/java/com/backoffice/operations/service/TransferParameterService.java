@@ -14,5 +14,5 @@ public interface TransferParameterService {
 
     TransferParameterDTO update(String id, TransferParameterDTO updatedTransferParameterDTO);
 
-    void delete(String id);
+    boolean delete(String id);
 }
