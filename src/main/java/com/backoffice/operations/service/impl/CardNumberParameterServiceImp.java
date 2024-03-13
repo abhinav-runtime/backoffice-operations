@@ -91,6 +91,7 @@ public class CardNumberParameterServiceImp implements CardNumberParameterService
 	public CardNumberParameterDTO deleteCardNumberParameter() {
 		try {
 			CardNumberParameter cardNumberParameter = cardNumberParameterRepo.findAll().get(0);
+			cardNumberParameterRepo.delete(cardNumberParameter);
 			return CardNumberParameterDTO.builder().cardFirstDigitLength(cardNumberParameter.getCardFirstDigitLength())
 					.cardLastDigitLength(cardNumberParameter.getCardLastDigitLength())
 					.entryTimeOut(cardNumberParameter.getEntryTimeOut()).scanOption(cardNumberParameter.getScanOption())
