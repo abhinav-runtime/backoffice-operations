@@ -380,6 +380,10 @@ public class DashboardServiceImpl implements DashboardService {
             });
 
             accountTransactionsEntityRepository.saveAll(accountTransactionsEntityList);
+            Collections.reverse(accountTransactionsEntities);
+            ArrayList<AccountTransactionResponseDTO.AccountTransaction> reversedList = new ArrayList<>(accountTransactionsEntities);
+            accountTransactionsEntities.clear();
+            accountTransactionsEntities.addAll(reversedList);
             accountTransactionResponseDTOS.setAccountTransactions(accountTransactionsEntities);
             GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
             Map<String, Object> data = new HashMap<>();
