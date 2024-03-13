@@ -7,12 +7,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -23,36 +25,14 @@ public class CardPinParameter {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", unique = true, nullable = false)
     private Long id;
-	
+	private int pinLength;
 	@Column(name = "cardPinMaximumAttempts")
     private int cardPinMaximumAttempts;
-    
+    private int sequentialDigits;
+    private int repetitiveDigits;
+    private int sessionExpiry;
+    private int incorrectPinAttempts;
     @Column(name = "cardPinCooldownInSec")
     private int cardPinCooldownInSec;
-
-    
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public int getCardPinMaximumAttempts() {
-		return cardPinMaximumAttempts;
-	}
-
-	public void setCardPinMaximumAttempts(int cardPinMaximumAttempts) {
-		this.cardPinMaximumAttempts = cardPinMaximumAttempts;
-	}
-
-	public int getCardPinCooldownInSec() {
-		return cardPinCooldownInSec;
-	}
-
-	public void setCardPinCooldownInSec(int cardPinCooldownInSec) {
-		this.cardPinCooldownInSec = cardPinCooldownInSec;
-	}
-    
+    private int pinHistoryDepth;
 }
