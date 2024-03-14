@@ -37,4 +37,10 @@ public class DashboardEntity {
     private double lowBalLimit;
     private String customerNickName;
     private String uniqueKey;
+    private String requestDebitCard;
+    private String requestsChequeBook;
+    private String billPayments;
+    private String transfers;
+    private String editAccountInfo;
+    private String visibility;
 }
