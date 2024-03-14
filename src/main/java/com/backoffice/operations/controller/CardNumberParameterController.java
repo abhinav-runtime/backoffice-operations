@@ -19,7 +19,7 @@ import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.CardNumberParameterService;
 
 @RestController
-@RequestMapping("/bo/cardNumberParameter")
+@RequestMapping("/bo/v1/cardNumberParameter")
 public class CardNumberParameterController {
 	@Autowired
 	private CardNumberParameterService cardNumberParameterService;

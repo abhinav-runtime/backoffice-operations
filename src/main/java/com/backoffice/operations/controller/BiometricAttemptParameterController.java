@@ -13,21 +13,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backoffice.operations.payloads.PassCodeParameterDTO;
+import com.backoffice.operations.payloads.BiometricAttemptParameterDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.security.BOUserToken;
-import com.backoffice.operations.service.PassCodeParameterService;
+import com.backoffice.operations.service.BiometricAttemptService;
 
 @RestController
-@RequestMapping("/bo/v1/passcode-parameter")
-public class PassCodeParameterController {
+@RequestMapping("/bo/v1/biometric-attempt-parameter")
+public class BiometricAttemptParameterController {
 	@Autowired
-	private PassCodeParameterService parameterService;
+	private BiometricAttemptService biometricAttemptService;
 	@Autowired
 	private BOUserToken boUserToken;
 
 	@PutMapping("/update")
-	public ResponseEntity<Object> updatePassCodeParameter(@RequestBody PassCodeParameterDTO requestDto) {
+	public ResponseEntity<Object> updateBiometricAttemptParameter(@RequestBody BiometricAttemptParameterDto requestDto) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -35,22 +35,22 @@ public class PassCodeParameterController {
 			response.setData(new HashMap<>());
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} else {
-			PassCodeParameterDTO data = parameterService.updatePasscodeParameter(requestDto);
+			BiometricAttemptParameterDto data = biometricAttemptService.updateBiometricAttemptParameter(requestDto);
 			if (data == null || data.equals(null)) {
-				response.setMessage("Pass Code parameter not found");
+				response.setMessage("Bimetric Attempt parameter not found");
 				response.setStatus("Failure");
 				response.setData(new HashMap<>());
 				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 			}
 			response.setData(data);
-			response.setMessage("Pass Code parameter updated successfully");
+			response.setMessage("Bimetric Attempt parameter updated successfully");
 			response.setStatus("Success");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
 	@GetMapping("/get")
-	public ResponseEntity<Object> getPassCodeParameter() {
+	public ResponseEntity<Object> getBiometricAttemptParameter() {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -58,22 +58,22 @@ public class PassCodeParameterController {
 			response.setData(new HashMap<>());
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} else {
-			PassCodeParameterDTO data = parameterService.getPasscodeParameter();
+			BiometricAttemptParameterDto data = biometricAttemptService.getBiometricAttemptParameter();
 			if (data == null || data.equals(null)) {
-				response.setMessage("Pass Code parameter not found");
+				response.setMessage("Bimetric Attempt parameter not found");
 				response.setStatus("Failure");
 				response.setData(new HashMap<>());
 				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 			}
 			response.setData(data);
-			response.setMessage("Pass Code parameter fetched successfully");
+			response.setMessage("Bimetric Attempt parameter fetched successfully");
 			response.setStatus("Success");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
 	@PostMapping("/insert")
-	public ResponseEntity<Object> insertPassCodeParameter(@RequestBody PassCodeParameterDTO requestDto) {
+	public ResponseEntity<Object> insertBiometricAttemptParameter(@RequestBody BiometricAttemptParameterDto requestDto) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -81,22 +81,22 @@ public class PassCodeParameterController {
 			response.setData(new HashMap<>());
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} else {
-			PassCodeParameterDTO data = parameterService.createPassCodeParameter(requestDto);
+			BiometricAttemptParameterDto data = biometricAttemptService.createBiometricAttemptParameter(requestDto);
 			if (data == null || data.equals(null)) {
-				response.setMessage("Pass Code parameter already exists");
+				response.setMessage("Bimetric Attempt parameter already exists");
 				response.setStatus("Failure");
 				response.setData(new HashMap<>());
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			}
 			response.setData(data);
-			response.setMessage("Pass Code parameter inserted successfully");
+			response.setMessage("Bimetric Attempt parameter inserted successfully");
 			response.setStatus("Success");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 	
 	@DeleteMapping("/delete")
-	public ResponseEntity<Object> deletePassCodeParameter() {
+	public ResponseEntity<Object> deleteBiometricAttemptParameter() {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -104,15 +104,15 @@ public class PassCodeParameterController {
 			response.setData(new HashMap<>());
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} else {
-			PassCodeParameterDTO data = parameterService.deletePassCodeParameter();
+			BiometricAttemptParameterDto data = biometricAttemptService.deleteBiometricAttemptParameter();
 			if (data == null || data.equals(null)) {
-				response.setMessage("Pass Code parameter not found");
+				response.setMessage("Bimetric Attempt parameter not found");
 				response.setStatus("Failure");
 				response.setData(new HashMap<>());
 				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 			}
 			response.setData(data);
-			response.setMessage("Pass Code parameter deleted successfully");
+			response.setMessage("Bimetric Attempt parameter deleted successfully");
 			response.setStatus("Success");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}

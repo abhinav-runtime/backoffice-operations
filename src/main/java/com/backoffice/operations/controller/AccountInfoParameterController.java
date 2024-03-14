@@ -19,7 +19,7 @@ import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.AccountInfoParameterService;
 
 @RestController
-@RequestMapping("/bo/account-info-parameter")
+@RequestMapping("/bo/v1/account-info-parameter")
 public class AccountInfoParameterController {
 	@Autowired
 	private AccountInfoParameterService accountInfoParameterService;

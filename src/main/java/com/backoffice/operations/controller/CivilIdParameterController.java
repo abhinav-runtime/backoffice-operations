@@ -21,7 +21,7 @@ import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.CivilIdParameterService;
 
 @RestController
-@RequestMapping("/bo/civil-id-parameter")
+@RequestMapping("/bo/v1/civil-id-parameter")
 public class CivilIdParameterController {
 	@Autowired
 	private CivilIdParameterService civilIdParameterService;
