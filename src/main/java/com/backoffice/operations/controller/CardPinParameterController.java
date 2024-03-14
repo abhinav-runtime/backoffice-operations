@@ -19,7 +19,7 @@ import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.CardPinParameterService;
 
 @RestController
-@RequestMapping("/bo/card-pin-parameter")
+@RequestMapping("/bo/v1/card-pin-parameter")
 public class CardPinParameterController {
 	@Autowired
 	private CardPinParameterService cardPinParameterService;

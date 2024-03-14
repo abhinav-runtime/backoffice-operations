@@ -19,7 +19,7 @@ import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.OtpParameterService;
 
 @RestController
-@RequestMapping("bo/otp-parameter")
+@RequestMapping("/bo/v1/otp-parameter")
 public class OtpParameterController {
 	@Autowired
 	private OtpParameterService otpParameterService;

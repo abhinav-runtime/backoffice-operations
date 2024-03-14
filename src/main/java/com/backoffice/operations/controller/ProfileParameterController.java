@@ -19,7 +19,7 @@ import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.ProfileParameterService;
 
 @RestController
-@RequestMapping("/bo/profile-parameter")
+@RequestMapping("/bo/v1/profile-parameter")
 public class ProfileParameterController {
 	@Autowired
 	private ProfileParameterService profileParameterService;

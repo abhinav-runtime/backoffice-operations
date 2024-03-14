@@ -19,7 +19,7 @@ import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.PassCodeParameterService;
 
 @RestController
-@RequestMapping("/bo/passcode-parameter")
+@RequestMapping("/bo/v1/passcode-parameter")
 public class PassCodeParameterController {
 	@Autowired
 	private PassCodeParameterService parameterService;

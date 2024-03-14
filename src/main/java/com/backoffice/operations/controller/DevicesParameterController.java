@@ -19,7 +19,7 @@ import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.DevicesParameterService;
 
 @RestController
-@RequestMapping("/bo/devices-parameter")
+@RequestMapping("/bo/v1/devices-parameter")
 public class DevicesParameterController {
 	@Autowired
 	private DevicesParameterService devicesParameterService;
