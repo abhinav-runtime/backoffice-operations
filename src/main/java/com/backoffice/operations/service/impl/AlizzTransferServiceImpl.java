@@ -58,8 +58,9 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
     private final ApiCaller apiCaller;
 
     private final ObjectMapper objectMapper;
+    private final OtpRepository otpRepository;
 
-    public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository, SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository, SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository, BeneficiaryBankRepository beneficiaryBankRepository, ApiCaller apiCaller, ObjectMapper objectMapper) {
+    public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository, SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository, SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository, BeneficiaryBankRepository beneficiaryBankRepository, ApiCaller apiCaller, ObjectMapper objectMapper, OtpRepository otpRepository) {
         this.commonUtils = commonUtils;
         this.restTemplate = restTemplate;
         this.beneficiaryService = beneficiaryService;
@@ -71,6 +72,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
         this.beneficiaryBankRepository = beneficiaryBankRepository;
         this.apiCaller = apiCaller;
         this.objectMapper = objectMapper;
+        this.otpRepository = otpRepository;
     }
 
     @Override
@@ -78,6 +80,18 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         try{
+
+        OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(alizzTransferRequestDto.getUniqueKey());
+
+        if (!otpEntity.isTransferWithinAlizzValidate()){
+            Map<String, Object> data = new HashMap<>();
+            data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
+            responseDTO.setMessage("OTP verification failed");
+            responseDTO.setStatus("Failure");
+            responseDTO.setData(data);
+            return responseDTO;
+        }
+
         ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
         if (Objects.nonNull(response.getBody())) {
 
