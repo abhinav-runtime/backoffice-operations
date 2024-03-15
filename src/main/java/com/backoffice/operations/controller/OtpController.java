@@ -74,8 +74,8 @@ public class OtpController {
 	}
 
 	@PostMapping("/resend")
-	public ResponseEntity<GenericResponseDTO<Object>> resendOtp(@RequestParam String uniqueKey,
-			@RequestParam String lang,
+	public ResponseEntity<GenericResponseDTO<Object>> resendOtp(@RequestParam(name = "uniqueKey" ) String uniqueKey,
+			@RequestParam(name = "lang") String lang,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		GenericResponseDTO<Object> validationResultDTO = new GenericResponseDTO<>();
 		try {
