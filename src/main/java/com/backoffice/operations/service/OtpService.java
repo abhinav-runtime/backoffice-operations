@@ -10,7 +10,7 @@ public interface OtpService {
 	
 	GenericResponseDTO<Object> validateOtp(OtpRequestDTO otpRequest, String token) throws OtpValidationException;
 
-	GenericResponseDTO<Object> transferOTP(OtpRequestDTO otpRequest, String token) throws OtpValidationException;
+	GenericResponseDTO<Object> transferOTP(String uniqueKey, String otp) throws OtpValidationException;
 	
 	GenericResponseDTO<Object> resendOtp(String uniqueKeyCivilId) throws MaxResendAttemptsException;
     
