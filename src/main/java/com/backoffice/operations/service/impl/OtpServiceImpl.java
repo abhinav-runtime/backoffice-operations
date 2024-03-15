@@ -184,7 +184,7 @@ public class OtpServiceImpl implements OtpService {
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         if (civilIdEntity.isPresent() && user.isPresent()) {
             OtpEntity otpEntity = new OtpEntity();
-            otpEntity.setOtp("1234");
+            otpEntity.setOtp("123456");
 
             if (otpRequest.getOtp() == null) {
                 Map<String, String> data = new HashMap<>();
