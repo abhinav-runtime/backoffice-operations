@@ -77,7 +77,7 @@ public class OtpServiceImpl implements OtpService {
 			Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
 			if (civilIdEntity.isPresent() && user.isPresent()) {
 				OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(otpRequest.getUniqueKey());
-//				otpEntity.setOtp("1234");
+				otpEntity.setOtp("123456");
 
 				if (otpRequest.getOtp() == null) {
 					data.put("uniqueKey", civilIdEntity.get().getId());
@@ -185,11 +185,11 @@ public class OtpServiceImpl implements OtpService {
 		OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
 		int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
 
-		Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
-		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		if (civilIdEntity.isPresent() && user.isPresent()) {
-			OtpEntity otpEntity = new OtpEntity();
-			otpEntity.setOtp("1234");
+        Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        if (civilIdEntity.isPresent() && user.isPresent()) {
+            OtpEntity otpEntity = new OtpEntity();
+            otpEntity.setOtp("123456");
 
 			if (otpRequest.getOtp() == null) {
 				Map<String, String> data = new HashMap<>();
@@ -307,10 +307,10 @@ public class OtpServiceImpl implements OtpService {
 
 	private void generateAndSaveOtp(OtpEntity otpEntity) {
 //		String newOtp = CommonUtils.generateRandomOtp();
-		otpEntity.setOtp("1234");
-		otpEntity.setLastAttemptTime(LocalDateTime.now());
-		otpRepository.save(otpEntity);
-		// Send the OTP to the user (e.g., via SMS, email, etc.)
-	}
+        otpEntity.setOtp("123456");
+        otpEntity.setLastAttemptTime(LocalDateTime.now());
+        otpRepository.save(otpEntity);
+        // Send the OTP to the user (e.g., via SMS, email, etc.)
+    }
 
 }

@@ -383,7 +383,7 @@ public class CivilIdServiceImpl implements CivilIdService {
                 otpEntity.setUniqueKeyCivilId(civilIdEntity.get().getId());
 
 //										String newOtp = CommonUtils.generateRandomOtp();
-                String newOtp = "1234";
+                String newOtp = "123456";
                 otpEntity.setOtp(newOtp);
                 otpEntity.setLastAttemptTime(LocalDateTime.now());
                 otpRepository.save(otpEntity);
