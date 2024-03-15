@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class DevicesParameterDto {
-	boolean unsecureDevicesSupport;
+	Boolean unsecureDevicesSupport;
 	String minRequiredAndroidAppVersion;
 	String minRequiredIosAppVersion;
 	int maxAllowedDevices;

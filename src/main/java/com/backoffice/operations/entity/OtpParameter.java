@@ -1,9 +1,11 @@
 package com.backoffice.operations.entity;
 
-import java.util.Set;
+import com.backoffice.operations.enums.AllowedChannels;
+import com.backoffice.operations.enums.OtpLang;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -35,11 +37,13 @@ public class OtpParameter {
 	@Column(name = "otpAttemptTimeoutInMin", nullable = false)
 	private int attemptTimeOut;
 	@Column(name = "otpLanguage", nullable = false)
-	private Set<String> otpLang;
+	@Enumerated
+	private OtpLang otpLang;
 	@Column(name = "otpLength", nullable = false)
 	private int otpLength;
 	@Column(name = "allowedChannels", nullable = false)
-	private Set<String> allowedChannels;
+	@Enumerated
+	private AllowedChannels allowedChannels;
 	@Column(name = "resendOtpCount", nullable = false)
 	private int otpResend;
 	@Column(name = "otpResendInterval", nullable = false)

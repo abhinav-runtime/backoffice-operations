@@ -16,9 +16,9 @@ public class OtpParameterDTO {
 	int otpValidity;
 	int otpMaxAttempts;
 	int attemptTimeOut;
-	Set<String> otpLang;
+	String otpLang;
 	int otpLength;
-	Set<String> allowedChannels;
+	String allowedChannels;
 	int otpResend;
 	int otpResentTime;
 	int sessionExpiry;

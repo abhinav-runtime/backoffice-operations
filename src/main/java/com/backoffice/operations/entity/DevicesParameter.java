@@ -23,7 +23,7 @@ public class DevicesParameter {
 	@Column(name = "id", unique = true, nullable = false)
 	private Long id;
 	@Column(name = "unsecure_devices_support", nullable = false)
-	private boolean unsecureDevicesSupport;
+	private Boolean unsecureDevicesSupport;
 	@Column(name = "min_required_android_app_version", nullable = false)
 	private String minRequiredAndroidAppVersion;
 	@Column(name = "min_required_ios_app_version", nullable = false)
