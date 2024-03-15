@@ -63,13 +63,13 @@ public class TransferServiceImpl implements TransferService {
     @Override
     public GenericResponseDTO<Object> transferToBank(SelfTransferDTO selfTransferDTO) {
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        Map<String, Object> data = new HashMap<>();
+        String transactionRefcode = "TRST";
+        String refId = String.format("%012d", getNextSequence());
+        String txnRefId = transactionRefcode + refId;
+        String trnxDate = "";
         try {
             TransferRequestDto transferRequestDto = new TransferRequestDto();
-
-            String transactionRefcode = "TRST";
-            String refId = String.format("%012d", getNextSequence());
-            String txnRefId = transactionRefcode + refId;
-            String txnDate = LocalDateTime.now().toString();
 
             //set Sender details
             TransferRequestDto.Sender sender = transferRequestDto.new Sender();
@@ -127,7 +127,7 @@ public class TransferServiceImpl implements TransferService {
             SourceOperation SourceOperation = sourceOperationRepository.findBySourceCode("SelfTransfer");
             header.setSource_operation(SourceOperation.getSourceOperation());
 
-            String trnxDate = commonUtils.getBankDate(selfTransferDTO.getFromAccountNumber().substring(0, 3));
+            trnxDate = commonUtils.getBankDate(selfTransferDTO.getFromAccountNumber().substring(0, 3));
 
             //set transaction
             TransferRequestDto.Transaction transaction = transferRequestDto.new Transaction();
@@ -152,7 +152,14 @@ public class TransferServiceImpl implements TransferService {
             if (avlBalance > selfTransferDTO.getTransactionAmount()) {
                 transaction.setTransaction_amount(selfTransferDTO.getTransactionAmount());
             } else {
-                throw new RuntimeException("Insufficient balance for the transaction");
+                data.put("message", "Payment failed!");
+                data.put("transactionID", txnRefId);
+                data.put("transactionDateTime", trnxDate);
+                data.put("uniqueKey", selfTransferDTO.getUniqueKey());
+                data.put("status", "Failure");
+                responseDTO.setStatus("Success");
+                responseDTO.setMessage("Failure");
+                responseDTO.setData(data);
             }
             transferRequestDto.setSender(sender);
             transferRequestDto.setReceiver(receiver);
@@ -172,42 +179,43 @@ public class TransferServiceImpl implements TransferService {
             HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
             ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(bankTransferUrl, HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
 
-            Map<String, Object> data = new HashMap<>();
-
             FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
             logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
 
-            data = getResponseDto(selfTransferDTO.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId,trnxDate);
-
-            data.put("uniqueKey", selfTransferDTO.getUniqueKey());
-            responseDTO.setStatus("Success");
-            responseDTO.setMessage("Success");
-            responseDTO.setData(data);
+            responseDTO = getResponseDto(selfTransferDTO.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId, trnxDate);
         } catch (Exception e) {
             logger.error("ERROR in class TransferServiceImpl method transferToBank", e);
-            responseDTO.setMessage("Something went wrong");
-            responseDTO.setStatus("Failure");
+            data.put("message", "Payment failed!");
+            data.put("transactionID", txnRefId);
+            data.put("transactionDateTime", trnxDate);
+            data.put("uniqueKey", selfTransferDTO.getUniqueKey());
+            data.put("status", "Failure");
+            responseDTO.setStatus("Success");
+            responseDTO.setMessage("Failure");
+            responseDTO.setData(data);
+            return responseDTO;
         }
         return responseDTO;
     }
 
-    public Map<String, Object> getResponseDto(String uniqueKey, boolean isSuccessful, FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate) throws JsonProcessingException {
+    public GenericResponseDTO<Object> getResponseDto(String uniqueKey, boolean isSuccessful, FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate) throws JsonProcessingException {
 
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         Map<String, Object> data = new HashMap<>();
 
         if (isSuccessful && Objects.nonNull(fundTransferResponseDto) && fundTransferResponseDto.isSuccess()) {
 
-            List<FundTransferResponseDto.Fcubswarningresp> warningResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+            List<FundTransferResponseDto.Fcubswarningresp> warningResponse = Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
                     .getFcubswarningresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubswarningresp() : new ArrayList<>();
 
-            List<FundTransferResponseDto.Fcubserrorresp> errorResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+            List<FundTransferResponseDto.Fcubserrorresp> errorResponse = Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
                     .getFcubserrorresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubserrorresp() : new ArrayList<>();
 
             Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
             String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
 
-            if(errorResponse.isEmpty()){
-                String warningResponseString =  objectMapper.writeValueAsString(!warningResponse.isEmpty() ? warningResponse : "");
+            if (errorResponse.isEmpty()) {
+                String warningResponseString = objectMapper.writeValueAsString(!warningResponse.isEmpty() ? warningResponse : "");
                 Transaction transactionObj = Transaction.builder()
                         .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
                         .txnStatus("Success")
@@ -215,11 +223,15 @@ public class TransferServiceImpl implements TransferService {
                         .txnDate(reqExctnDt).uniqueKey(uniqueKey).build();
 
                 transactionRepository.save(transactionObj);
+                data.put("transactionID", txnRefId);
+                data.put("uniqueKey", uniqueKey);
+                data.put("transactionDateTime", reqExctnDt);
                 data.put("message", "Payment successful!");
-                data.put("transactionID", responseTxnRefNo);
-                data.put("transactionDateTime",reqExctnDt);
-                data.put("warning", warningResponse);
-            }else {
+                data.put("status", "Success");
+                responseDTO.setData(data);
+                responseDTO.setMessage("Success");
+                responseDTO.setStatus("Success");
+            } else {
                 String errorResponseString = objectMapper.writeValueAsString(!errorResponse.isEmpty() ? errorResponse : "");
                 Transaction transactionObj = Transaction.builder()
                         .responseTxnReferenceId(String.valueOf(responseTxnRefNo)).txnReferenceId(txnRefId)
@@ -228,19 +240,24 @@ public class TransferServiceImpl implements TransferService {
                         .txnDate(reqExctnDt).uniqueKey(uniqueKey).build();
 
                 transactionRepository.save(transactionObj);
+                data.put("transactionID", txnRefId);
+                data.put("uniqueKey", uniqueKey);
+                data.put("transactionDateTime", reqExctnDt);
                 data.put("message", "Payment failed!");
-                data.put("transactionID", responseTxnRefNo);
-                data.put("transactionDateTime",reqExctnDt);
+                data.put("status", "Failure");
                 data.put("error", errorResponse);
+                responseDTO.setData(data);
+                responseDTO.setMessage("Failure");
+                responseDTO.setStatus("Success");
             }
         } else if (isSuccessful && Objects.nonNull(fundTransferResponseDto) && !fundTransferResponseDto.isSuccess()) {
             Long responseTxnRefNo = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getGrpTlr().getTxnRefNo();
             String reqExctnDt = fundTransferResponseDto.getResponse().getResult().getCstmrCdtTrfInitn().getPmtInf().getReqdExctnDt();
 
-            List<FundTransferResponseDto.Fcubswarningresp> warningResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+            List<FundTransferResponseDto.Fcubswarningresp> warningResponse = Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
                     .getFcubswarningresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubswarningresp() : new ArrayList<>();
 
-            List<FundTransferResponseDto.Fcubserrorresp> errorResponse =  Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
+            List<FundTransferResponseDto.Fcubserrorresp> errorResponse = Objects.nonNull(fundTransferResponseDto.getResponse().getResult()
                     .getFcubserrorresp()) ? fundTransferResponseDto.getResponse().getResult().getFcubserrorresp() : new ArrayList<>();
 
             String warningResponseString = objectMapper.writeValueAsString(!warningResponse.isEmpty() ? warningResponse : "");
@@ -253,13 +270,17 @@ public class TransferServiceImpl implements TransferService {
                     .txnDate(reqExctnDt).uniqueKey(uniqueKey).build();
 
             transactionRepository.save(transactionObj);
+            data.put("transactionID", txnRefId);
+            data.put("uniqueKey", uniqueKey);
+            data.put("transactionDateTime", reqExctnDt);
             data.put("message", "Payment failed!");
-            data.put("transactionID", responseTxnRefNo);
-            data.put("transactionDateTime",reqExctnDt);
-            data.put("warning", warningResponse);
+            data.put("status", "Failure");
             data.put("error", errorResponse);
+            responseDTO.setData(data);
+            responseDTO.setMessage("Failure");
+            responseDTO.setStatus("Success");
         }
-        return data;
+        return responseDTO;
     }
 
     private Optional<AccountDetails> getTokenAndApiResponse(String civilId) {

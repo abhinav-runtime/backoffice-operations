@@ -18,6 +18,7 @@ public class OtpRequestDTO {
 	private String uniqueKey;
 	private boolean profileValidate;
 	private boolean beneficiaryValidate;
+	private boolean transferWithinAlizzValidate;
 	private String lang;
 
 	public String getLang() {

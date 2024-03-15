@@ -93,6 +93,13 @@ public class DashboardServiceImpl implements DashboardService {
                                 AccountType accountType = getAccountDescription(islamicAccount.getAccls());
                                 String accountCodeDesc = Objects.nonNull(accountType) && Objects.nonNull(accountType.getDescription()) ? accountType.getDescription() : "";
                                 String accNickName = Objects.nonNull(accountType) && Objects.nonNull(accountType.getAccountNickName()) ? accountType.getAccountNickName() : "";
+                                String requestDebitCard = Objects.nonNull(accountType) && Objects.nonNull(accountType.getRequestDebitCard()) ? accountType.getRequestDebitCard() : "N";
+                                String requestsChequeBook = Objects.nonNull(accountType) && Objects.nonNull(accountType.getRequestsChequeBook()) ? accountType.getRequestsChequeBook() : "N";
+                                String billPayments = Objects.nonNull(accountType) && Objects.nonNull(accountType.getBillPayments()) ? accountType.getBillPayments() : "N";
+                                String transfers = Objects.nonNull(accountType) && Objects.nonNull(accountType.getTransfers()) ? accountType.getTransfers() : "N";
+                                String editAccountInfo = Objects.nonNull(accountType) && Objects.nonNull(accountType.getEditAccountInfo()) ? accountType.getEditAccountInfo() : "N";
+                                String visibility = Objects.nonNull(accountType) && Objects.nonNull(accountType.getVisibility()) ? accountType.getVisibility() : "N";
+
                                 DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndUniqueKey(islamicAccount.getAcc(),uniqueKey);
 
                                 DashboardEntity dashboardEntity = DashboardEntity.builder()
@@ -111,6 +118,8 @@ public class DashboardServiceImpl implements DashboardService {
                                         .lowBalLimit(Objects.nonNull(dashboard) ? dashboard.getLowBalLimit() : 0)
                                         .openDate(islamicAccount.getStatsince()).shariaContract("")
                                         .customerNickName(Objects.nonNull(dashboard) ? dashboard.getCustomerNickName() : "")
+                                        .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
+                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility)
                                         .build();
                                 if(Objects.nonNull(dashboard)){
                                     dashboardEntity.setId(dashboard.getId());
@@ -129,7 +138,9 @@ public class DashboardServiceImpl implements DashboardService {
                                         .lowBalLimit(dashboardEntity.getLowBalLimit()).openDate(dashboardEntity.getOpenDate()).shariaContract("")
                                         .customerNickName(dashboardEntity.getCustomerNickName())
                                         .type(account)
-                                        .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "").build();
+                                        .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "")
+                                        .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
+                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility).build();
                             })
                             .collect(Collectors.toList());
 
@@ -138,6 +149,12 @@ public class DashboardServiceImpl implements DashboardService {
                                 AccountType accountType = getAccountDescription(istdDetails.getAccclass());
                                 String accountCodeDesc = Objects.nonNull(accountType) && Objects.nonNull(accountType.getDescription()) ? accountType.getDescription() : "";
                                 String accNickName = Objects.nonNull(accountType) && Objects.nonNull(accountType.getAccountNickName()) ? accountType.getAccountNickName() : "";
+                                String requestDebitCard = Objects.nonNull(accountType) && Objects.nonNull(accountType.getRequestDebitCard()) ? accountType.getRequestDebitCard() : "N";
+                                String requestsChequeBook = Objects.nonNull(accountType) && Objects.nonNull(accountType.getRequestsChequeBook()) ? accountType.getRequestsChequeBook() : "N";
+                                String billPayments = Objects.nonNull(accountType) && Objects.nonNull(accountType.getBillPayments()) ? accountType.getBillPayments() : "N";
+                                String transfers = Objects.nonNull(accountType) && Objects.nonNull(accountType.getTransfers()) ? accountType.getTransfers() : "N";
+                                String editAccountInfo = Objects.nonNull(accountType) && Objects.nonNull(accountType.getEditAccountInfo()) ? accountType.getEditAccountInfo() : "N";
+                                String visibility = Objects.nonNull(accountType) && Objects.nonNull(accountType.getVisibility()) ? accountType.getVisibility() : "N";
 
                                 DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndUniqueKey(istdDetails.getCustacno(),uniqueKey);
 
@@ -157,6 +174,8 @@ public class DashboardServiceImpl implements DashboardService {
                                         .lowBalLimit(Objects.nonNull(dashboard) ? dashboard.getLowBalLimit() : 0)
                                         .openDate(istdDetails.getStatsince()).shariaContract("")
                                         .customerNickName(Objects.nonNull(dashboard) ? dashboard.getCustomerNickName() : "")
+                                        .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
+                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility)
                                         .build();
                                 if(Objects.nonNull(dashboard)){
                                     dashboardEntity.setId(dashboard.getId());
@@ -176,7 +195,10 @@ public class DashboardServiceImpl implements DashboardService {
                                         .lowBalLimit(dashboardEntity.getLowBalLimit()).openDate(dashboardEntity.getOpenDate()).shariaContract("")
                                         .customerNickName(dashboardEntity.getCustomerNickName())
                                         .type(account)
-                                        .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "").build();
+                                        .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "")
+                                        .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
+                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility)
+                                        .build();
                             })
                             .toList();
 

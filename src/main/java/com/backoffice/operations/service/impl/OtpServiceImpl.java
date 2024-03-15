@@ -67,6 +67,115 @@ public class OtpServiceImpl implements OtpService {
         long id = 1;
         String userEmail = jwtTokenProvider.getUsername(token);
         Optional<User> user = userRepository.findByEmail(userEmail);
+        Map<String, String> data = new HashMap<>();
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        try {
+            OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
+            int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
+
+            Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
+            if (civilIdEntity.isPresent() && user.isPresent()) {
+                OtpEntity otpEntity = new OtpEntity();
+                otpEntity.setOtp("1234");
+
+                if (otpRequest.getOtp() == null) {
+                    data.put("uniqueKey", civilIdEntity.get().getId());
+                    responseDTO.setStatus("Failure");
+                    responseDTO.setMessage("Invalid OTP or OTP expired");
+                    responseDTO.setData(data);
+                    return responseDTO;
+                }
+
+                if (!otpEntity.getOtp().equals(otpRequest.getOtp())) {
+                    otpEntity.setAttempts(otpEntity.getAttempts() + 1);
+                    otpEntity.setLastAttemptTime(LocalDateTime.now());
+                    otpRepository.save(otpEntity);
+
+                    if (otpEntity.getAttempts() >= otpMaxAttempts) {
+                        responseDTO.setStatus("Failure");
+                        responseDTO.setMessage("Maximum attempts reached. Please try again later.");
+                        data.put("uniqueKey", civilIdEntity.get().getId());
+                        responseDTO.setData(data);
+                        return responseDTO;
+                    } else {
+                        responseDTO.setStatus("Failure");
+                        responseDTO.setMessage("Invalid OTP. Attempts left: " + (otpMaxAttempts - otpEntity.getAttempts()));
+                        data.put("uniqueKey", civilIdEntity.get().getId());
+                        responseDTO.setData(data);
+                        return responseDTO;
+                    }
+                }
+
+                // Check expiration time (e.g., within the last 10 minutes)
+                LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(10);
+                if (Objects.nonNull(otpEntity.getLastAttemptTime())
+                        && otpEntity.getLastAttemptTime().isBefore(expirationTime)) {
+                    responseDTO.setStatus("Failure");
+                    responseDTO.setMessage("OTP expired. Please request a new OTP.");
+                    data.put("uniqueKey", civilIdEntity.get().getId());
+                    responseDTO.setData(data);
+                    return responseDTO;
+                }
+
+                // OTP validation successful, reset attempts
+                otpEntity.setAttempts(0);
+                otpEntity.setLastAttemptTime(LocalDateTime.now());
+                otpRepository.save(otpEntity);
+                responseDTO.setStatus("Success");
+                responseDTO.setMessage("Success");
+                data.put("uniqueKey", civilIdEntity.get().getId());
+                responseDTO.setData(data);
+
+                if (otpRequest.isProfileValidate()) {
+                    Optional<Profile> profile = profileRepository.findByUserId(user.get().getId());
+                    if (profile.isPresent()) {
+                        UpdateProfileRequestBank updateProfileRequestBank = new UpdateProfileRequestBank();
+                        updateProfileRequestBank.setEmailAddress(profile.get().getEmailId());
+                        updateProfileRequestBank.setMobileNumber(profile.get().getMobNum());
+
+                        ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+                        if (Objects.nonNull(response.getBody())) {
+                            String apiUrl = profileUpdate + profile.get().getNId();
+                            HttpHeaders headers = new HttpHeaders();
+                            headers.setContentType(MediaType.APPLICATION_JSON);
+                            headers.setBearerAuth(response.getBody().getAccessToken());
+                            HttpEntity<UpdateProfileRequestBank> entity = new HttpEntity<>(updateProfileRequestBank, headers);
+
+                            ResponseEntity<Object> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.PUT, entity, Object.class);
+                            if (Objects.nonNull(responseEntity.getBody())) {
+                                user.get().setMobileNumber(updateProfileRequestBank.getMobileNumber());
+                                userRepository.save(user.get());
+                                responseDTO.setStatus("Success");
+                                responseDTO.setMessage("Success");
+                                data.put("uniqueKey", otpRequest.getUniqueKey());
+                                responseDTO.setData(data);
+                                return responseDTO;
+                            }
+                        }
+                    }
+                }
+                return responseDTO;
+            }
+        } catch (Exception e) {
+            logger.error("Error: {}", e.getMessage());
+            data.put("uniqueKey", otpRequest.getUniqueKey());
+            responseDTO.setStatus("Failure");
+            responseDTO.setMessage("Server Error");
+            responseDTO.setData(data);
+            return responseDTO;
+        }
+        data.put("uniqueKey", otpRequest.getUniqueKey());
+        responseDTO.setStatus("Failure");
+        responseDTO.setMessage("Server Error");
+        responseDTO.setData(data);
+        return responseDTO;
+    }
+
+    @Override
+    public GenericResponseDTO<Object> transferOTP(OtpRequestDTO otpRequest, String token) throws OtpValidationException {
+        long id = 1;
+        String userEmail = jwtTokenProvider.getUsername(token);
+        Optional<User> user = userRepository.findByEmail(userEmail);
 
         OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
         int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
@@ -123,6 +232,7 @@ public class OtpServiceImpl implements OtpService {
             // OTP validation successful, reset attempts
             otpEntity.setAttempts(0);
             otpEntity.setLastAttemptTime(LocalDateTime.now());
+            otpEntity.setTransferWithinAlizzValidate(Boolean.TRUE);
             otpRepository.save(otpEntity);
             Map<String, String> data = new HashMap<>();
             responseDTO.setStatus("Success");
@@ -130,34 +240,6 @@ public class OtpServiceImpl implements OtpService {
             data.put("uniqueKey", civilIdEntity.get().getId());
             responseDTO.setData(data);
 
-            if (otpRequest.isProfileValidate()) {
-                Optional<Profile> profile = profileRepository.findByUserId(user.get().getId());
-                if (profile.isPresent()) {
-                    UpdateProfileRequestBank updateProfileRequestBank = new UpdateProfileRequestBank();
-                    updateProfileRequestBank.setEmailAddress(profile.get().getEmailId());
-                    updateProfileRequestBank.setMobileNumber(profile.get().getMobNum());
-
-                    ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-                    if (Objects.nonNull(response.getBody())) {
-                        String apiUrl = profileUpdate + profile.get().getNId();
-                        HttpHeaders headers = new HttpHeaders();
-                        headers.setContentType(MediaType.APPLICATION_JSON);
-                        headers.setBearerAuth(response.getBody().getAccessToken());
-                        HttpEntity<UpdateProfileRequestBank> entity = new HttpEntity<>(updateProfileRequestBank, headers);
-
-                        ResponseEntity<Object> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.PUT, entity, Object.class);
-                        if (Objects.nonNull(responseEntity.getBody())) {
-                            user.get().setMobileNumber(updateProfileRequestBank.getMobileNumber());
-                            userRepository.save(user.get());
-                            responseDTO.setStatus("Success");
-                            responseDTO.setMessage("Success");
-                            data.put("uniqueKey", otpRequest.getUniqueKey());
-                            responseDTO.setData(data);
-                            return responseDTO;
-                        }
-                    }
-                }
-            }
             return responseDTO;
         }
         return responseDTO;
