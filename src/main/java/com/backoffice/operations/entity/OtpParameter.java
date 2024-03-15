@@ -34,12 +34,12 @@ public class OtpParameter {
 	private int otpMaxAttempts;
 	@Column(name = "otpAttemptTimeoutInMin", nullable = false)
 	private int attemptTimeOut;
-	@Column(name = "otpLanguage", nullable = false)
-	private Set<String> otpLang;
+//	@Column(name = "otpLanguage", nullable = false)
+//	private Set<String> otpLang;
 	@Column(name = "otpLength", nullable = false)
 	private int otpLength;
-	@Column(name = "allowedChannels", nullable = false)
-	private Set<String> allowedChannels;
+//	@Column(name = "allowedChannels", nullable = false)
+//	private Set<String> allowedChannels;
 	@Column(name = "resendOtpCount", nullable = false)
 	private int otpResend;
 	@Column(name = "otpResendInterval", nullable = false)

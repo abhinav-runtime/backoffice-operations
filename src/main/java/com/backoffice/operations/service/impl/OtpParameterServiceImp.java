@@ -24,8 +24,10 @@ public class OtpParameterServiceImp implements OtpParameterService {
 			OtpParameter otpParameter = otpParameterRepository.findAll().get(0);
 			return OtpParameterDTO.builder().otpValidity(otpParameter.getOtpValidity())
 					.otpMaxAttempts(otpParameter.getOtpMaxAttempts()).attemptTimeOut(otpParameter.getAttemptTimeOut())
-					.otpLang(otpParameter.getOtpLang()).otpLength(otpParameter.getOtpLength())
-					.allowedChannels(otpParameter.getAllowedChannels()).otpResend(otpParameter.getOtpResend())
+//					.otpLang(otpParameter.getOtpLang())
+					.otpLength(otpParameter.getOtpLength())
+//					.allowedChannels(otpParameter.getAllowedChannels())
+					.otpResend(otpParameter.getOtpResend())
 					.otpResentTime(otpParameter.getOtpResentTime()).sessionExpiry(otpParameter.getSessionExpiry())
 					.build();
 		} catch (Exception e) {
@@ -48,13 +50,13 @@ public class OtpParameterServiceImp implements OtpParameterService {
 				otpParameter.setAttemptTimeOut(otpParameterDTO.getAttemptTimeOut());
 			}
 			if (otpParameterDTO.getOtpLang() != null) {
-				otpParameter.setOtpLang(otpParameterDTO.getOtpLang());
+//				otpParameter.setOtpLang(otpParameterDTO.getOtpLang());
 			}
 			if (otpParameterDTO.getOtpLength() != 0) {
 				otpParameter.setOtpLength(otpParameterDTO.getOtpLength());
 			}
 			if (otpParameterDTO.getAllowedChannels() != null) {
-				otpParameter.setAllowedChannels(otpParameterDTO.getAllowedChannels());
+//				otpParameter.setAllowedChannels(otpParameterDTO.getAllowedChannels());
 			}
 			if (otpParameterDTO.getOtpResend() != 0) {
 				otpParameter.setOtpResend(otpParameterDTO.getOtpResend());
@@ -68,8 +70,10 @@ public class OtpParameterServiceImp implements OtpParameterService {
 			otpParameter = otpParameterRepository.save(otpParameter);
 			return OtpParameterDTO.builder().otpValidity(otpParameter.getOtpValidity())
 					.otpMaxAttempts(otpParameter.getOtpMaxAttempts()).attemptTimeOut(otpParameter.getAttemptTimeOut())
-					.otpLang(otpParameter.getOtpLang()).otpLength(otpParameter.getOtpLength())
-					.allowedChannels(otpParameter.getAllowedChannels()).otpResend(otpParameter.getOtpResend())
+//					.otpLang(otpParameter.getOtpLang())
+					.otpLength(otpParameter.getOtpLength())
+//					.allowedChannels(otpParameter.getAllowedChannels())
+					.otpResend(otpParameter.getOtpResend())
 					.otpResentTime(otpParameter.getOtpResentTime()).sessionExpiry(otpParameter.getSessionExpiry())
 					.build();
 		} catch (Exception e) {
@@ -86,15 +90,19 @@ public class OtpParameterServiceImp implements OtpParameterService {
 			if (otpParameterList.size() == 0) {
 				OtpParameter otpParameter = OtpParameter.builder().otpValidity(otpParameterDTO.getOtpValidity())
 						.otpMaxAttempts(otpParameterDTO.getOtpMaxAttempts())
-						.attemptTimeOut(otpParameterDTO.getAttemptTimeOut()).otpLang(otpParameterDTO.getOtpLang())
-						.otpLength(otpParameterDTO.getOtpLength()).allowedChannels(otpParameterDTO.getAllowedChannels())
+						.attemptTimeOut(otpParameterDTO.getAttemptTimeOut())
+//						.otpLang(otpParameterDTO.getOtpLang())
+						.otpLength(otpParameterDTO.getOtpLength())
+//						.allowedChannels(otpParameterDTO.getAllowedChannels())
 						.otpResend(otpParameterDTO.getOtpResend()).otpResentTime(otpParameterDTO.getOtpResentTime())
 						.sessionExpiry(otpParameterDTO.getSessionExpiry()).build();
 				otpParameter = otpParameterRepository.save(otpParameter);
 				return OtpParameterDTO.builder().otpValidity(otpParameter.getOtpValidity())
 						.otpMaxAttempts(otpParameter.getOtpMaxAttempts())
-						.attemptTimeOut(otpParameter.getAttemptTimeOut()).otpLang(otpParameter.getOtpLang())
-						.otpLength(otpParameter.getOtpLength()).allowedChannels(otpParameter.getAllowedChannels())
+						.attemptTimeOut(otpParameter.getAttemptTimeOut())
+//						.otpLang(otpParameter.getOtpLang())
+						.otpLength(otpParameter.getOtpLength())
+//						.allowedChannels(otpParameter.getAllowedChannels())
 						.otpResend(otpParameter.getOtpResend()).otpResentTime(otpParameter.getOtpResentTime())
 						.sessionExpiry(otpParameter.getSessionExpiry()).build();
 			} else {
@@ -114,8 +122,10 @@ public class OtpParameterServiceImp implements OtpParameterService {
 		otpParameterRepository.delete(otpParameter);
 		return OtpParameterDTO.builder().otpValidity(otpParameter.getOtpValidity())
 				.otpMaxAttempts(otpParameter.getOtpMaxAttempts()).attemptTimeOut(otpParameter.getAttemptTimeOut())
-				.otpLang(otpParameter.getOtpLang()).otpLength(otpParameter.getOtpLength())
-				.allowedChannels(otpParameter.getAllowedChannels()).otpResend(otpParameter.getOtpResend())
+//				.otpLang(otpParameter.getOtpLang())
+				.otpLength(otpParameter.getOtpLength())
+//				.allowedChannels(otpParameter.getAllowedChannels())
+				.otpResend(otpParameter.getOtpResend())
 				.otpResentTime(otpParameter.getOtpResentTime()).sessionExpiry(otpParameter.getSessionExpiry()).build();
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
