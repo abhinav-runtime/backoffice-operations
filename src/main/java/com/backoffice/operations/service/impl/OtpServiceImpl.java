@@ -77,7 +77,7 @@ public class OtpServiceImpl implements OtpService {
 			Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
 			if (civilIdEntity.isPresent() && user.isPresent()) {
 				OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(otpRequest.getUniqueKey());
-				otpEntity.setOtp("123456");
+//				otpEntity.setOtp("123456");
 
 				if (otpRequest.getOtp() == null) {
 					data.put("uniqueKey", civilIdEntity.get().getId());
@@ -178,11 +178,11 @@ public class OtpServiceImpl implements OtpService {
 	@Override
 	public GenericResponseDTO<Object> transferOTP(OtpRequestDTO otpRequest, String token)
 			throws OtpValidationException {
-		long id = 1;
+//		long id = 1;
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 
-		OtpParameter otpParameter = otpParameterRepository.findById(id).orElse(null);
+		OtpParameter otpParameter = otpParameterRepository.findAll().get(0);
 		int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
 
         Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
