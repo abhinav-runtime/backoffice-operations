@@ -22,7 +22,7 @@ public class DevicesParameterServiceImp implements DevicesParameterService {
 	public DevicesParameterDto getDevicesParameter() {
 		try {
 			DevicesParameter devicesParameter = devicesParameterRepo.findAll().get(0);
-			return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.isUnsecureDevicesSupport())
+			return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.getUnsecureDevicesSupport())
 					.minRequiredAndroidAppVersion(devicesParameter.getMinRequiredAndroidAppVersion())
 					.minRequiredIosAppVersion(devicesParameter.getMinRequiredIosAppVersion())
 					.maxAllowedDevices(devicesParameter.getMaxAllowedDevices())
@@ -39,8 +39,8 @@ public class DevicesParameterServiceImp implements DevicesParameterService {
 	public DevicesParameterDto updateDevicesParameter(DevicesParameterDto devicesParameterDto) {
 		try {
 			DevicesParameter devicesParameter = devicesParameterRepo.findAll().get(0);
-			if (devicesParameterDto.isUnsecureDevicesSupport()) {
-				devicesParameter.setUnsecureDevicesSupport(devicesParameterDto.isUnsecureDevicesSupport());
+			if (devicesParameterDto.getUnsecureDevicesSupport() != null ) {
+				devicesParameter.setUnsecureDevicesSupport(devicesParameterDto.getUnsecureDevicesSupport());
 			}
 			if (devicesParameterDto.getMinRequiredAndroidAppVersion() != null) {
 				devicesParameter.setMinRequiredAndroidAppVersion(devicesParameterDto.getMinRequiredAndroidAppVersion());
@@ -62,7 +62,7 @@ public class DevicesParameterServiceImp implements DevicesParameterService {
 						.setMaxSimultaneousLoggedInDevices(devicesParameterDto.getMaxSimultaneousLoggedInDevices());
 			}
 			devicesParameter = devicesParameterRepo.save(devicesParameter);
-			return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.isUnsecureDevicesSupport())
+			return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.getUnsecureDevicesSupport())
 					.minRequiredAndroidAppVersion(devicesParameter.getMinRequiredAndroidAppVersion())
 					.minRequiredIosAppVersion(devicesParameter.getMinRequiredIosAppVersion())
 					.maxAllowedDevices(devicesParameter.getMaxAllowedDevices())
@@ -83,7 +83,7 @@ public class DevicesParameterServiceImp implements DevicesParameterService {
 				return null;
 			} else {
 				DevicesParameter devicesParameter = DevicesParameter.builder()
-						.unsecureDevicesSupport(devicesParameterDto.isUnsecureDevicesSupport())
+						.unsecureDevicesSupport(devicesParameterDto.getUnsecureDevicesSupport())
 						.minRequiredAndroidAppVersion(devicesParameterDto.getMinRequiredAndroidAppVersion())
 						.minRequiredIosAppVersion(devicesParameterDto.getMinRequiredIosAppVersion())
 						.maxAllowedDevices(devicesParameterDto.getMaxAllowedDevices())
@@ -92,7 +92,7 @@ public class DevicesParameterServiceImp implements DevicesParameterService {
 						.maxSimultaneousLoggedInDevices(devicesParameterDto.getMaxSimultaneousLoggedInDevices())
 						.build();
 				devicesParameter = devicesParameterRepo.save(devicesParameter);
-				return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.isUnsecureDevicesSupport())
+				return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.getUnsecureDevicesSupport())
 						.minRequiredAndroidAppVersion(devicesParameter.getMinRequiredAndroidAppVersion())
 						.minRequiredIosAppVersion(devicesParameter.getMinRequiredIosAppVersion())
 						.maxAllowedDevices(devicesParameter.getMaxAllowedDevices())
@@ -111,7 +111,7 @@ public class DevicesParameterServiceImp implements DevicesParameterService {
 		try {
 			DevicesParameter devicesParameter = devicesParameterRepo.findAll().get(0);
 			devicesParameterRepo.delete(devicesParameter);
-			return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.isUnsecureDevicesSupport())
+			return DevicesParameterDto.builder().unsecureDevicesSupport(devicesParameter.getUnsecureDevicesSupport())
 					.minRequiredAndroidAppVersion(devicesParameter.getMinRequiredAndroidAppVersion())
 					.minRequiredIosAppVersion(devicesParameter.getMinRequiredIosAppVersion())
 					.maxAllowedDevices(devicesParameter.getMaxAllowedDevices())
