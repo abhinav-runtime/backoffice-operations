@@ -109,7 +109,7 @@ public class OtpServiceImpl implements OtpService {
 				}
 
 				// Check expiration time (e.g., within the last 10 minutes)
-				LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(10);
+				LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(otpParameter.getAttemptTimeOut());
 				if (Objects.nonNull(otpEntity.getLastAttemptTime())
 						&& otpEntity.getLastAttemptTime().isBefore(expirationTime)) {
 					responseDTO.setStatus("Failure");
