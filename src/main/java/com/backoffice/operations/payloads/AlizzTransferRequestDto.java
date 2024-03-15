@@ -19,4 +19,5 @@ public class AlizzTransferRequestDto {
     private String uniqueKey;
     private String toAccountName;
     private String toBankName;
+    private String otp;
 }

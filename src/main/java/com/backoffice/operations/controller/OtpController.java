@@ -62,17 +62,6 @@ public class OtpController {
 		}
 	}
 
-	@PostMapping("/validate/transferOTP")
-	public ResponseEntity<GenericResponseDTO<Object>> transferOTP(@RequestBody OtpRequestDTO otpRequest, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		GenericResponseDTO<Object> validationResultDTO = new GenericResponseDTO<>();
-		try {
-			validationResultDTO = otpService.transferOTP(otpRequest, token.substring("Bearer ".length()));
-			return ResponseEntity.ok(validationResultDTO);
-		} catch (OtpValidationException e) {
-			return ResponseEntity.ok(validationResultDTO);
-		}
-	}
-
 	@PostMapping("/resend")
 	public ResponseEntity<GenericResponseDTO<Object>> resendOtp(@RequestParam(name = "uniqueKey" ) String uniqueKey,
 			@RequestParam(name = "lang") String lang,
