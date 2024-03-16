@@ -6,6 +6,7 @@ import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.*;
 import com.backoffice.operations.service.AlizzTransferService;
 import com.backoffice.operations.service.BeneficiaryService;
+import com.backoffice.operations.service.OtpService;
 import com.backoffice.operations.utils.ApiCaller;
 import com.backoffice.operations.utils.CommonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -60,7 +62,9 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
     private final ObjectMapper objectMapper;
     private final OtpRepository otpRepository;
 
-    public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository, SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository, SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository, BeneficiaryBankRepository beneficiaryBankRepository, ApiCaller apiCaller, ObjectMapper objectMapper, OtpRepository otpRepository) {
+    private final OtpService otpService;
+
+    public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository, SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository, SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository, BeneficiaryBankRepository beneficiaryBankRepository, ApiCaller apiCaller, ObjectMapper objectMapper, OtpRepository otpRepository, OtpService otpService) {
         this.commonUtils = commonUtils;
         this.restTemplate = restTemplate;
         this.beneficiaryService = beneficiaryService;
@@ -73,6 +77,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
         this.apiCaller = apiCaller;
         this.objectMapper = objectMapper;
         this.otpRepository = otpRepository;
+        this.otpService = otpService;
     }
 
     @Override
@@ -86,99 +91,116 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
         String trnxDate = "";
         try {
 
-            OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(alizzTransferRequestDto.getUniqueKey());
+            if(Objects.nonNull(alizzTransferRequestDto) && StringUtils.hasLength(alizzTransferRequestDto.getOtp())){
+                GenericResponseDTO<Object> validationResultDTO = otpService.transferOTP(alizzTransferRequestDto.getUniqueKey(), alizzTransferRequestDto.getOtp());
 
-            if ((Objects.isNull(otpEntity)) || (Objects.nonNull(otpEntity) && !otpEntity.isTransferWithinAlizzValidate())) {
-                data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
-                responseDTO.setMessage("OTP verification failed");
-                responseDTO.setStatus("Failure");
-                responseDTO.setData(data);
-                return responseDTO;
-            }
+                if(Objects.nonNull(validationResultDTO) && validationResultDTO.getStatus().equalsIgnoreCase("Failure"))
+                    return validationResultDTO;
 
-            ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-            if (Objects.nonNull(response.getBody())) {
+                OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(alizzTransferRequestDto.getUniqueKey());
 
-                trnxDate = commonUtils.getBankDate(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3));
-
-                AlizzTransferResponseDto alizzTransferResponseDto = new AlizzTransferResponseDto();
-
-                HttpHeaders headers = new HttpHeaders();
-                headers.setBearerAuth(response.getBody().getAccessToken());
-
-                TransferAccountFields transferAccountFields = transferAccountFieldsRepository.findByTransferType("WITHIN ALIZZ");
-
-                SourceOperation sourceOperation = sourceOperationRepository.findAll().get(0);
-
-                AccountCurrency accountCurrency = accountCurrencyRepository.findAll().get(0);
-                BeneficiaryBank beneficiaryBank = beneficiaryBankRepository.findByBankName(alizzTransferRequestDto.getToBankName());
-
-                AlizzTransferDto alizzTransferDto = new AlizzTransferDto();
-                AlizzTransferDto.Header header = new AlizzTransferDto.Header();
-                header.setSource_system(sourceOperation.getSourceSystem());
-                header.setSource_user(alizzTransferRequestDto.getUniqueKey());
-                header.setSource_operation(sourceOperation.getSourceOperation());
-
-                AlizzTransferDto.Transaction transaction = getTransactionDetails(alizzTransferRequestDto, txnRefId, accountCurrency, transferAccountFields, trnxDate);
-
-
-                AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount senderAccDetails = getIslamicAccount(alizzTransferRequestDto.getFromAccountNumber());
-
-                if (Objects.isNull(senderAccDetails)) {
-                    return getErrorResponseGenericDTO(alizzTransferRequestDto, "Sender Account Invalid");
-                }
-
-                AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails = getIslamicAccount(alizzTransferRequestDto.getToAccountNumber());
-
-                if (Objects.isNull(receiverAccDetails)) {
-                    return getErrorResponseGenericDTO(alizzTransferRequestDto, "Receiver Account Invalid");
-                }
-
-                AlizzTransferDto.Sender sender = getSenderDetails(alizzTransferRequestDto, senderAccDetails, beneficiaryBank);
-
-                AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto, receiverAccDetails, beneficiaryBank);
-
-                double avlBalance = apiCaller.getAvailableBalance(alizzTransferRequestDto.getFromAccountNumber());
-                if (avlBalance > alizzTransferRequestDto.getTransactionAmount()) {
-                    transaction.setTransactionAmount(alizzTransferRequestDto.getTransactionAmount());
-                } else {
-                    data.put("message", "Payment failed!");
-                    data.put("transactionID", txnRefId);
-                    data.put("transactionDateTime", trnxDate);
+                if ((Objects.isNull(otpEntity)) || (Objects.nonNull(otpEntity) && !otpEntity.isTransferWithinAlizzValidate())) {
                     data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
-                    data.put("status", "Failure");
-                    responseDTO.setStatus("Success");
-                    responseDTO.setMessage("Failure");
+                    responseDTO.setMessage("OTP verification failed");
+                    responseDTO.setStatus("Failure");
                     responseDTO.setData(data);
                     return responseDTO;
                 }
 
-                alizzTransferDto.setSender(sender);
-                alizzTransferDto.setReceiver(receiver);
-                alizzTransferDto.setHeader(header);
-                alizzTransferDto.setTransaction(transaction);
+                ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+                if (Objects.nonNull(response.getBody())) {
 
-                ObjectMapper objectMapper = JsonMapper.builder()
-                        .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                        .build();
-                String jsonRequestBody = objectMapper.writeValueAsString(alizzTransferDto);
-                logger.info("jsonRequestBody: {}", jsonRequestBody);
+                    trnxDate = commonUtils.getBankDate(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3));
 
-                headers.setContentType(MediaType.APPLICATION_JSON);
+                    AlizzTransferResponseDto alizzTransferResponseDto = new AlizzTransferResponseDto();
 
-                HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-                ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(alizzBankTransfer, HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setBearerAuth(response.getBody().getAccessToken());
 
-                if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                    Beneficiary beneficiary = beneficiaryService.addBeneficiary(alizzTransferDto.getReceiver());
-                    alizzTransferResponseDto.setAccountName(beneficiary.getAccountName());
-                    alizzTransferResponseDto.setAccountNumber(beneficiary.getAccountNumber());
-                    alizzTransferResponseDto.setBankName("Alizz bank");
-                    FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
-                    logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
+                    TransferAccountFields transferAccountFields = transferAccountFieldsRepository.findByTransferType("WITHIN ALIZZ");
 
-                    responseDTO = getResponseDto(alizzTransferRequestDto.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId, transaction.getTransactionDate());
+                    SourceOperation sourceOperation = sourceOperationRepository.findAll().get(0);
+
+                    AccountCurrency accountCurrency = accountCurrencyRepository.findAll().get(0);
+                    BeneficiaryBank beneficiaryBank = beneficiaryBankRepository.findByBankName(alizzTransferRequestDto.getToBankName());
+
+                    AlizzTransferDto alizzTransferDto = new AlizzTransferDto();
+                    AlizzTransferDto.Header header = new AlizzTransferDto.Header();
+                    header.setSource_system(sourceOperation.getSourceSystem());
+                    header.setSource_user(alizzTransferRequestDto.getUniqueKey());
+                    header.setSource_operation(sourceOperation.getSourceOperation());
+
+                    AlizzTransferDto.Transaction transaction = getTransactionDetails(alizzTransferRequestDto, txnRefId, accountCurrency, transferAccountFields, trnxDate);
+
+
+                    AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount senderAccDetails = getIslamicAccount(alizzTransferRequestDto.getFromAccountNumber());
+
+                    if (Objects.isNull(senderAccDetails)) {
+                        return getErrorResponseGenericDTO(alizzTransferRequestDto, "Sender Account Invalid");
+                    }
+
+                    AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails = getIslamicAccount(alizzTransferRequestDto.getToAccountNumber());
+
+                    if (Objects.isNull(receiverAccDetails)) {
+                        return getErrorResponseGenericDTO(alizzTransferRequestDto, "Receiver Account Invalid");
+                    }
+
+                    AlizzTransferDto.Sender sender = getSenderDetails(alizzTransferRequestDto, senderAccDetails, beneficiaryBank);
+
+                    AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto, receiverAccDetails, beneficiaryBank);
+
+                    double avlBalance = apiCaller.getAvailableBalance(alizzTransferRequestDto.getFromAccountNumber());
+                    if (avlBalance > alizzTransferRequestDto.getTransactionAmount()) {
+                        transaction.setTransactionAmount(alizzTransferRequestDto.getTransactionAmount());
+                    } else {
+                        data.put("message", "Payment failed!");
+                        data.put("transactionID", txnRefId);
+                        data.put("transactionDateTime", trnxDate);
+                        data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
+                        data.put("status", "Failure");
+                        responseDTO.setStatus("Success");
+                        responseDTO.setMessage("Failure");
+                        responseDTO.setData(data);
+                        return responseDTO;
+                    }
+
+                    alizzTransferDto.setSender(sender);
+                    alizzTransferDto.setReceiver(receiver);
+                    alizzTransferDto.setHeader(header);
+                    alizzTransferDto.setTransaction(transaction);
+
+                    ObjectMapper objectMapper = JsonMapper.builder()
+                            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                            .build();
+                    String jsonRequestBody = objectMapper.writeValueAsString(alizzTransferDto);
+                    logger.info("jsonRequestBody: {}", jsonRequestBody);
+
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+
+                    HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+                    ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(alizzBankTransfer, HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
+
+                    if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                        Beneficiary beneficiary = beneficiaryService.addBeneficiary(alizzTransferDto.getReceiver());
+                        alizzTransferResponseDto.setAccountName(beneficiary.getAccountName());
+                        alizzTransferResponseDto.setAccountNumber(beneficiary.getAccountNumber());
+                        alizzTransferResponseDto.setBankName("Alizz bank");
+                        FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
+                        logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
+
+                        responseDTO = getResponseDto(alizzTransferRequestDto.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId, transaction.getTransactionDate());
+                    }
+                    return responseDTO;
                 }
+            } else {
+                data.put("message", "Payment failed!");
+                data.put("transactionID", txnRefId);
+                data.put("transactionDateTime", trnxDate);
+                data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
+                data.put("status", "Failure");
+                responseDTO.setStatus("Success");
+                responseDTO.setMessage("Failure");
+                responseDTO.setData(data);
                 return responseDTO;
             }
         } catch (Exception e) {

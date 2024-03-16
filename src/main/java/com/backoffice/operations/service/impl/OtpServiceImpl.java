@@ -176,22 +176,19 @@ public class OtpServiceImpl implements OtpService {
 	}
 
 	@Override
-	public GenericResponseDTO<Object> transferOTP(OtpRequestDTO otpRequest, String token)
+	public GenericResponseDTO<Object> transferOTP(String uniqueKey, String otp)
 			throws OtpValidationException {
-//		long id = 1;
-		String userEmail = jwtTokenProvider.getUsername(token);
-		Optional<User> user = userRepository.findByEmail(userEmail);
 
 		OtpParameter otpParameter = otpParameterRepository.findAll().get(0);
 		int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
 
-        Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(otpRequest.getUniqueKey());
+        Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-        if (civilIdEntity.isPresent() && user.isPresent()) {
+        if (civilIdEntity.isPresent()) {
             OtpEntity otpEntity = new OtpEntity();
             otpEntity.setOtp("123456");
 
-			if (otpRequest.getOtp() == null) {
+			if (otp == null) {
 				Map<String, String> data = new HashMap<>();
 				data.put("uniqueKey", civilIdEntity.get().getId());
 				responseDTO.setStatus("Failure");
@@ -200,7 +197,7 @@ public class OtpServiceImpl implements OtpService {
 				return responseDTO;
 			}
 
-			if (!otpEntity.getOtp().equals(otpRequest.getOtp())) {
+			if (!otpEntity.getOtp().equals(otp)) {
 				otpEntity.setAttempts(otpEntity.getAttempts() + 1);
 				otpEntity.setLastAttemptTime(LocalDateTime.now());
 				otpRepository.save(otpEntity);
