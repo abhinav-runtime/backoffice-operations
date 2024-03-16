@@ -97,16 +97,6 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
                 if(Objects.nonNull(validationResultDTO) && validationResultDTO.getStatus().equalsIgnoreCase("Failure"))
                     return validationResultDTO;
 
-                OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(alizzTransferRequestDto.getUniqueKey());
-
-                if ((Objects.isNull(otpEntity)) || (Objects.nonNull(otpEntity) && !otpEntity.isTransferWithinAlizzValidate())) {
-                    data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
-                    responseDTO.setMessage("OTP verification failed");
-                    responseDTO.setStatus("Failure");
-                    responseDTO.setData(data);
-                    return responseDTO;
-                }
-
                 ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
                 if (Objects.nonNull(response.getBody())) {
 

@@ -181,13 +181,10 @@ public class OtpServiceImpl implements OtpService {
 
 		OtpParameter otpParameter = otpParameterRepository.findAll().get(0);
 		int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
-
+		OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(uniqueKey);
         Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         if (civilIdEntity.isPresent()) {
-            OtpEntity otpEntity = new OtpEntity();
-            otpEntity.setOtp("123456");
-
 			if (otp == null) {
 				Map<String, String> data = new HashMap<>();
 				data.put("uniqueKey", civilIdEntity.get().getId());
