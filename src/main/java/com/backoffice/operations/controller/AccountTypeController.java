@@ -4,6 +4,7 @@ import com.backoffice.operations.payloads.AccountTypeDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.AccountTypeService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ public class AccountTypeController {
     }
 
     @GetMapping
-    public GenericResponseDTO<Object> getAllAccountTypes() {
+    public GenericResponseDTO<Object> getAllAccountTypes(@RequestHeader(HttpHeaders.AUTHORIZATION)  String token) {
     	GenericResponseDTO<Object> response = new GenericResponseDTO<>();
     	response.setStatus("Success");
     	response.setMessage("Request retrieved successfully");
@@ -37,7 +38,7 @@ public class AccountTypeController {
     }
 
     @GetMapping("/{productCode}")
-    public GenericResponseDTO<Object> getAccountTypeById(@PathVariable String productCode) {
+    public GenericResponseDTO<Object> getAccountTypeById(@PathVariable String productCode, @RequestHeader(HttpHeaders.AUTHORIZATION)  String token) {
     	GenericResponseDTO<Object> response = new GenericResponseDTO<>();
     	response.setStatus("Success");
     	response.setMessage("Request retrieved successfully");

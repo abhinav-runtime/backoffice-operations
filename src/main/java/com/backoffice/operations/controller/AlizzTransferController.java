@@ -7,6 +7,7 @@ import com.backoffice.operations.service.AlizzTransferService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,27 +16,29 @@ import java.util.Map;
 @RequestMapping("/api/v1/allizTransfer")
 public class AlizzTransferController {
 
-    private final AlizzTransferService alizzTransferService;
+	private final AlizzTransferService alizzTransferService;
 
-    public AlizzTransferController(AlizzTransferService alizzTransferService) {
-        this.alizzTransferService = alizzTransferService;
-    }
+	public AlizzTransferController(AlizzTransferService alizzTransferService) {
+		this.alizzTransferService = alizzTransferService;
+	}
 
-    @PostMapping
-    public ResponseEntity<GenericResponseDTO<Object>> transferToAlizzAccount(@RequestBody AlizzTransferRequestDto alizzTransferRequestDto) throws JsonProcessingException {
-        return ResponseEntity.ok(alizzTransferService.transferToAlizzAccount(alizzTransferRequestDto));
-    }
+	@PostMapping
+	public ResponseEntity<GenericResponseDTO<Object>> transferToAlizzAccount(
+			@RequestBody AlizzTransferRequestDto alizzTransferRequestDto) throws JsonProcessingException {
+		return ResponseEntity.ok(alizzTransferService.transferToAlizzAccount(alizzTransferRequestDto));
+	}
 
-    @GetMapping("/calculateFee")
-    public ResponseEntity<GenericResponseDTO<Object>> calculateFee(@RequestParam String amount, @RequestParam String uniqueKey) {
-        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-        Map<String, Object> data = new HashMap<>();
-        data.put("uniqueKey", uniqueKey);
-        data.put("fee", 0);
-        data.put("amount", amount);
-        responseDTO.setStatus("Success");
-        responseDTO.setMessage("Success");
-        responseDTO.setData(data);
-        return ResponseEntity.ok(responseDTO);
-    }
+	@GetMapping("/calculateFee")
+	public ResponseEntity<GenericResponseDTO<Object>> calculateFee(@RequestParam String amount,
+			@RequestParam String uniqueKey, @RequestHeader(HttpHeaders.AUTHORIZATION)  String token) {
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		Map<String, Object> data = new HashMap<>();
+		data.put("uniqueKey", uniqueKey);
+		data.put("fee", 0);
+		data.put("amount", amount);
+		responseDTO.setStatus("Success");
+		responseDTO.setMessage("Success");
+		responseDTO.setData(data);
+		return ResponseEntity.ok(responseDTO);
+	}
 }

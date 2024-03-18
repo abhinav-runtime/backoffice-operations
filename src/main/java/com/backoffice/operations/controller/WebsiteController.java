@@ -2,6 +2,7 @@ package com.backoffice.operations.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
 
 import com.backoffice.operations.entity.WebsiteEntity;
 import com.backoffice.operations.payloads.WebsiteDTO;
@@ -14,21 +15,22 @@ import java.util.Optional;
 @RequestMapping("/api/website")
 public class WebsiteController {
 
-    @Autowired
-    private WebsiteService websiteService;
+	@Autowired
+	private WebsiteService websiteService;
 
-    @GetMapping
-    public List<WebsiteEntity> getAllWebsites() {
-        return websiteService.findAllWebsites();
-    }
+	@GetMapping
+	public List<WebsiteEntity> getAllWebsites(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		return websiteService.findAllWebsites();
+	}
 
-    @PostMapping
-    public WebsiteEntity createWebsite(@RequestBody WebsiteDTO websiteDTO) {
-        return websiteService.createWebsite(websiteDTO);
-    }
+	@PostMapping
+	public WebsiteEntity createWebsite(@RequestBody WebsiteDTO websiteDTO) {
+		return websiteService.createWebsite(websiteDTO);
+	}
 
-    @GetMapping("/{id}")
-    public Optional<WebsiteEntity> getWebsiteById(@PathVariable String id) {
-        return websiteService.getWebsiteById(id);
-    }
+	@GetMapping("/{id}")
+	public Optional<WebsiteEntity> getWebsiteById(@PathVariable String id,
+			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		return websiteService.getWebsiteById(id);
+	}
 }

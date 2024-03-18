@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
 
 import java.util.List;
 
@@ -20,13 +21,13 @@ public class TestCmsControlParameterController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TestCmsControlParameterDTO>> getAllParameters() {
+    public ResponseEntity<List<TestCmsControlParameterDTO>> getAllParameters(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         List<TestCmsControlParameterDTO> parameters = service.getAllParameters();
         return new ResponseEntity<>(parameters, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TestCmsControlParameterDTO> getParameterById(@PathVariable String id) {
+    public ResponseEntity<TestCmsControlParameterDTO> getParameterById(@PathVariable String id, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         TestCmsControlParameterDTO parameter = service.getParameterById(id);
         if (parameter != null) {
             return new ResponseEntity<>(parameter, HttpStatus.OK);

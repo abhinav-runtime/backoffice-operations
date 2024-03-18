@@ -44,7 +44,7 @@ public class ValidationServiceImpl implements ValidationService {
 
 	@Value("${external.api.m2p.civilId}")
 	private String civilIdExternalAPI;
-
+	
 	public ValidationServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate) {
 		this.commonUtils = commonUtils;
 		this.restTemplate = restTemplate;

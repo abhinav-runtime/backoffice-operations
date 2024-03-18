@@ -30,7 +30,7 @@ public class SystemDetailsController {
     private CivilIdRepository civilIdRepository;
 
     @GetMapping
-    public GenericResponseDTO<Object> getAllSystemDetails() {
+    public GenericResponseDTO<Object> getAllSystemDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
     	GenericResponseDTO<Object> response = new GenericResponseDTO<>();
         List<SystemDetail> systemDetails = systemDetailRepository.findAll();
         response.setStatus("Success");
