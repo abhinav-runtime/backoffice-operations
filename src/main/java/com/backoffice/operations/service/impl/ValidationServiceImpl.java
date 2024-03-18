@@ -33,7 +33,7 @@ import java.util.Optional;
 public class ValidationServiceImpl implements ValidationService {
 	private static final Logger logger = LoggerFactory.getLogger(ValidationServiceImpl.class);
 
-	private final CommonUtils commonUtils;
+//	private final CommonUtils commonUtils;
 	@Autowired
 	private CivilIdRepository civilIdRepository;
 
@@ -44,9 +44,13 @@ public class ValidationServiceImpl implements ValidationService {
 
 	@Value("${external.api.m2p.civilId}")
 	private String civilIdExternalAPI;
+	
+//	public ValidationServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate) {
+//		this.commonUtils = commonUtils;
+//		this.restTemplate = restTemplate;
+//	}
 
-	public ValidationServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate) {
-		this.commonUtils = commonUtils;
+	public ValidationServiceImpl( RestTemplate restTemplate) {
 		this.restTemplate = restTemplate;
 	}
 
@@ -87,10 +91,11 @@ public class ValidationServiceImpl implements ValidationService {
 	}
 
 	private Optional<AccountDetails> getTokenAndApiResponse(String civilId) {
-		ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-		if (Objects.nonNull(response.getBody())) {
+//		ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+//		if (Objects.nonNull(response.getBody())) {
+		if (Objects.nonNull(true)) {
 			HttpHeaders headers = new HttpHeaders();
-			headers.setBearerAuth(response.getBody().getAccessToken());
+//			headers.setBearerAuth(response.getBody().getAccessToken());
 			HttpEntity<String> entity = new HttpEntity<>(headers);
 
 			String apiUrl = accountExternalAPI + civilId;
@@ -103,10 +108,11 @@ public class ValidationServiceImpl implements ValidationService {
 	}
 
 	private String getTokenAndApiResponseForCustomerInformation(String civilId) {
-		ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-		if (Objects.nonNull(response.getBody())) {
+//		ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+//		if (Objects.nonNull(response.getBody())) {
+		if (Objects.nonNull(true)) {
 			HttpHeaders headers = new HttpHeaders();
-			headers.setBearerAuth(response.getBody().getAccessToken());
+//			headers.setBearerAuth(response.getBody().getAccessToken());
 			HttpEntity<String> entity = new HttpEntity<>(headers);
 
 			String apiUrl = civilIdExternalAPI + civilId;

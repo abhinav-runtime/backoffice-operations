@@ -3,6 +3,7 @@ package com.backoffice.operations.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.http.HttpHeaders;
 import com.backoffice.operations.entity.EmailEntity;
 import com.backoffice.operations.payloads.EmailDTO;
 import com.backoffice.operations.service.EmailService;
@@ -18,7 +19,7 @@ public class EmailController {
     private EmailService emailService;
 
     @GetMapping
-    public List<EmailEntity> getAllEmails() {
+    public List<EmailEntity> getAllEmails(@RequestHeader(HttpHeaders.AUTHORIZATION)  String token) {
         return emailService.findAllEmails();
     }
 
@@ -28,7 +29,7 @@ public class EmailController {
     }
 
     @GetMapping("/{id}")
-    public Optional<EmailEntity> getEmailById(@PathVariable String id) {
+    public Optional<EmailEntity> getEmailById(@PathVariable String id, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         return emailService.getEmailById(id);
     }
 }

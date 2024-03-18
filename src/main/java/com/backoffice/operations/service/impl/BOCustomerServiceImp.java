@@ -166,7 +166,11 @@ public class BOCustomerServiceImp implements BOCustomerService {
 			customer.setCountry(country);
 			customer.setDateRegistered(new Date(System.currentTimeMillis()));
 			customer.setCustNo(costNoString);
-			customerRepository.save(customer);
+			if (!customerRepository.existsById(CivilId)) {
+				customerRepository.save(customer);
+			} else {
+				logger.error("Customer already exists with the same civil id: {}", CivilId);
+			}
 
 		} catch (Exception e) {
 			logger.error("Error: {}", e.getMessage());
