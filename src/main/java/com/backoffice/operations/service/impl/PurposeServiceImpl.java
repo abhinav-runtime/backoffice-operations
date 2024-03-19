@@ -37,7 +37,7 @@ public class PurposeServiceImpl implements PurposeService {
 		this.purposeRepository = purposeRepository;
 	}
 
-	@Value("${exteral.api.purpose.network.ach}")
+	@Value("${external.api.purpose.network.ach}")
 	private String apiUrl;
 
 	@Autowired
@@ -46,19 +46,6 @@ public class PurposeServiceImpl implements PurposeService {
 	@Autowired
 	@Qualifier("jwtAuth")
 	private RestTemplate jwtAuthRestTemplate;
-
-	@Override
-	public GenericResponseDTO<Object> getPurposeList() {
-		List<Purpose> purposeList = purposeRepository.findAll();
-
-		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		Map<String, Object> data = new HashMap<>();
-		data.put("purposeList", purposeList);
-		responseDTO.setStatus("Success");
-		responseDTO.setMessage("Success");
-		responseDTO.setData(data);
-		return responseDTO;
-	}
 
 	@Override
 	public GenericResponseDTO<Object> getPurposeNetworkACH() {
