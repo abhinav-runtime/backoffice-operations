@@ -43,4 +43,5 @@ public class DashboardEntity {
     private String transfers;
     private String editAccountInfo;
     private String visibility;
+    private String color;
 }
