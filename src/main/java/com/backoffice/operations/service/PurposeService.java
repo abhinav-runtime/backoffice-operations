@@ -7,6 +7,5 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface PurposeService {
-    GenericResponseDTO<Object> getPurposeList();
 	GenericResponseDTO<Object> getPurposeNetworkACH();
 }

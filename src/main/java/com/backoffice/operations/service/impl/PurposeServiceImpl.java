@@ -48,19 +48,6 @@ public class PurposeServiceImpl implements PurposeService {
 	private RestTemplate jwtAuthRestTemplate;
 
 	@Override
-	public GenericResponseDTO<Object> getPurposeList() {
-		List<Purpose> purposeList = purposeRepository.findAll();
-
-		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		Map<String, Object> data = new HashMap<>();
-		data.put("purposeList", purposeList);
-		responseDTO.setStatus("Success");
-		responseDTO.setMessage("Success");
-		responseDTO.setData(data);
-		return responseDTO;
-	}
-
-	@Override
 	public GenericResponseDTO<Object> getPurposeNetworkACH() {
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		String accessToken = null;
