@@ -158,6 +158,8 @@ public class AnnexureTransferLimitServiceImp implements AnnexureTransferLimitSer
 	public GenericResponseDTO<Object> deleteAnnexureTransferLimits(String id) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<Object>();
 		try {
+			annexureTransferSubLimitsRepo.deleteAllInBatch(annexureTransferSubLimitsRepo
+					.findByAnnexureTransferLimits(annexureTransferLimitsRepo.findById(id).get()));
 			annexureTransferLimitsRepo.deleteById(id);
 			response.setData(new HashMap<>());
 			response.setStatus("Success");
