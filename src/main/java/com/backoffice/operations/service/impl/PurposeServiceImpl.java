@@ -37,7 +37,7 @@ public class PurposeServiceImpl implements PurposeService {
 		this.purposeRepository = purposeRepository;
 	}
 
-	@Value("${exteral.api.purpose.network.ach}")
+	@Value("${external.api.purpose.network.ach}")
 	private String apiUrl;
 
 	@Autowired
