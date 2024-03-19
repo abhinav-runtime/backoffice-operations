@@ -286,6 +286,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		Map<String, String> data = new HashMap<>();
 		try {
 			if (user.isPresent()) {
 				Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(entityIdDTO.getUniqueKey());
@@ -298,6 +299,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 					HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 					ResponseEntity<ExternalApiResponseDTO> responseEntity = basicAuthRestTemplate.exchange(apiUrl,
 							HttpMethod.POST, requestEntity, ExternalApiResponseDTO.class);
+
 					if (Objects.requireNonNull(responseEntity.getBody()).getResult() != null) {
 						List<Card> cardList = responseEntity.getBody().getResult().getCardList();
 						for (Card card : cardList) {
@@ -306,66 +308,52 @@ public class CivilIdServiceImpl implements CivilIdService {
 							if (entityIdDTO.getFirstFourDigitscardNo().equals(actualFirstFourDigits)
 									&& entityIdDTO.getLastFourDigitscardNo().equals(actualLastFourDigits)) {
 								if (card.getStatus().equalsIgnoreCase(CardStatus.LOCKED.name())) {
-									Map<String, String> data = new HashMap<>();
 									responseDTO.setStatus("Success");
 									responseDTO.setMessage("Your card is locked");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
-									return responseDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.BLOCKED.name())) {
-									Map<String, String> data = new HashMap<>();
 									responseDTO.setStatus("Failure");
 									responseDTO.setMessage("Your card is permanently blocked");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
-									return responseDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
 									// send OTP
 									sendOtp(civilIdEntity, responseDTO);
 									CardEntity cardEntity = getCardEntity(card, civilIdEntity, responseEntity);
 									cardRepository.save(cardEntity);
-									Map<String, String> data = new HashMap<>();
 									responseDTO.setStatus("Success");
 									responseDTO.setMessage("Success");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
-									return responseDTO;
 								} else {
-									Map<String, String> data = new HashMap<>();
 									responseDTO.setStatus("Failure");
 									responseDTO.setMessage("Something went wrong");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
-									return responseDTO;
 								}
 							} else {
-								Map<String, String> data = new HashMap<>();
 								responseDTO.setStatus("Failure");
 								responseDTO.setMessage("Please verify card first/last four digits.");
 								data.put("uniqueKey", entityIdDTO.getUniqueKey());
 								responseDTO.setData(data);
-								return responseDTO;
 							}
 						}
 					}
 				} else {
-					Map<String, String> data = new HashMap<>();
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Something went wrong");
 					data.put("uniqueKey", entityIdDTO.getUniqueKey());
 					responseDTO.setData(data);
-					return responseDTO;
 				}
 			}
-			Map<String, String> data = new HashMap<>();
-			responseDTO.setStatus("Failure");
-			responseDTO.setMessage("Something went wrong");
-			data.put("uniqueKey", entityIdDTO.getUniqueKey());
-			responseDTO.setData(data);
+//			responseDTO.setStatus("Failure");
+//			responseDTO.setMessage("Something went wrong");
+//			data.put("uniqueKey", entityIdDTO.getUniqueKey());
+//			responseDTO.setData(data);
 			return responseDTO;
 		} catch (Exception e) {
 			logger.error("ERROR in class CivilIdServiceImpl method verifyCard", e);
-			Map<String, String> data = new HashMap<>();
 			responseDTO.setStatus("Failure");
 			responseDTO.setMessage("Something went wrong");
 			data.put("uniqueKey", entityIdDTO.getUniqueKey());
