@@ -68,6 +68,8 @@ public class AccountTypeServiceImpl implements AccountTypeService {
                 .requestDebitCard(accountType.getRequestDebitCard())
                 .requestsChequeBook(accountType.getRequestsChequeBook())
                 .visibility(accountType.getVisibility())
+                .color(accountType.getColor())
+                .accountNickName(accountType.getAccountNickName())
                 .id(accountType.getId())
                 .transfers(accountType.getTransfers())
                 .build();
@@ -103,6 +105,8 @@ public class AccountTypeServiceImpl implements AccountTypeService {
                 .visibility(Objects.nonNull(accountTypeDto.getVisibility()) ? accountTypeDto.getVisibility() : "")
                 .id(Objects.nonNull(accountTypeDto.getId()) ? accountTypeDto.getId() : "")
                 .transfers(Objects.nonNull(accountTypeDto.getTransfers()) ? accountTypeDto.getTransfers() : "")
+                .accountNickName(Objects.nonNull(accountTypeDto.getAccountNickName()) ? accountTypeDto.getAccountNickName() : "")
+                .color(Objects.nonNull(accountTypeDto.getColor()) ? accountTypeDto.getColor() : "")
                 .build();
     }
 }

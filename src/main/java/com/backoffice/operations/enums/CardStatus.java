@@ -5,5 +5,6 @@ public enum CardStatus {
 	BLOCKED,
     LOCKED,
     ALLOCATED,
+    REPLACED,
 
 }

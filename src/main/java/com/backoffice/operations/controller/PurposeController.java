@@ -24,12 +24,6 @@ public class PurposeController {
 		this.purposeService = purposeService;
 	}
 
-	@GetMapping()
-	public ResponseEntity<GenericResponseDTO<Object>> getPurposeList(
-			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-		return ResponseEntity.ok(purposeService.getPurposeList());
-	}
-
 	@GetMapping("/network/ACH")
 	public ResponseEntity<Object> networkACH(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		return new ResponseEntity<>(purposeService.getPurposeNetworkACH(), HttpStatus.OK);

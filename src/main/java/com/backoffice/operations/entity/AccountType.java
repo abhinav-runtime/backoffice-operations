@@ -30,4 +30,5 @@ public class AccountType {
     private String editAccountInfo;
     private String visibility;
     private String accountNickName;
+    private String color;
 }
