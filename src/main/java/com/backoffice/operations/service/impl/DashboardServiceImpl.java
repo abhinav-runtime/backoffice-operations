@@ -444,7 +444,8 @@ public class DashboardServiceImpl implements DashboardService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.add("TENANT", "ALIZZ_UAT");
-            String apiUrl = externalCardTransactionApiUrl + "?pageNo=0&pageSize=999&txnCategory=spend";
+//            String apiUrl = externalCardTransactionApiUrl + "?pageNo=0&pageSize=999&txnCategory=spend";
+            String apiUrl = externalCardTransactionApiUrl + "?pageNo=0&pageSize=999";
             StringBuilder requestBody = new StringBuilder();
             if (Objects.isNull(fromDate) && Objects.isNull(toDate)) {
                 requestBody.append("{\n" + "\"entityId\": \"").append(civilIdEntity.get().getCivilId()).append("\"\n" + " }");
