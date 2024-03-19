@@ -64,6 +64,9 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
     private final OtpService otpService;
 
+    @Value("${external.charge.api}")
+    private String chargeApi;
+
     public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository, SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository, SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository, BeneficiaryBankRepository beneficiaryBankRepository, ApiCaller apiCaller, ObjectMapper objectMapper, OtpRepository otpRepository, OtpService otpService) {
         this.commonUtils = commonUtils;
         this.restTemplate = restTemplate;
@@ -109,7 +112,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
                     TransferAccountFields transferAccountFields = transferAccountFieldsRepository.findByTransferType("WITHIN ALIZZ");
 
-                    SourceOperation sourceOperation = sourceOperationRepository.findAll().get(0);
+                    SourceOperation sourceOperation = sourceOperationRepository.findBySourceCode("WithinAlizz");
 
                     AccountCurrency accountCurrency = accountCurrencyRepository.findAll().get(0);
                     BeneficiaryBank beneficiaryBank = beneficiaryBankRepository.findByBankName(alizzTransferRequestDto.getToBankName());
@@ -207,6 +210,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
         }
         return responseDTO;
     }
+
 
     public GenericResponseDTO<Object> getResponseDto(String uniqueKey, boolean isSuccessful, FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate) throws JsonProcessingException {
 
@@ -401,4 +405,33 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
         return nextValue;
     }
+
+    @Override
+    public Double calculateFee() throws JsonProcessingException {
+        ResponseEntity<AccessTokenResponse> tokenResponse = commonUtils.getToken();
+
+        if (tokenResponse.getStatusCode().is2xxSuccessful()) {
+            ModuleData data = ModuleData.builder()
+                    .moduleCode("FT").productCode("FT02").customerNumber("000034")
+                    .accountNumber("").fromDate("").toDate("").chequeLeaves("").transactionCurrency("")
+                    .transactionAmount("").tenure(0).eventCode("INIT").build();
+
+            HttpHeaders headers = new HttpHeaders();
+            String jsonRequestBody = objectMapper.writeValueAsString(data);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+
+            ResponseEntity<ChargeApiResponse> chargeResponseEntity = restTemplate.exchange(chargeApi, HttpMethod.POST, requestEntity, ChargeApiResponse.class);
+            logger.info("chargeResponse {}",chargeResponseEntity);
+            if (chargeResponseEntity.getStatusCode().is2xxSuccessful()) {
+                ChargeApiResponse chargeResponse = chargeResponseEntity.getBody();
+                if (chargeResponse != null && chargeResponse.isSuccess()) {
+                    ChargeApiResponse.ChargeSheetEntry chargeEntry = chargeResponse.getChargeSheet().get(0);
+                    return Double.parseDouble(String.valueOf(chargeEntry.getChargeAmount()));
+                }
+            }
+        }
+        return 0.0;
+    }
+
 }
