@@ -18,26 +18,17 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @Table(name = "az_annexure_transfer_limits_bk")
-public class AnnexureTransferLimits {
+public class AnnexureTransferLimits extends DailyTrxnLimitAmt{
 	
 	@Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
 	String id;
-	@Column
-	String globalLimit;
+
 	@Column
 	String segment;
+
 	@Column
-	long minPerTrxnAmt;
-	@Column
-	long maxPerTrxnAmt;
-	@Column
-	long dailyAmt;
-	@Column
-	long monthlyAmt;
-	@Column
-	long dailyCount;
-	@Column
-	long monthlyCount;
+	String globalLimit;
 }
+

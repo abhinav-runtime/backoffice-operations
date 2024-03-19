@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @Table(name = "az_annexure_transfer_with_sub_limits_bk")
-public class AnnexureTransferWithSubLimits {
+public class AnnexureTransferWithSubLimits extends DailyTrxnLimitAmt{
 
 	@Id
 	@GeneratedValue(generator = "uuid")
@@ -30,7 +30,7 @@ public class AnnexureTransferWithSubLimits {
 	
 	@Column
 	private String subTypeLimit;
-	
+
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "annexure_transfer_limits_id", referencedColumnName = "id")
 	private AnnexureTransferLimits annexureTransferLimits;
