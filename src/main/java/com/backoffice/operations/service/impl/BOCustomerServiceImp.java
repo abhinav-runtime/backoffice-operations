@@ -242,22 +242,21 @@ public class BOCustomerServiceImp implements BOCustomerService {
 		BOCustomerDetailsResponseDTO customerResponseDTO = new BOCustomerDetailsResponseDTO();
 		String accessToken = null;
 		try {
-//			ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-//			logger.info("response: {}", response.getBody());
-//
-//			accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
-//			logger.info("accessToken: {}", accessToken);
+			ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+			logger.info("response: {}", response.getBody());
 
-//			String apiUrl = externalApiUrl + custId;
-			String apiUrl = "http://182.18.138.199/chandan/api/v1/customer/nid/" + custId;
+			accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
+			logger.info("accessToken: {}", accessToken);
+
+			String apiUrl = externalApiUrl + custId;
 			HttpHeaders headers = new HttpHeaders();
 			headers.setBearerAuth(accessToken);
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-//			ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
-//					String.class);
-			ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
+			ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
 					String.class);
+//			ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
+//					String.class);
 
 			String jsonResponse = responseEntity.getBody();
 			ObjectMapper mapper = new ObjectMapper();

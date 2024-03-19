@@ -7,5 +7,5 @@ import com.backoffice.operations.payloads.common.GenericResponseDTO;
 
 public interface BoSystemDetailsService {
 	List<BoSystemDetailsResponseDTO> getSystemDetails(String custNo);
-	GenericResponseDTO<Object> getSystemLogs();
+	GenericResponseDTO<Object> getSystemLogs(int page, int size);
 }

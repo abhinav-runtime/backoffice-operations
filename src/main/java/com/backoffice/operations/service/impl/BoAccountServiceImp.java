@@ -1,6 +1,7 @@
 package com.backoffice.operations.service.impl;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.backoffice.operations.payloads.AccessTokenResponse;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.BoAccountService;
 import com.backoffice.operations.utils.CommonUtils;
@@ -43,22 +45,21 @@ public class BoAccountServiceImp implements BoAccountService {
 
 		String accessToken = null;
 		try {
-			// ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-			// logger.info("response: {}", response.getBody());
-			// accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
-			// logger.info("accessToken: {}", accessToken);
+			 ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+			 logger.info("response: {}", response.getBody());
+			 accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
+			 logger.info("accessToken: {}", accessToken);
 
-			// String apiUrl = externalAccountApiUrl + custNo;
-			String apiUrl = "http://182.18.138.199/chandan/api/v1/accounts/" + custNo;
+			 String apiUrl = externalAccountApiUrl + custNo;
 			HttpHeaders headers = new HttpHeaders();
 			headers.setBearerAuth(accessToken);
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-			// ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl,
-			// HttpMethod.GET,
-			// requestEntity, String.class);
-			ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
-					String.class);
+			 ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl,
+			 HttpMethod.GET,
+			 requestEntity, String.class);
+//			ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
+//					String.class);
 
 			String jsonResponse = responseEntity.getBody();
 			ObjectMapper mapper = new ObjectMapper();
