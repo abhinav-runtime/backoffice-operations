@@ -18,5 +18,7 @@ public class AccountTypeDto {
     private String transfers;
     private String editAccountInfo;
     private String visibility;
+    private String accountNickName;
+    private String color;
 }
 

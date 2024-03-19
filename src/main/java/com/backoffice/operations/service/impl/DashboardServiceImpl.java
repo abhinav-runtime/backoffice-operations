@@ -99,6 +99,7 @@ public class DashboardServiceImpl implements DashboardService {
                                 String transfers = Objects.nonNull(accountType) && Objects.nonNull(accountType.getTransfers()) ? accountType.getTransfers() : "N";
                                 String editAccountInfo = Objects.nonNull(accountType) && Objects.nonNull(accountType.getEditAccountInfo()) ? accountType.getEditAccountInfo() : "N";
                                 String visibility = Objects.nonNull(accountType) && Objects.nonNull(accountType.getVisibility()) ? accountType.getVisibility() : "N";
+                                String color = Objects.nonNull(accountType) && Objects.nonNull(accountType.getColor()) ? accountType.getColor() : "";
 
                                 DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndUniqueKey(islamicAccount.getAcc(),uniqueKey);
 
@@ -120,6 +121,7 @@ public class DashboardServiceImpl implements DashboardService {
                                         .customerNickName(Objects.nonNull(dashboard) ? dashboard.getCustomerNickName() : "")
                                         .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
                                         .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility)
+                                        .color(color)
                                         .build();
                                 if(Objects.nonNull(dashboard)){
                                     dashboardEntity.setId(dashboard.getId());
@@ -140,7 +142,7 @@ public class DashboardServiceImpl implements DashboardService {
                                         .type(account)
                                         .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "")
                                         .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
-                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility).build();
+                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility).color(color).build();
                             })
                             .collect(Collectors.toList());
 
@@ -155,6 +157,7 @@ public class DashboardServiceImpl implements DashboardService {
                                 String transfers = Objects.nonNull(accountType) && Objects.nonNull(accountType.getTransfers()) ? accountType.getTransfers() : "N";
                                 String editAccountInfo = Objects.nonNull(accountType) && Objects.nonNull(accountType.getEditAccountInfo()) ? accountType.getEditAccountInfo() : "N";
                                 String visibility = Objects.nonNull(accountType) && Objects.nonNull(accountType.getVisibility()) ? accountType.getVisibility() : "N";
+                                String color = Objects.nonNull(accountType) && Objects.nonNull(accountType.getColor()) ? accountType.getColor() : "";
 
                                 DashboardEntity dashboard = dashboardRepository.findByAccountNumberAndUniqueKey(istdDetails.getCustacno(),uniqueKey);
 
@@ -176,6 +179,7 @@ public class DashboardServiceImpl implements DashboardService {
                                         .customerNickName(Objects.nonNull(dashboard) ? dashboard.getCustomerNickName() : "")
                                         .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
                                         .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility)
+                                        .color(color)
                                         .build();
                                 if(Objects.nonNull(dashboard)){
                                     dashboardEntity.setId(dashboard.getId());
@@ -197,7 +201,7 @@ public class DashboardServiceImpl implements DashboardService {
                                         .type(account)
                                         .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "")
                                         .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
-                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility)
+                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility).color(color)
                                         .build();
                             })
                             .toList();

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backoffice.operations.payloads.BoSystemDetailsResponseDTO;
@@ -45,8 +46,9 @@ public class BoSystemDetailsController {
 	}
 
 	@GetMapping("/system-log")
-	public ResponseEntity<Object> getSystemLog() {
-		GenericResponseDTO<Object> response = boSystemDetailsService.getSystemLogs();
+	public ResponseEntity<Object> getSystemLog(@RequestParam(name = "pageIndex") int pageIndex,
+			@RequestParam(name = "pageSize") int pageSize) {
+		GenericResponseDTO<Object> response = boSystemDetailsService.getSystemLogs(pageIndex, pageSize);
 		if (response.getStatus().equals("Success")) {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
