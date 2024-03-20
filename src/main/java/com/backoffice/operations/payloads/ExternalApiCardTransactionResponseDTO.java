@@ -24,7 +24,7 @@ public class ExternalApiCardTransactionResponseDTO {
 
         private String crDr;
 
-        private String merchantName;
+        private String description;
 
         private String txId;
     }

@@ -20,7 +20,7 @@ public class CardTransactionResponseDTO {
     @Builder
     public static class CardTransaction {
 
-        private String transactionDescription;
+        private String description;
         private Double transactionAmount;
         private LocalDate transactionDate;
         private String indicator;
