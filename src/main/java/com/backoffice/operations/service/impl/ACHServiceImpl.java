@@ -65,7 +65,7 @@ public class ACHServiceImpl implements ACHService {
 
 	private final BankListRepo bankListRepo;
 
-	public ACHServiceImpl(String achBankTransfer, SequenceCounterRepository sequenceCounterRepository, OtpService otpService,
+	public ACHServiceImpl(SequenceCounterRepository sequenceCounterRepository, OtpService otpService,
 						  CommonUtils commonUtils, TransferAccountFieldsRepository transferAccountFieldsRepository,
 						  SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository,
 						  BeneficiaryBankRepository beneficiaryBankRepository, RestTemplate restTemplate, ApiCaller apiCaller,
