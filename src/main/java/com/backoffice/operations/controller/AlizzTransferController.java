@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/allizTransfer")
@@ -30,11 +31,11 @@ public class AlizzTransferController {
 
 	@GetMapping("/calculateFee")
 	public ResponseEntity<GenericResponseDTO<Object>> calculateFee(@RequestParam String amount,
-			@RequestParam String uniqueKey, @RequestHeader(HttpHeaders.AUTHORIZATION)  String token) {
+			@RequestParam String uniqueKey, @RequestHeader(HttpHeaders.AUTHORIZATION)  String token) throws JsonProcessingException {
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		Map<String, Object> data = new HashMap<>();
 		data.put("uniqueKey", uniqueKey);
-		data.put("fee", 0);
+		data.put("fee", Objects.nonNull(alizzTransferService.calculateFee()) ? alizzTransferService.calculateFee() : 0);
 		data.put("amount", amount);
 		responseDTO.setStatus("Success");
 		responseDTO.setMessage("Success");

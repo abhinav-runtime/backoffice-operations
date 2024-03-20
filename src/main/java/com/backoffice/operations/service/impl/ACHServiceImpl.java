@@ -4,7 +4,7 @@ import com.backoffice.operations.entity.*;
 import com.backoffice.operations.payloads.*;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.*;
-import com.backoffice.operations.service.AlizzTransferService;
+import com.backoffice.operations.service.ACHService;
 import com.backoffice.operations.service.BeneficiaryService;
 import com.backoffice.operations.service.OtpService;
 import com.backoffice.operations.utils.ApiCaller;
@@ -19,32 +19,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
-@Service
-public class AlizzTransferServiceImpl implements AlizzTransferService {
+public class ACHServiceImpl implements ACHService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AlizzTransferServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ACHServiceImpl.class);
 
-    @Value("${external.api.transfer.bank}")
-    private String alizzBankTransfer;
+    @Value("${external.api.ach.transfer.bank}")
+    private String achBankTransfer;
+    private final SequenceCounterRepository sequenceCounterRepository;
+
+    private final OtpService otpService;
 
     private final CommonUtils commonUtils;
-
-    private final RestTemplate restTemplate;
-
-    private final BeneficiaryService beneficiaryService;
-
-    @Value("${external.api.accounts}")
-    private String accountExternalAPI;
-
-    @Autowired
-    @Qualifier("jwtAuth")
-    private RestTemplate jwtAuthRestTemplate;
 
     private final TransferAccountFieldsRepository transferAccountFieldsRepository;
 
@@ -52,43 +42,46 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
     private final AccountCurrencyRepository accountCurrencyRepository;
 
-    private final SequenceCounterRepository sequenceCounterRepository;
-    private final TransactionRepository transactionRepository;
-
     private final BeneficiaryBankRepository beneficiaryBankRepository;
+
+    @Value("${external.api.accounts}")
+    private String accountExternalAPI;
+
+    @Qualifier("jwtAuth")
+    @Autowired
+    private RestTemplate jwtAuthRestTemplate;
+
+    private final RestTemplate restTemplate;
 
     private final ApiCaller apiCaller;
 
+    private final BeneficiaryService beneficiaryService;
+
     private final ObjectMapper objectMapper;
-    private final OtpRepository otpRepository;
 
-    private final OtpService otpService;
+    private final TransactionRepository transactionRepository;
 
-    @Value("${external.charge.api}")
-    private String chargeApi;
-
-    public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository, SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository, SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository, BeneficiaryBankRepository beneficiaryBankRepository, ApiCaller apiCaller, ObjectMapper objectMapper, OtpRepository otpRepository, OtpService otpService) {
+    public ACHServiceImpl(SequenceCounterRepository sequenceCounterRepository, OtpService otpService, CommonUtils commonUtils, TransferAccountFieldsRepository transferAccountFieldsRepository, SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository, BeneficiaryBankRepository beneficiaryBankRepository, RestTemplate restTemplate, ApiCaller apiCaller, BeneficiaryService beneficiaryService, ObjectMapper objectMapper, TransactionRepository transactionRepository) {
+        this.sequenceCounterRepository = sequenceCounterRepository;
+        this.otpService = otpService;
         this.commonUtils = commonUtils;
-        this.restTemplate = restTemplate;
-        this.beneficiaryService = beneficiaryService;
         this.transferAccountFieldsRepository = transferAccountFieldsRepository;
         this.sourceOperationRepository = sourceOperationRepository;
         this.accountCurrencyRepository = accountCurrencyRepository;
-        this.sequenceCounterRepository = sequenceCounterRepository;
-        this.transactionRepository = transactionRepository;
         this.beneficiaryBankRepository = beneficiaryBankRepository;
+        this.restTemplate = restTemplate;
         this.apiCaller = apiCaller;
+        this.beneficiaryService = beneficiaryService;
         this.objectMapper = objectMapper;
-        this.otpRepository = otpRepository;
-        this.otpService = otpService;
+        this.transactionRepository = transactionRepository;
     }
 
     @Override
-    public GenericResponseDTO<Object> transferToAlizzAccount(AlizzTransferRequestDto alizzTransferRequestDto) throws JsonProcessingException {
+    public GenericResponseDTO<Object> transferToACHAccount(AlizzTransferRequestDto alizzTransferRequestDto) {
 
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         Map<String, Object> data = new HashMap<>();
-        String transactionRefcode = "TRWA";
+        String transactionRefcode = "TRAH";
         String refId = String.format("%012d", getNextSequence());
         String txnRefId = transactionRefcode + refId;
         String trnxDate = "";
@@ -110,9 +103,9 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
                     HttpHeaders headers = new HttpHeaders();
                     headers.setBearerAuth(response.getBody().getAccessToken());
 
-                    TransferAccountFields transferAccountFields = transferAccountFieldsRepository.findByTransferType("WITHIN ALIZZ");
+                    TransferAccountFields transferAccountFields = transferAccountFieldsRepository.findByTransferType("ACH");
 
-                    SourceOperation sourceOperation = sourceOperationRepository.findBySourceCode("WithinAlizz");
+                    SourceOperation sourceOperation = sourceOperationRepository.findBySourceCode("ach");
 
                     AccountCurrency accountCurrency = accountCurrencyRepository.findAll().get(0);
                     BeneficiaryBank beneficiaryBank = beneficiaryBankRepository.findByBankName(alizzTransferRequestDto.getToBankName());
@@ -171,13 +164,13 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
                     headers.setContentType(MediaType.APPLICATION_JSON);
 
                     HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-                    ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(alizzBankTransfer, HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
+                    ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(achBankTransfer, HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
 
                     if (responseEntity.getStatusCode().is2xxSuccessful()) {
                         Beneficiary beneficiary = beneficiaryService.addBeneficiary(alizzTransferDto.getReceiver());
                         alizzTransferResponseDto.setAccountName(beneficiary.getAccountName());
                         alizzTransferResponseDto.setAccountNumber(beneficiary.getAccountNumber());
-                        alizzTransferResponseDto.setBankName("Alizz bank");
+                        alizzTransferResponseDto.setBankName(alizzTransferRequestDto.getToBankName());
                         FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
                         logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
 
@@ -197,7 +190,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
                 return responseDTO;
             }
         } catch (Exception e) {
-            logger.error("ERROR in class AlizzTransferServiceImpl method transferToAlizzAccount", e);
+            logger.error("ERROR in class ACHServiceImpl method transferToACHAccount", e);
             data.put("message", "Payment failed!");
             data.put("transactionID", txnRefId);
             data.put("transactionDateTime", trnxDate);
@@ -210,7 +203,6 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
         }
         return responseDTO;
     }
-
 
     public GenericResponseDTO<Object> getResponseDto(String uniqueKey, boolean isSuccessful, FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate) throws JsonProcessingException {
 
@@ -353,17 +345,6 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
                 .build();
     }
 
-    private static GenericResponseDTO<Object> getErrorResponseGenericDTO(AlizzTransferRequestDto alizzTransferRequestDto, String Receiver_Account_Invalid) {
-        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-        Map<String, Object> data = new HashMap<>();
-        data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
-        data.put("message", Receiver_Account_Invalid);
-        responseDTO.setStatus("Failure");
-        responseDTO.setMessage("Failure");
-        responseDTO.setData(data);
-        return responseDTO;
-    }
-
     private AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount getIslamicAccount(String accountNumber) {
         String receiverCifNo = accountNumber.substring(3, 10);
         Optional<AccountDetails> receiverAccountInfo = getTokenAndApiResponse(receiverCifNo);
@@ -391,6 +372,16 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
         return Optional.empty();
     }
 
+    private static GenericResponseDTO<Object> getErrorResponseGenericDTO(AlizzTransferRequestDto alizzTransferRequestDto, String Receiver_Account_Invalid) {
+        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+        Map<String, Object> data = new HashMap<>();
+        data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
+        data.put("message", Receiver_Account_Invalid);
+        responseDTO.setStatus("Failure");
+        responseDTO.setMessage("Failure");
+        responseDTO.setData(data);
+        return responseDTO;
+    }
     private synchronized long getNextSequence() {
         SequenceCounter sequenceCounter = sequenceCounterRepository.findById(1L).orElseGet(() -> {
             SequenceCounter newCounter = new SequenceCounter();
@@ -405,33 +396,4 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
         return nextValue;
     }
-
-    @Override
-    public Double calculateFee() throws JsonProcessingException {
-        ResponseEntity<AccessTokenResponse> tokenResponse = commonUtils.getToken();
-
-        if (tokenResponse.getStatusCode().is2xxSuccessful()) {
-            ModuleData data = ModuleData.builder()
-                    .moduleCode("FT").productCode("FT02").customerNumber("000034")
-                    .accountNumber("").fromDate("").toDate("").chequeLeaves("").transactionCurrency("")
-                    .transactionAmount("").tenure(0).eventCode("INIT").build();
-
-            HttpHeaders headers = new HttpHeaders();
-            String jsonRequestBody = objectMapper.writeValueAsString(data);
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-
-            ResponseEntity<ChargeApiResponse> chargeResponseEntity = restTemplate.exchange(chargeApi, HttpMethod.POST, requestEntity, ChargeApiResponse.class);
-            logger.info("chargeResponse {}",chargeResponseEntity);
-            if (chargeResponseEntity.getStatusCode().is2xxSuccessful()) {
-                ChargeApiResponse chargeResponse = chargeResponseEntity.getBody();
-                if (chargeResponse != null && chargeResponse.isSuccess()) {
-                    ChargeApiResponse.ChargeSheetEntry chargeEntry = chargeResponse.getChargeSheet().get(0);
-                    return Double.parseDouble(String.valueOf(chargeEntry.getChargeAmount()));
-                }
-            }
-        }
-        return 0.0;
-    }
-
 }

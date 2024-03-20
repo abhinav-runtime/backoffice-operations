@@ -13,7 +13,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SourceOperation {
+public class  SourceOperation {
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")

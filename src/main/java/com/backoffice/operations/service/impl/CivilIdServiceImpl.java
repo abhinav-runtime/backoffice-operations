@@ -326,7 +326,12 @@ public class CivilIdServiceImpl implements CivilIdService {
 									responseDTO.setMessage("Success");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
-								} else {
+								} else if (card.getStatus().equalsIgnoreCase(CardStatus.REPLACED.name())){
+									responseDTO.setStatus("Failure");
+									responseDTO.setMessage("Kindly use your newly issued Credit Card to onboard yourself into the Application.");
+									data.put("uniqueKey", entityIdDTO.getUniqueKey());
+									responseDTO.setData(data);
+								}else {
 									responseDTO.setStatus("Failure");
 									responseDTO.setMessage("Something went wrong");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
