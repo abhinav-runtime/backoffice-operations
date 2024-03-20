@@ -11,6 +11,6 @@ import org.springframework.stereotype.Service;
 public interface AlizzTransferService {
     GenericResponseDTO<Object> transferToAlizzAccount(AlizzTransferRequestDto alizzTransferRequestDto) throws JsonProcessingException;
 
-    public Double calculateFee() throws JsonProcessingException;
+	public Double calculateFee(String transferType);
 
 }

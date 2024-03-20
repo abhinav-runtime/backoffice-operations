@@ -7,6 +7,8 @@ import com.backoffice.operations.service.AlizzTransferService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 
 import java.util.HashMap;
@@ -16,6 +18,7 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/v1/allizTransfer")
 public class AlizzTransferController {
+	private static final Logger logger = LoggerFactory.getLogger(AlizzTransferController.class);
 
 	private final AlizzTransferService alizzTransferService;
 
@@ -30,16 +33,32 @@ public class AlizzTransferController {
 	}
 
 	@GetMapping("/calculateFee")
-	public ResponseEntity<GenericResponseDTO<Object>> calculateFee(@RequestParam String amount,
-			@RequestParam String uniqueKey, @RequestHeader(HttpHeaders.AUTHORIZATION)  String token) throws JsonProcessingException {
+	public ResponseEntity<GenericResponseDTO<Object>> calculateFee(@RequestParam(name = "amount") String amount,
+			@RequestParam(name = "transferType") String transferType,
+			@RequestParam(name = "uniqueKey") String uniqueKey,
+			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		Map<String, Object> data = new HashMap<>();
-		data.put("uniqueKey", uniqueKey);
-		data.put("fee", Objects.nonNull(alizzTransferService.calculateFee()) ? alizzTransferService.calculateFee() : 0);
-		data.put("amount", amount);
-		responseDTO.setStatus("Success");
-		responseDTO.setMessage("Success");
-		responseDTO.setData(data);
-		return ResponseEntity.ok(responseDTO);
+		// TODO: based on transferType fetch codes from DB. transferType should have 3
+		// enums: SELF/ALIZZ_TRANSFER/ACH_TRANSFER
+		try {
+			Map<String, Object> data = new HashMap<>();
+			data.put("uniqueKey", uniqueKey);
+			data.put("fee",
+					Objects.nonNull(alizzTransferService.calculateFee(transferType))
+							? alizzTransferService.calculateFee(transferType)
+							: 0);
+			data.put("amount", amount);
+			data.put("transferType", transferType);
+			responseDTO.setStatus("Success");
+			responseDTO.setMessage("Success");
+			responseDTO.setData(data);
+			return ResponseEntity.ok(responseDTO);
+		} catch (Exception e) {
+			logger.error("Error while calculating fee : {}", e.getMessage());
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			return ResponseEntity.ok(responseDTO);
+		}
+
 	}
 }
