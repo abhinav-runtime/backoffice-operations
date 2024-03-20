@@ -3,7 +3,6 @@ package com.backoffice.operations.controller;
 import com.backoffice.operations.payloads.AlizzTransferRequestDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.ACHService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
