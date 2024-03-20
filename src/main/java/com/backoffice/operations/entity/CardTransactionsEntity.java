@@ -25,4 +25,5 @@ public class CardTransactionsEntity {
     private LocalDate transactionDate;
     private String indicator;
     private String referenceNumber;
+    private String balance;
 }

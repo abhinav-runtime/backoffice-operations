@@ -289,12 +289,14 @@ public class DashboardServiceImpl implements DashboardService {
                             String creditCardNumber = actualFirstFourDigits + "********" + actualLastFourDigits;
                             Double outStandingAmount = Double.parseDouble(fetchDueResult.getTotalOutStandingAmount());
                             Double availableAmount = Double.parseDouble(fetchBalanceResponseEntity.getBody().getResult().getLimitAvailable());
+                            String status = card.getStatus();
                             CreditCardDetailsResponseDTO creditCardDetailsResponseDTO = new CreditCardDetailsResponseDTO();
                             creditCardDetailsResponseDTO.setAvailableBalance(availableAmount);
                             creditCardDetailsResponseDTO.setOutstandingBalance(outStandingAmount);
                             creditCardDetailsResponseDTO.setCustomerName(customerName);
                             creditCardDetailsResponseDTO.setCreditCardNumber(creditCardNumber);
                             creditCardDetailsResponseDTO.setType(creditCard);
+                            creditCardDetailsResponseDTO.setStatus(status);
                             creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
 
                             DashboardInfoEntity dashboardInfoEntity = DashboardInfoEntity.builder().creditCardNumber(creditCardNumber)
@@ -475,16 +477,17 @@ public class DashboardServiceImpl implements DashboardService {
                     ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
                     LocalDate dt = zonedDateTime.toLocalDate();
                     double amt = Double.parseDouble(txn.getAmount());
-                    String desc = txn.getMerchantName();
+                    String desc = txn.getDescription();
                     String indicator = txn.getCrDr();
                     String refNo = txn.getTxId();
+                    String balance = txn.getAfterTransactionLimit();
                     CardTransactionsEntity cardTransactionsEntity = CardTransactionsEntity.builder()
                             .transactionDate(dt).transactionAmount(amt).transactionDescription(desc)
-                            .referenceNumber(refNo).indicator(indicator).build();
+                            .referenceNumber(refNo).indicator(indicator).balance(balance).build();
                     cardTransactionsEntities.add(cardTransactionsEntity);
                     CardTransactionResponseDTO.CardTransaction cardTransaction = CardTransactionResponseDTO.CardTransaction.builder()
-                            .transactionDate(dt).transactionAmount(amt).transactionDescription(desc).indicator(indicator)
-                            .referenceNumber(refNo).build();
+                            .transactionDate(dt).transactionAmount(amt).description(desc).indicator(indicator)
+                            .referenceNumber(refNo).balance(balance).build();
                     cardTransactionsList.add(cardTransaction);
                 });
                 cardTransactionsEntityRepository.saveAll(cardTransactionsEntities);
@@ -502,8 +505,8 @@ public class DashboardServiceImpl implements DashboardService {
                 GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
                 CardTransactionResponseDTO cardTransactionResponseDTO = CardTransactionResponseDTO.builder()
                         .cardTransactions(List.of(CardTransactionResponseDTO.CardTransaction.builder()
-                                .transactionDate(LocalDate.now()).transactionAmount(0.0).transactionDescription("").indicator("")
-                                .referenceNumber("").build())).build();
+                                .transactionDate(LocalDate.now()).transactionAmount(0.0).description("").indicator("")
+                                .referenceNumber("").balance("").build())).build();
                 Map<String, Object> data = new HashMap<>();
                 data.put("cardTransactions",cardTransactionResponseDTO);
                 data.put("uniqueKey",uniqueKey);
@@ -516,8 +519,8 @@ public class DashboardServiceImpl implements DashboardService {
             GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
             CardTransactionResponseDTO cardTransactionResponseDTO = CardTransactionResponseDTO.builder()
                     .cardTransactions(List.of(CardTransactionResponseDTO.CardTransaction.builder()
-                            .transactionDate(LocalDate.now()).transactionAmount(0.0).transactionDescription("").indicator("")
-                            .referenceNumber("").build())).build();
+                            .transactionDate(LocalDate.now()).transactionAmount(0.0).description("").indicator("")
+                            .referenceNumber("").balance("").build())).build();
             Map<String, Object> data = new HashMap<>();
             data.put("cardTransactions",cardTransactionResponseDTO);
             data.put("uniqueKey",uniqueKey);
