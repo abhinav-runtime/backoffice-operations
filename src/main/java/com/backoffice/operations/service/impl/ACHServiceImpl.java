@@ -19,11 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
+@Service
 public class ACHServiceImpl implements ACHService {
 
 	private static final Logger logger = LoggerFactory.getLogger(ACHServiceImpl.class);
@@ -91,7 +93,6 @@ public class ACHServiceImpl implements ACHService {
 		String txnRefId = transactionRefcode + refId;
 		String trnxDate = "";
 		try {
-
 			if (Objects.nonNull(alizzTransferRequestDto) && StringUtils.hasLength(alizzTransferRequestDto.getOtp())) {
 				GenericResponseDTO<Object> validationResultDTO = otpService
 						.transferOTP(alizzTransferRequestDto.getUniqueKey(), alizzTransferRequestDto.getOtp());
@@ -204,7 +205,7 @@ public class ACHServiceImpl implements ACHService {
 				return responseDTO;
 			}
 		} catch (Exception e) {
-			logger.error("ERROR in class ACHServiceImpl method transferToACHAccount", e);
+			logger.error("ERROR in class ACHServiceImpl method transferToACHAccount : {}", e.getMessage());
 			data.put("message", "Payment failed!");
 			data.put("transactionID", txnRefId);
 			data.put("transactionDateTime", trnxDate);

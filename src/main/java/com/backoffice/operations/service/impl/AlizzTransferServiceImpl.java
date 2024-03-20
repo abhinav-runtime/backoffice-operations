@@ -1,6 +1,7 @@
 package com.backoffice.operations.service.impl;
 
 import com.backoffice.operations.entity.*;
+import com.backoffice.operations.enums.TransferType;
 import com.backoffice.operations.payloads.*;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.*;
@@ -66,6 +67,9 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
 	@Value("${external.charge.api}")
 	private String chargeApi;
+
+	@Autowired
+	private TransactionCodeRepo transactionCodeRepo;
 
 	public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate,
 			BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository,
@@ -447,14 +451,17 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 	}
 
 	@Override
-	public Double calculateFee() {
+	public Double calculateFee(String transferType) {
 		try {
+			TransactionCode transactionCode = transactionCodeRepo
+					.findByTransferType(TransferType.valueOf(transferType));
 			ResponseEntity<AccessTokenResponse> tokenResponse = commonUtils.getToken();
 			logger.info("tokenResponse {}", tokenResponse);
 			if (tokenResponse.getStatusCode().is2xxSuccessful()) {
-				ModuleData data = ModuleData.builder().moduleCode("FT").productCode("FT02").customerNumber("000034")
-						.accountNumber("").fromDate("").toDate("").chequeLeaves("").transactionCurrency("")
-						.transactionAmount("").tenure(0).eventCode("INIT").build();
+				ModuleData data = ModuleData.builder().moduleCode(transactionCode.getCbsModule())
+						.productCode(transactionCode.getCbsProduct()).customerNumber("000034").accountNumber("")
+						.fromDate("").toDate("").chequeLeaves("").transactionCurrency("").transactionAmount("")
+						.tenure(0).eventCode("INIT").build();
 
 				HttpHeaders headers = new HttpHeaders();
 				String accessToken = Objects.requireNonNull(tokenResponse.getBody().getAccessToken());
