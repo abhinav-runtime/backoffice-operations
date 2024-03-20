@@ -31,14 +31,15 @@ public class AlizzTransferController {
 
 	@GetMapping("/calculateFee")
 	public ResponseEntity<GenericResponseDTO<Object>> calculateFee(@RequestParam(name = "amount") String amount,
-			@RequestParam(name = "requestType") String requestType, @RequestParam(name = "uniqueKey") String uniqueKey,
+			@RequestParam(name = "transferType") String transferType, @RequestParam(name = "uniqueKey") String uniqueKey,
 			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws JsonProcessingException {
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		//TODO: based on transferType fetch codes from DB. transferType should have 3 enums: SELF/ALIZZ_TRANSFER/ACH_TRANSFER
 		Map<String, Object> data = new HashMap<>();
 		data.put("uniqueKey", uniqueKey);
 		data.put("fee", Objects.nonNull(alizzTransferService.calculateFee()) ? alizzTransferService.calculateFee() : 0);
 		data.put("amount", amount);
-		data.put("requestType", requestType);
+		data.put("transferType", transferType);
 		responseDTO.setStatus("Success");
 		responseDTO.setMessage("Success");
 		responseDTO.setData(data);
