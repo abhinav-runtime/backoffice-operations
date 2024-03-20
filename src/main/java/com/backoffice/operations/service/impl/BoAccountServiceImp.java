@@ -89,6 +89,7 @@ public class BoAccountServiceImp implements BoAccountService {
 		}
 	}
 
+	@Override
 	public GenericResponseDTO<Object> getTransactionDetails(String accountNumber, String fromDate, String toDate) {
         ResponseEntity<AccessTokenResponse>  response = commonUtils.getToken();
         HttpHeaders headers = new HttpHeaders();
