@@ -2,7 +2,6 @@ package com.backoffice.operations.controller;
 
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.TransferLimitService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +21,7 @@ public class TransferLimitController {
                                                                        @RequestParam String uniqueKey,
                                                                        @RequestParam String transactionType,
                                                                        @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        transferLimitService.getTransferLimit(customerType,uniqueKey,transactionType);
+        transferLimitService.getTransferLimit(customerType,uniqueKey,transactionType, 1000.00);
 
         return null;
     }

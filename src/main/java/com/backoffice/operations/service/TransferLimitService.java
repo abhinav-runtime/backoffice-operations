@@ -5,5 +5,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface TransferLimitService {
-    GenericResponseDTO<Object> getTransferLimit(String customerType, String uniqueKey, String transactionType);
+    GenericResponseDTO<Object> getTransferLimit(String customerType, String uniqueKey, String transactionType, Double transactionAmt);
+
+    void saveUserTrxnLimitData(String uniqueKey, Double dailyTrxnAmt, String accountNumber);
 }
