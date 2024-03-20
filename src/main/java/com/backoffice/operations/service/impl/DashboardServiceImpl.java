@@ -289,12 +289,14 @@ public class DashboardServiceImpl implements DashboardService {
                             String creditCardNumber = actualFirstFourDigits + "********" + actualLastFourDigits;
                             Double outStandingAmount = Double.parseDouble(fetchDueResult.getTotalOutStandingAmount());
                             Double availableAmount = Double.parseDouble(fetchBalanceResponseEntity.getBody().getResult().getLimitAvailable());
+                            String status = card.getStatus();
                             CreditCardDetailsResponseDTO creditCardDetailsResponseDTO = new CreditCardDetailsResponseDTO();
                             creditCardDetailsResponseDTO.setAvailableBalance(availableAmount);
                             creditCardDetailsResponseDTO.setOutstandingBalance(outStandingAmount);
                             creditCardDetailsResponseDTO.setCustomerName(customerName);
                             creditCardDetailsResponseDTO.setCreditCardNumber(creditCardNumber);
                             creditCardDetailsResponseDTO.setType(creditCard);
+                            creditCardDetailsResponseDTO.setStatus(status);
                             creditCardDetailsResponseList.add(creditCardDetailsResponseDTO);
 
                             DashboardInfoEntity dashboardInfoEntity = DashboardInfoEntity.builder().creditCardNumber(creditCardNumber)
