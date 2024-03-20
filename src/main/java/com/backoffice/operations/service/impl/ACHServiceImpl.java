@@ -63,12 +63,15 @@ public class ACHServiceImpl implements ACHService {
 
 	private final TransactionRepository transactionRepository;
 
-	public ACHServiceImpl(SequenceCounterRepository sequenceCounterRepository, OtpService otpService,
-			CommonUtils commonUtils, TransferAccountFieldsRepository transferAccountFieldsRepository,
-			SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository,
-			BeneficiaryBankRepository beneficiaryBankRepository, RestTemplate restTemplate, ApiCaller apiCaller,
-			BeneficiaryService beneficiaryService, ObjectMapper objectMapper,
-			TransactionRepository transactionRepository) {
+	private final BankListRepo bankListRepo;
+
+	public ACHServiceImpl(String achBankTransfer, SequenceCounterRepository sequenceCounterRepository, OtpService otpService,
+						  CommonUtils commonUtils, TransferAccountFieldsRepository transferAccountFieldsRepository,
+						  SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository,
+						  BeneficiaryBankRepository beneficiaryBankRepository, RestTemplate restTemplate, ApiCaller apiCaller,
+						  BeneficiaryService beneficiaryService, ObjectMapper objectMapper,
+						  TransactionRepository transactionRepository, BankListRepo bankListRepo) {
+		this.achBankTransfer = achBankTransfer;
 		this.sequenceCounterRepository = sequenceCounterRepository;
 		this.otpService = otpService;
 		this.commonUtils = commonUtils;
@@ -81,6 +84,7 @@ public class ACHServiceImpl implements ACHService {
 		this.beneficiaryService = beneficiaryService;
 		this.objectMapper = objectMapper;
 		this.transactionRepository = transactionRepository;
+		this.bankListRepo = bankListRepo;
 	}
 
 	@Override
@@ -274,7 +278,7 @@ public class ACHServiceImpl implements ACHService {
 					data.put("transactionDateTime", reqExctnDt);
 					data.put("message", "Payment failed!");
 					data.put("status", "Failure");
-					data.put("error", errorResponse);
+//					data.put("error", errorResponse);
 					responseDTO.setData(data);
 					responseDTO.setMessage("Payment failed!");
 					responseDTO.setStatus("Failure");
@@ -311,7 +315,7 @@ public class ACHServiceImpl implements ACHService {
 				data.put("transactionDateTime", reqExctnDt);
 				data.put("message", "Payment failed!");
 				data.put("status", "Failure");
-				data.put("error", errorResponse);
+//				data.put("error", errorResponse);
 				responseDTO.setData(data);
 				responseDTO.setMessage("Payment failed!");
 				responseDTO.setStatus("Failure");
@@ -333,7 +337,7 @@ public class ACHServiceImpl implements ACHService {
 			return AlizzTransferDto.Receiver.builder().notesToReceiver(alizzTransferRequestDto.getNotesToReceiver())
 					.accountName(receiverAccDetails.getAdesc()).accountNumber(receiverAccDetails.getAcc())
 					.bankCode(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankCode() : "")
-					.bankName(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankName() : "")
+					.bankName(alizzTransferRequestDto.getToBankName())
 					.branchCode(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3)).iBanAccountNumber("")
 					.bankAddress1("Muscat").bankAddress2("Muscat").bankAddress3("Muscat").bankAddress4("Muscat")
 					.beneAddress1("Muscat").beneAddress2("Muscat").beneAddress3("Muscat").beneAddress4("Muscat")
@@ -349,9 +353,11 @@ public class ACHServiceImpl implements ACHService {
 			BeneficiaryBank beneficiaryBank) {
 		try {
 			String senderCifNo = alizzTransferRequestDto.getFromAccountNumber().substring(3, 10);
+			BankList banklist = bankListRepo.findByBankName("Alizz Islamic Bank");
+
 			AlizzTransferDto.Sender sender = AlizzTransferDto.Sender.builder().accountNumber(senderAccDetails.getAcc())
 					.accountCurrency(senderAccDetails.getCcy())
-					.bankCode(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankCode() : "")
+					.bankCode(banklist.getBicCode())
 					.branchCode(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3))
 					.bankName("Alizz Islamic Bank").build();
 
