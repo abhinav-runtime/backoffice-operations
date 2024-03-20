@@ -27,6 +27,8 @@ public class ExternalApiCardTransactionResponseDTO {
         private String description;
 
         private String txId;
+
+        private String afterTransactionLimit;
     }
 
 }
