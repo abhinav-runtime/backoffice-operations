@@ -319,13 +319,12 @@ public class ACHServiceImpl implements ACHService {
 		} catch (Exception e) {
 			logger.error("ERROR on getResponseDto : {}", e.getMessage());
 			responseDTO.setData(new HashMap<>());
-			data.put("transactionID", txnRefId);
 			data.put("uniqueKey", uniqueKey);
 			data.put("message", "Payment failed!");
 			data.put("status", "Failure");
 			responseDTO.setData(data);
 			responseDTO.setMessage("Payment failed!");
-			responseDTO.setStatus("Success");
+			responseDTO.setStatus("Failure");
 		}
 		return responseDTO;
 	}
