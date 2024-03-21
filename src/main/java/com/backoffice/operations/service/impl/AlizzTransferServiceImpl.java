@@ -71,12 +71,14 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 	@Autowired
 	private TransactionCodeRepo transactionCodeRepo;
 
+	private final ProfileRepository profileRepository;
+
 	public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate,
 			BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository,
 			SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository,
 			SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository,
 			BeneficiaryBankRepository beneficiaryBankRepository, ApiCaller apiCaller, ObjectMapper objectMapper,
-			OtpRepository otpRepository, OtpService otpService) {
+			OtpRepository otpRepository, OtpService otpService, ProfileRepository profileRepository) {
 		this.commonUtils = commonUtils;
 		this.restTemplate = restTemplate;
 		this.beneficiaryService = beneficiaryService;
@@ -90,6 +92,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 		this.objectMapper = objectMapper;
 		this.otpRepository = otpRepository;
 		this.otpService = otpService;
+		this.profileRepository = profileRepository;
 	}
 
 	@Override
@@ -451,15 +454,19 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 	}
 
 	@Override
-	public Double calculateFee(String transferType) {
+	public Double calculateFee(String transferType, String uniqueKey) {
 		try {
 			TransactionCode transactionCode = transactionCodeRepo
 					.findByTransferType(TransferType.valueOf(transferType));
 			ResponseEntity<AccessTokenResponse> tokenResponse = commonUtils.getToken();
 			logger.info("tokenResponse {}", tokenResponse);
 			if (tokenResponse.getStatusCode().is2xxSuccessful()) {
+
+				Optional<Profile> profileOptional = profileRepository.findByUniqueKeyCivilId(uniqueKey);
+				Profile profile = profileOptional.orElse(null);
+
 				ModuleData data = ModuleData.builder().moduleCode(transactionCode.getCbsModule())
-						.productCode(transactionCode.getCbsProduct()).customerNumber("000034").accountNumber("")
+						.productCode(transactionCode.getCbsProduct()).customerNumber(Objects.nonNull(profile) ? profile.getNId() : "").accountNumber("")
 						.fromDate("").toDate("").chequeLeaves("").transactionCurrency("").transactionAmount("")
 						.tenure(0).eventCode("INIT").build();
 
