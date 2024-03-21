@@ -71,7 +71,6 @@ public class ACHServiceImpl implements ACHService {
 						  BeneficiaryBankRepository beneficiaryBankRepository, RestTemplate restTemplate, ApiCaller apiCaller,
 						  BeneficiaryService beneficiaryService, ObjectMapper objectMapper,
 						  TransactionRepository transactionRepository, BankListRepo bankListRepo) {
-		this.achBankTransfer = achBankTransfer;
 		this.sequenceCounterRepository = sequenceCounterRepository;
 		this.otpService = otpService;
 		this.commonUtils = commonUtils;
@@ -120,8 +119,6 @@ public class ACHServiceImpl implements ACHService {
 					SourceOperation sourceOperation = sourceOperationRepository.findBySourceCode("ach");
 
 					AccountCurrency accountCurrency = accountCurrencyRepository.findAll().get(0);
-					BeneficiaryBank beneficiaryBank = beneficiaryBankRepository
-							.findByBankName(alizzTransferRequestDto.getToBankName());
 
 					AlizzTransferDto alizzTransferDto = new AlizzTransferDto();
 					AlizzTransferDto.Header header = new AlizzTransferDto.Header();
@@ -146,11 +143,9 @@ public class ACHServiceImpl implements ACHService {
 						return getErrorResponseGenericDTO(alizzTransferRequestDto, "Receiver Account Invalid");
 					}
 
-					AlizzTransferDto.Sender sender = getSenderDetails(alizzTransferRequestDto, senderAccDetails,
-							beneficiaryBank);
+					AlizzTransferDto.Sender sender = getSenderDetails(alizzTransferRequestDto, senderAccDetails);
 
-					AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto, receiverAccDetails,
-							beneficiaryBank);
+					AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto, receiverAccDetails);
 
 					double avlBalance = apiCaller.getAvailableBalance(alizzTransferRequestDto.getFromAccountNumber());
 					if (avlBalance > alizzTransferRequestDto.getTransactionAmount()) {
@@ -281,7 +276,7 @@ public class ACHServiceImpl implements ACHService {
 //					data.put("error", errorResponse);
 					responseDTO.setData(data);
 					responseDTO.setMessage("Payment failed!");
-					responseDTO.setStatus("Failure");
+					responseDTO.setStatus("Success");
 				}
 			} else if (isSuccessful && Objects.nonNull(fundTransferResponseDto)
 					&& !fundTransferResponseDto.isSuccess()) {
@@ -318,29 +313,32 @@ public class ACHServiceImpl implements ACHService {
 //				data.put("error", errorResponse);
 				responseDTO.setData(data);
 				responseDTO.setMessage("Payment failed!");
-				responseDTO.setStatus("Failure");
+				responseDTO.setStatus("Success");
 			}
 		} catch (Exception e) {
 			logger.error("ERROR on getResponseDto : {}", e.getMessage());
 			responseDTO.setData(new HashMap<>());
-			responseDTO.setMessage("Something went wrong!");
+			data.put("uniqueKey", uniqueKey);
+			data.put("message", "Payment failed!");
+			data.put("status", "Failure");
+			responseDTO.setData(data);
+			responseDTO.setMessage("Payment failed!");
 			responseDTO.setStatus("Failure");
 		}
-
 		return responseDTO;
 	}
 
-	private static AlizzTransferDto.Receiver getReceiverDetails(AlizzTransferRequestDto alizzTransferRequestDto,
-			AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails,
-			BeneficiaryBank beneficiaryBank) {
+	private AlizzTransferDto.Receiver getReceiverDetails(AlizzTransferRequestDto alizzTransferRequestDto,
+			AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails) {
 		try {
-			return AlizzTransferDto.Receiver.builder().notesToReceiver(alizzTransferRequestDto.getNotesToReceiver())
-					.accountName(receiverAccDetails.getAdesc()).accountNumber(receiverAccDetails.getAcc())
-					.bankCode(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankCode() : "")
-					.bankName(alizzTransferRequestDto.getToBankName())
-					.branchCode(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3)).iBanAccountNumber("")
-					.bankAddress1("Muscat").bankAddress2("Muscat").bankAddress3("Muscat").bankAddress4("Muscat")
-					.beneAddress1("Muscat").beneAddress2("Muscat").beneAddress3("Muscat").beneAddress4("Muscat")
+			BankList banklist = bankListRepo.findByBicCode(alizzTransferRequestDto.getToBankName());
+			return AlizzTransferDto.Receiver.builder().notesToReceiver("/INT/" + alizzTransferRequestDto.getNotesToReceiver())
+					.accountName(alizzTransferRequestDto.getToAccountName()).accountNumber(receiverAccDetails.getAcc())
+					.bankCode(Objects.nonNull(banklist) ? banklist.getBicCode() : "")
+					.bankName(Objects.nonNull(banklist) ? banklist.getBankName() : "")
+					.branchCode(Objects.nonNull(banklist) ? banklist.getBicCode() : "").iBanAccountNumber("")
+					.bankAddress1("Muscat").bankAddress2("").bankAddress3("").bankAddress4("OM")
+					.beneAddress1("").beneAddress2("").beneAddress3("").beneAddress4("OM")
 					.bankCountry("Oman").build();
 		} catch (Exception e) {
 			logger.error("ERROR on getReceiverDetails : {}", e.getMessage());
@@ -349,8 +347,7 @@ public class ACHServiceImpl implements ACHService {
 	}
 
 	private AlizzTransferDto.Sender getSenderDetails(AlizzTransferRequestDto alizzTransferRequestDto,
-			AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount senderAccDetails,
-			BeneficiaryBank beneficiaryBank) {
+			AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount senderAccDetails) {
 		try {
 			String senderCifNo = alizzTransferRequestDto.getFromAccountNumber().substring(3, 10);
 			BankList banklist = bankListRepo.findByBankName("Alizz Islamic Bank");

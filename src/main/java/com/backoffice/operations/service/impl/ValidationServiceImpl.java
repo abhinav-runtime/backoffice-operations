@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -44,6 +45,10 @@ public class ValidationServiceImpl implements ValidationService {
 
 	@Value("${external.api.m2p.civilId}")
 	private String civilIdExternalAPI;
+
+	@Autowired
+	@Qualifier("jwtAuth")
+	private RestTemplate jwtAuthRestTemplate;
 	
 	public ValidationServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate) {
 		this.commonUtils = commonUtils;
@@ -110,7 +115,7 @@ public class ValidationServiceImpl implements ValidationService {
 			HttpEntity<String> entity = new HttpEntity<>(headers);
 
 			String apiUrl = civilIdExternalAPI + civilId;
-			ResponseEntity<CivilIdAPIResponse> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, entity,
+			ResponseEntity<CivilIdAPIResponse> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity,
 					CivilIdAPIResponse.class);
 			CivilIdAPIResponse apiResponse = responseEntity.getBody();
 			if (apiResponse != null && apiResponse.isSuccess()) {

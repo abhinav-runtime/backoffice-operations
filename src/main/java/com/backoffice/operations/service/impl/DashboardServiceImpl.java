@@ -28,6 +28,9 @@ public class DashboardServiceImpl implements DashboardService {
     @Value("${external.api.accounts}")
     private String accountExternalAPI;
 
+    @Value("${external.api.m2p.civilId}")
+    private String civilIdExternalAPI;
+
     @Value("${external.api.customer.fetchDue}")
     private String creditCardFetchDue;
 
@@ -87,6 +90,7 @@ public class DashboardServiceImpl implements DashboardService {
                     Optional<Profile> profileOptional = profileRepository.findByUniqueKeyCivilId(uniqueKey);
                     Profile profile = profileOptional.orElse(null);
                     String custFullName = Objects.nonNull(profile) ? profile.getFullName() : "";
+                    String cType = getTokenAndApiResponseForCustomerInformation(profile.getNId());
 
                     List<AccountsDetailsResponseDTO> accountsDetailsResponseDTOList = apiResponse.getResponse().getPayload().getCustSummaryDetails().getIslamicAccounts().stream()
                             .map(islamicAccount -> {
@@ -142,7 +146,7 @@ public class DashboardServiceImpl implements DashboardService {
                                         .type(account)
                                         .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "")
                                         .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
-                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility).color(color).build();
+                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility).color(color).customerType(cType).build();
                             })
                             .collect(Collectors.toList());
 
@@ -201,7 +205,7 @@ public class DashboardServiceImpl implements DashboardService {
                                         .type(account)
                                         .accountNickName(Objects.nonNull(dashboardEntity.getAccountNickName()) ? dashboardEntity.getAccountNickName() : "")
                                         .requestDebitCard(requestDebitCard).requestsChequeBook(requestsChequeBook).billPayments(billPayments)
-                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility).color(color)
+                                        .transfers(transfers).editAccountInfo(editAccountInfo).visibility(visibility).color(color).customerType(cType)
                                         .build();
                             })
                             .toList();
@@ -218,6 +222,27 @@ public class DashboardServiceImpl implements DashboardService {
                     return responseDTO;
                 })
                 .orElseGet(() -> createFailureResponse(uniqueKey));
+    }
+
+    private String getTokenAndApiResponseForCustomerInformation(String civilId) {
+        ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+        if (Objects.nonNull(response.getBody())) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(response.getBody().getAccessToken());
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            String apiUrl = civilIdExternalAPI + civilId;
+            ResponseEntity<CivilIdAPIResponse> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET, entity,
+                    CivilIdAPIResponse.class);
+            CivilIdAPIResponse apiResponse = responseEntity.getBody();
+            if (apiResponse != null && apiResponse.isSuccess()) {
+                CivilIdAPIResponse.CustomerFull customerFull = apiResponse.getResponse().getResult().getCustomerFull();
+                if (customerFull != null) {
+                    return customerFull.getCtype();
+                }
+            }
+        }
+        return "";
     }
 
     private AccountType getAccountDescription(String accls) {

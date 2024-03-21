@@ -44,8 +44,8 @@ public class AlizzTransferController {
 			Map<String, Object> data = new HashMap<>();
 			data.put("uniqueKey", uniqueKey);
 			data.put("fee",
-					Objects.nonNull(alizzTransferService.calculateFee(transferType))
-							? alizzTransferService.calculateFee(transferType)
+					Objects.nonNull(alizzTransferService.calculateFee(transferType, uniqueKey))
+							? alizzTransferService.calculateFee(transferType, uniqueKey)
 							: 0);
 			data.put("amount", amount);
 			data.put("transferType", transferType);
