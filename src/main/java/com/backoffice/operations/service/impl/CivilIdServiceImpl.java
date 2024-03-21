@@ -312,11 +312,13 @@ public class CivilIdServiceImpl implements CivilIdService {
 									responseDTO.setMessage("Your card is locked");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
+									return responseDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.BLOCKED.name())) {
 									responseDTO.setStatus("Failure");
 									responseDTO.setMessage("Your card is permanently blocked");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
+									return responseDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
 									// send OTP
 									sendOtp(civilIdEntity, responseDTO);
@@ -326,12 +328,14 @@ public class CivilIdServiceImpl implements CivilIdService {
 									responseDTO.setMessage("Success");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
+									return responseDTO;
 								} else if (card.getStatus().equalsIgnoreCase(CardStatus.REPLACED.name())){
 									responseDTO.setStatus("Failure");
-									responseDTO.setMessage("Kindly use your newly issued Credit Card to onboard yourself into the Application.");
+									responseDTO.setMessage("Kindly use your newly issued credit card to onboard yourself into the application.");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
 									responseDTO.setData(data);
-								}else {
+									return responseDTO;
+								} else {
 									responseDTO.setStatus("Failure");
 									responseDTO.setMessage("Something went wrong");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
