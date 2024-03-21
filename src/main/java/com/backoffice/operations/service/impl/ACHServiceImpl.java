@@ -71,7 +71,6 @@ public class ACHServiceImpl implements ACHService {
 						  BeneficiaryBankRepository beneficiaryBankRepository, RestTemplate restTemplate, ApiCaller apiCaller,
 						  BeneficiaryService beneficiaryService, ObjectMapper objectMapper,
 						  TransactionRepository transactionRepository, BankListRepo bankListRepo) {
-		this.achBankTransfer = achBankTransfer;
 		this.sequenceCounterRepository = sequenceCounterRepository;
 		this.otpService = otpService;
 		this.commonUtils = commonUtils;
