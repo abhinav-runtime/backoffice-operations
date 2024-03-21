@@ -277,7 +277,7 @@ public class ACHServiceImpl implements ACHService {
 //					data.put("error", errorResponse);
 					responseDTO.setData(data);
 					responseDTO.setMessage("Payment failed!");
-					responseDTO.setStatus("Failure");
+					responseDTO.setStatus("Success");
 				}
 			} else if (isSuccessful && Objects.nonNull(fundTransferResponseDto)
 					&& !fundTransferResponseDto.isSuccess()) {
@@ -314,15 +314,19 @@ public class ACHServiceImpl implements ACHService {
 //				data.put("error", errorResponse);
 				responseDTO.setData(data);
 				responseDTO.setMessage("Payment failed!");
-				responseDTO.setStatus("Failure");
+				responseDTO.setStatus("Success");
 			}
 		} catch (Exception e) {
 			logger.error("ERROR on getResponseDto : {}", e.getMessage());
 			responseDTO.setData(new HashMap<>());
-			responseDTO.setMessage("Something went wrong!");
-			responseDTO.setStatus("Failure");
+			data.put("transactionID", txnRefId);
+			data.put("uniqueKey", uniqueKey);
+			data.put("message", "Payment failed!");
+			data.put("status", "Failure");
+			responseDTO.setData(data);
+			responseDTO.setMessage("Payment failed!");
+			responseDTO.setStatus("Success");
 		}
-
 		return responseDTO;
 	}
 
