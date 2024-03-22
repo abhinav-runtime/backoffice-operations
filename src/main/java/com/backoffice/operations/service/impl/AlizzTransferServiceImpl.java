@@ -8,9 +8,11 @@ import com.backoffice.operations.repository.*;
 import com.backoffice.operations.service.AlizzTransferService;
 import com.backoffice.operations.service.BeneficiaryService;
 import com.backoffice.operations.service.OtpService;
+import com.backoffice.operations.service.TransferLimitService;
 import com.backoffice.operations.utils.ApiCaller;
 import com.backoffice.operations.utils.CommonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -73,12 +75,14 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 
 	private final ProfileRepository profileRepository;
 
+	private final TransferLimitService transferLimitService;
+
 	public AlizzTransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate,
 			BeneficiaryService beneficiaryService, TransferAccountFieldsRepository transferAccountFieldsRepository,
 			SourceOperationRepository sourceOperationRepository, AccountCurrencyRepository accountCurrencyRepository,
 			SequenceCounterRepository sequenceCounterRepository, TransactionRepository transactionRepository,
 			BeneficiaryBankRepository beneficiaryBankRepository, ApiCaller apiCaller, ObjectMapper objectMapper,
-			OtpRepository otpRepository, OtpService otpService, ProfileRepository profileRepository) {
+			OtpRepository otpRepository, OtpService otpService, ProfileRepository profileRepository, TransferLimitService transferLimitService) {
 		this.commonUtils = commonUtils;
 		this.restTemplate = restTemplate;
 		this.beneficiaryService = beneficiaryService;
@@ -93,7 +97,8 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 		this.otpRepository = otpRepository;
 		this.otpService = otpService;
 		this.profileRepository = profileRepository;
-	}
+        this.transferLimitService = transferLimitService;
+    }
 
 	@Override
 	public GenericResponseDTO<Object> transferToAlizzAccount(AlizzTransferRequestDto alizzTransferRequestDto)
@@ -175,30 +180,40 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 					alizzTransferDto.setHeader(header);
 					alizzTransferDto.setTransaction(transaction);
 
-					ObjectMapper objectMapper = JsonMapper.builder()
-							.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).build();
-					String jsonRequestBody = objectMapper.writeValueAsString(alizzTransferDto);
-					logger.info("jsonRequestBody: {}", jsonRequestBody);
+					GenericResponseDTO<Object> responseObject = transferLimitService.getTransferLimit(alizzTransferRequestDto.getCustomerType(),
+							alizzTransferRequestDto.getUniqueKey(),alizzTransferRequestDto.getTransactionType(),alizzTransferRequestDto.getTransactionAmount());
+					Object map = responseObject.getData();
+					Map<String, Object> resMap = objectMapper.convertValue(map, new TypeReference<Map<String,Object>>() {
+					});
+					if (resMap.containsKey("isTrxnAllowed") && resMap.get("isTrxnAllowed").equals(true)) {
+						ObjectMapper objectMapper = JsonMapper.builder()
+								.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).build();
+						String jsonRequestBody = objectMapper.writeValueAsString(alizzTransferDto);
+						logger.info("jsonRequestBody: {}", jsonRequestBody);
 
-					headers.setContentType(MediaType.APPLICATION_JSON);
+						headers.setContentType(MediaType.APPLICATION_JSON);
 
-					HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-					ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(alizzBankTransfer,
-							HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
+						HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+						ResponseEntity<FundTransferResponseDto> responseEntity = restTemplate.exchange(alizzBankTransfer,
+								HttpMethod.POST, requestEntity, FundTransferResponseDto.class);
 
-					if (responseEntity.getStatusCode().is2xxSuccessful()) {
-						Beneficiary beneficiary = beneficiaryService.addBeneficiary(alizzTransferDto.getReceiver());
-						alizzTransferResponseDto.setAccountName(beneficiary.getAccountName());
-						alizzTransferResponseDto.setAccountNumber(beneficiary.getAccountNumber());
-						alizzTransferResponseDto.setBankName("Alizz bank");
-						FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
-						logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
+						if (responseEntity.getStatusCode().is2xxSuccessful()) {
+							Beneficiary beneficiary = beneficiaryService.addBeneficiary(alizzTransferDto.getReceiver());
+							alizzTransferResponseDto.setAccountName(beneficiary.getAccountName());
+							alizzTransferResponseDto.setAccountNumber(beneficiary.getAccountNumber());
+							alizzTransferResponseDto.setBankName("Alizz bank");
+							FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
+							logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
 
-						responseDTO = getResponseDto(alizzTransferRequestDto.getUniqueKey(),
-								responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId,
-								transaction.getTransactionDate());
+							responseDTO = getResponseDto(alizzTransferRequestDto.getUniqueKey(),
+									responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId,
+									transaction.getTransactionDate(),alizzTransferRequestDto.getTransactionAmount(),
+									alizzTransferRequestDto.getFromAccountNumber());
+						}
+						return responseDTO;
+					}else {
+						return responseObject;
 					}
-					return responseDTO;
 				}
 			} else {
 				data.put("message", "Payment failed!");
@@ -227,7 +242,7 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 	}
 
 	public GenericResponseDTO<Object> getResponseDto(String uniqueKey, boolean isSuccessful,
-			FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate)
+			FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate, Double transactionAmount, String accountNumber)
 			throws JsonProcessingException {
 
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
@@ -267,6 +282,8 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 				responseDTO.setData(data);
 				responseDTO.setMessage("Success");
 				responseDTO.setStatus("Success");
+
+				transferLimitService.saveUserTrxnLimitData(uniqueKey, transactionAmount, accountNumber);
 			} else {
 				String errorResponseString = objectMapper
 						.writeValueAsString(!errorResponse.isEmpty() ? errorResponse : "");
