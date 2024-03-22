@@ -14,7 +14,5 @@ public class SelfTransferDTO {
     private double transactionAmount;
     private String notesToReceiver;
     private String uniqueKey;
-    private String customerType;
-    private String transactionType;
 
 }

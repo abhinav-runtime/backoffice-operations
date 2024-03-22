@@ -20,6 +20,4 @@ public class AlizzTransferRequestDto {
     private String toAccountName;
     private String toBankName;
     private String otp;
-    private String customerType;
-    private String transactionType;
 }
