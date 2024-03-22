@@ -154,17 +154,10 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 						return getErrorResponseGenericDTO(alizzTransferRequestDto, "Sender Account Invalid");
 					}
 
-					AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails = getIslamicAccount(
-							alizzTransferRequestDto.getToAccountNumber());
-
-					if (Objects.isNull(receiverAccDetails)) {
-						return getErrorResponseGenericDTO(alizzTransferRequestDto, "Receiver Account Invalid");
-					}
-
 					AlizzTransferDto.Sender sender = getSenderDetails(alizzTransferRequestDto, senderAccDetails,
 							beneficiaryBank);
 
-					AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto, receiverAccDetails,
+					AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto,
 							beneficiaryBank);
 
 					double avlBalance = apiCaller.getAvailableBalance(alizzTransferRequestDto.getFromAccountNumber());
@@ -348,10 +341,9 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 	}
 
 	private static AlizzTransferDto.Receiver getReceiverDetails(AlizzTransferRequestDto alizzTransferRequestDto,
-			AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails,
 			BeneficiaryBank beneficiaryBank) {
 		return AlizzTransferDto.Receiver.builder().notesToReceiver(alizzTransferRequestDto.getNotesToReceiver())
-				.accountName(receiverAccDetails.getAdesc()).accountNumber(receiverAccDetails.getAcc())
+				.accountName(alizzTransferRequestDto.getToAccountName()).accountNumber(alizzTransferRequestDto.getToAccountNumber())
 				.bankCode(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankCode() : "")
 				.bankName(Objects.nonNull(beneficiaryBank) ? beneficiaryBank.getBankName() : "")
 				.branchCode(alizzTransferRequestDto.getFromAccountNumber().substring(0, 3)).iBanAccountNumber("")
