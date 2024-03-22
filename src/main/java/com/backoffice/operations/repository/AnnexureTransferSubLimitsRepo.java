@@ -10,5 +10,5 @@ import com.backoffice.operations.entity.AnnexureTransferWithSubLimits;
 
 @Repository
 public interface AnnexureTransferSubLimitsRepo extends JpaRepository<AnnexureTransferWithSubLimits, String> {
-	AnnexureTransferWithSubLimits findByAnnexureTransferLimitsAndSubTypeLimit(AnnexureTransferLimits annexureTransferLimits, String subType);
+	List<AnnexureTransferWithSubLimits> findByAnnexureTransferLimits(AnnexureTransferLimits annexureTransferLimits);
 }

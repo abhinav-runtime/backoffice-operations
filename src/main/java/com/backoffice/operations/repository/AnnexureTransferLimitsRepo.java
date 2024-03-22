@@ -8,5 +8,4 @@ import com.backoffice.operations.entity.AnnexureTransferLimits;
 @Repository
 public interface AnnexureTransferLimitsRepo extends JpaRepository<AnnexureTransferLimits, String> {
 
-    AnnexureTransferLimits findBySegmentAndGlobalLimit(String segment, String globalLimit);
 }

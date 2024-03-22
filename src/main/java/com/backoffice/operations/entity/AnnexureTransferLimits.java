@@ -41,4 +41,3 @@ public class AnnexureTransferLimits {
     @Column
     private long monthlyCount;
 }
-

@@ -4,12 +4,10 @@ import com.backoffice.operations.entity.*;
 import com.backoffice.operations.payloads.*;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.*;
-import com.backoffice.operations.service.TransferLimitService;
 import com.backoffice.operations.service.TransferService;
 import com.backoffice.operations.utils.ApiCaller;
 import com.backoffice.operations.utils.CommonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -22,6 +20,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -54,14 +53,11 @@ public class TransferServiceImpl implements TransferService {
 
     private final ObjectMapper objectMapper;
 
-    private final TransferLimitService transferLimitService;
-
-    public TransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, ApiCaller apiCaller, ObjectMapper objectMapper, TransferLimitService transferLimitService) {
+    public TransferServiceImpl(CommonUtils commonUtils, RestTemplate restTemplate, ApiCaller apiCaller, ObjectMapper objectMapper) {
         this.commonUtils = commonUtils;
         this.restTemplate = restTemplate;
         this.apiCaller = apiCaller;
         this.objectMapper = objectMapper;
-        this.transferLimitService = transferLimitService;
     }
 
     @Override
@@ -170,13 +166,6 @@ public class TransferServiceImpl implements TransferService {
             transferRequestDto.setHeader(header);
             transferRequestDto.setTransaction(transaction);
 
-
-            GenericResponseDTO<Object> responseObject = transferLimitService.getTransferLimit(selfTransferDTO.getCustomerType(),
-                    selfTransferDTO.getUniqueKey(), selfTransferDTO.getTransactionType(), selfTransferDTO.getTransactionAmount());
-            Object map = responseObject.getData();
-            Map<String, Object> resMap = objectMapper.convertValue(map, new TypeReference<Map<String, Object>>() {
-            });
-            if (resMap.containsKey("isTrxnAllowed") && resMap.get("isTrxnAllowed").equals(true)) {
             ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
 
             HttpHeaders headers = new HttpHeaders();
@@ -193,9 +182,7 @@ public class TransferServiceImpl implements TransferService {
             FundTransferResponseDto fundTransferResponseDto = responseEntity.getBody();
             logger.info("responseEntity.getBody(): {}", responseEntity.getBody());
 
-            responseDTO = getResponseDto(selfTransferDTO.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(),
-                    fundTransferResponseDto, txnRefId, trnxDate, selfTransferDTO.getTransactionAmount(), selfTransferDTO.getFromAccountNumber());
-        }
+            responseDTO = getResponseDto(selfTransferDTO.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(), fundTransferResponseDto, txnRefId, trnxDate);
         } catch (Exception e) {
             logger.error("ERROR in class TransferServiceImpl method transferToBank", e);
             data.put("message", "Payment failed!");
@@ -211,7 +198,7 @@ public class TransferServiceImpl implements TransferService {
         return responseDTO;
     }
 
-    public GenericResponseDTO<Object> getResponseDto(String uniqueKey, boolean isSuccessful, FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate, Double transactionAmount, String accountNumber) throws JsonProcessingException {
+    public GenericResponseDTO<Object> getResponseDto(String uniqueKey, boolean isSuccessful, FundTransferResponseDto fundTransferResponseDto, String txnRefId, String txnDate) throws JsonProcessingException {
 
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         Map<String, Object> data = new HashMap<>();
@@ -244,9 +231,6 @@ public class TransferServiceImpl implements TransferService {
                 responseDTO.setData(data);
                 responseDTO.setMessage("Success");
                 responseDTO.setStatus("Success");
-
-                transferLimitService.saveUserTrxnLimitData(uniqueKey, transactionAmount
-                        , accountNumber);
             } else {
                 String errorResponseString = objectMapper.writeValueAsString(!errorResponse.isEmpty() ? errorResponse : "");
                 Transaction transactionObj = Transaction.builder()
