@@ -116,6 +116,9 @@ public class CivilIdAPIResponse {
         @JsonProperty("custno")
         private String custNo;
 
+        @JsonProperty("ctype")
+        private String ctype;
+
         @JsonProperty("fullname")
         private String fullname;
 

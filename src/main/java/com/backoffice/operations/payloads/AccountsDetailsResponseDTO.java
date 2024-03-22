@@ -35,4 +35,5 @@ public class AccountsDetailsResponseDTO {
     private String editAccountInfo;
     private String visibility;
     private String color;
+    private String customerType;
 }
