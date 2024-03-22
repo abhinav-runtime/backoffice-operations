@@ -14,9 +14,7 @@ public class TransactionLimitsDTO {
 
 	@NotBlank(message = "Unique Key cannot be blank")
 	private String uniqueKey;
-	private double merchantOutletLimits;
-	private double onlineShoppingLimits;
-	private double atmWithdrawalLimits;
-	private double tapAndPayLimits;
+	private String requestType;
+	private int newLimits;
 
 }

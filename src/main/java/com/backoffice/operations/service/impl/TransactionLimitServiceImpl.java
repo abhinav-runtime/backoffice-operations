@@ -1,12 +1,15 @@
 package com.backoffice.operations.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -22,20 +25,36 @@ import com.backoffice.operations.entity.CardEntity;
 import com.backoffice.operations.entity.TransactionLimitsEntity;
 import com.backoffice.operations.entity.TransactionMaxMinLimitsParameter;
 import com.backoffice.operations.entity.User;
+import com.backoffice.operations.payloads.CardSettingDto;
+import com.backoffice.operations.payloads.CreditCardTrasactionChangeDto;
+import com.backoffice.operations.payloads.CreditCardTrasactionDto;
+import com.backoffice.operations.payloads.PurposeResponseDto;
 import com.backoffice.operations.payloads.TransactionLimitsDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.CardRepository;
+import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.TransactionLimitsRepository;
 import com.backoffice.operations.repository.TransactionMaxMinLimitsParameterRepo;
 import com.backoffice.operations.repository.UserRepository;
 import com.backoffice.operations.security.JwtTokenProvider;
 import com.backoffice.operations.service.TransactionLimitService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import jakarta.xml.bind.Element;
 
 @Service
 public class TransactionLimitServiceImpl implements TransactionLimitService {
+	private final static Logger logger = LoggerFactory.getLogger(TransactionLimitServiceImpl.class);
 
 	@Value("${external.api.setPreferenceUrl}")
 	private String setPreferenceUrl;
+
+	@Value("${external.api.fetchPreferenceUrl}")
+	private String fetchPreferenceUrl;
 	@Autowired
 	private RestTemplate basicAuthRestTemplate;
 
@@ -54,120 +73,53 @@ public class TransactionLimitServiceImpl implements TransactionLimitService {
 	@Autowired
 	private TransactionLimitsRepository transactionLimitsRepository;
 
+	@Autowired
+	private CivilIdRepository civilIdRepository;
+
 	@Override
-	public GenericResponseDTO<Object> setTransactionLimits(TransactionLimitsDTO transactionLimitsDTO, String token) {
+	public GenericResponseDTO<Object> setTransactionLimits(TransactionLimitsDTO transactionLimitsDTO) {
 
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		String userEmail = jwtTokenProvider.getUsername(token);
-		Optional<User> user = userRepository.findByEmail(userEmail);
+		try {
+			// Fetching Previous Limits
+			String custNo = civilIdRepository.findById(transactionLimitsDTO.getUniqueKey()).get().getCivilId();
+			CreditCardTrasactionChangeDto creditCardTrasactionChangeDto = new CreditCardTrasactionChangeDto();
+			String requestBody = "{\r\n   \"entityId\": \"" + custNo + "\"\r\n}";
+			String apiUrl = fetchPreferenceUrl;
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("TENANT", "ALIZZ_UAT");
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+			ResponseEntity<JsonNode> responseEntity = basicAuthRestTemplate.exchange(apiUrl, HttpMethod.POST,
+					requestEntity, JsonNode.class);
 
-		if (user.isPresent()) {
+			JsonNode response = responseEntity.getBody().get("result");
+			creditCardTrasactionChangeDto = getCreditCardTrasactionChangeDto(response);
+			creditCardTrasactionChangeDto.setEntityId(custNo);
 
-			CardEntity cardEntity = cardRepository.findByUniqueKeyCivilId(transactionLimitsDTO.getUniqueKey());
+			// Set New Limits
+			creditCardTrasactionChangeDto.setLimitConfigs(makeChanges(creditCardTrasactionChangeDto.getLimitConfigs(),
+					transactionLimitsDTO.getNewLimits(), transactionLimitsDTO.getRequestType()));
+			ObjectMapper objectMapper = new ObjectMapper();
+			String jsonString = "";
+			jsonString = objectMapper.writeValueAsString(creditCardTrasactionChangeDto);
+			String setUrl = setPreferenceUrl;
+			HttpEntity<String> setRequest = new HttpEntity<>(jsonString, headers);
+			logger.info("Request Body: {}", setRequest);
+			ResponseEntity<JsonNode> setResponse = basicAuthRestTemplate.exchange(setUrl, HttpMethod.POST, setRequest,
+					JsonNode.class);
 
-			TransactionLimitsEntity transactionLimitsEntity = new TransactionLimitsEntity();
-			TransactionLimitsEntity newTransactionLimitsEntity = transactionLimitsRepository
-					.findByUniqueKey(transactionLimitsDTO.getUniqueKey());
-
-			long id = 1;
-			TransactionMaxMinLimitsParameter transactionMaxMinLimitsParameter = transactionMaxLimitsParameterRepo
-					.findById(id).orElse(null);
-			double merchantOutletMaxLimits = transactionMaxMinLimitsParameter.getMerchantOutletMaxLimits();
-			double merchantOutletMinLimits = transactionMaxMinLimitsParameter.getMerchantOutletMinLimits();
-			double onlineShoppingMaxLimits = transactionMaxMinLimitsParameter.getOnlineShoppingMaxLimits();
-			double onlineShoppingMinLimits = transactionMaxMinLimitsParameter.getOnlineShoppingMinLimits();
-			double atmWithdrawalMaxLimits = transactionMaxMinLimitsParameter.getAtmWithdrawalMaxLimits();
-			double atmWithdrawalMinLimits = transactionMaxMinLimitsParameter.getAtmWithdrawalMinLimits();
-			double tapAndPayMaxLimits = transactionMaxMinLimitsParameter.getTapAndPayMaxLimits();
-			double tapAndPayMinLimits = transactionMaxMinLimitsParameter.getTapAndPayMinLimits();
-
-			if ((transactionLimitsDTO.getMerchantOutletLimits() > merchantOutletMaxLimits)
-					|| (transactionLimitsDTO.getOnlineShoppingLimits() > onlineShoppingMaxLimits)
-					|| (transactionLimitsDTO.getAtmWithdrawalLimits() > atmWithdrawalMaxLimits)
-					|| (transactionLimitsDTO.getTapAndPayLimits() > tapAndPayMaxLimits)) {
-				responseDTO.setStatus("Failure");
-				responseDTO.setMessage("Transaction limits should not exceed 100000 OMR.");
-				return responseDTO;
-			}
-			if ((transactionLimitsDTO.getMerchantOutletLimits() < merchantOutletMinLimits)
-					|| (transactionLimitsDTO.getOnlineShoppingLimits() < onlineShoppingMinLimits)
-					|| (transactionLimitsDTO.getAtmWithdrawalLimits() < atmWithdrawalMinLimits)
-					|| (transactionLimitsDTO.getTapAndPayLimits() < tapAndPayMinLimits)) {
-				responseDTO.setStatus("Failure");
-				responseDTO.setMessage("Transaction limits should not below 1 OMR.");
-				return responseDTO;
-			}
-
-			if (((transactionLimitsDTO.getMerchantOutletLimits() >= merchantOutletMinLimits)
-					&& (transactionLimitsDTO.getMerchantOutletLimits() <= merchantOutletMaxLimits))
-					|| ((transactionLimitsDTO.getOnlineShoppingLimits() >= onlineShoppingMinLimits)
-							&& (transactionLimitsDTO.getOnlineShoppingLimits() <= onlineShoppingMaxLimits))
-					|| ((transactionLimitsDTO.getAtmWithdrawalLimits() >= atmWithdrawalMinLimits)
-							&& (transactionLimitsDTO.getAtmWithdrawalLimits() <= atmWithdrawalMaxLimits))
-					|| ((transactionLimitsDTO.getTapAndPayLimits() >= tapAndPayMinLimits)
-							&& (transactionLimitsDTO.getTapAndPayLimits() <= tapAndPayMaxLimits))) {
-
-				HttpHeaders headers = new HttpHeaders();
-				headers.add("TENANT", "ALIZZ_UAT");
-				headers.setContentType(MediaType.APPLICATION_JSON);
-				String requestBody = "{\r\n    \"entityId\": \"" + cardEntity.getCivilId()
-						+ "\",\r\n    \"limitConfigs\": [\r\n        {\r\n            \"channel\": \"POS\",\r\n            \"maxAmount\": "
-						+ transactionLimitsDTO.getMerchantOutletLimits()
-						+ "\r\n       },\r\n        {\r\n            \"channel\": \"ECOM\",\r\n            \"maxAmount\": "
-						+ transactionLimitsDTO.getOnlineShoppingLimits()
-						+ "\r\n        },\r\n        {\r\n            \"channel\": \"ATM\",\r\n            \"maxAmount\": "
-						+ transactionLimitsDTO.getAtmWithdrawalLimits()
-						+ "\r\n        },\r\n        {\r\n            \"channel\": \"CONTACTLESS\",\r\n            \"maxAmount\": "
-						+ transactionLimitsDTO.getTapAndPayLimits() + "\r\n        }\r\n    ]\r\n}";
-				HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
-				ResponseEntity<Object> responseEntity = basicAuthRestTemplate.exchange(setPreferenceUrl,
-						HttpMethod.POST, requestEntity, Object.class);
-
-				if ((responseEntity.getStatusCode() == HttpStatus.OK) && (responseEntity.getBody() != null)) {
-					
-					if (Objects.nonNull(newTransactionLimitsEntity)) {
-						newTransactionLimitsEntity
-								.setMerchantOutletLimits(transactionLimitsDTO.getMerchantOutletLimits());
-						newTransactionLimitsEntity
-								.setOnlineShoppingLimits(transactionLimitsDTO.getOnlineShoppingLimits());
-						newTransactionLimitsEntity
-								.setAtmWithdrawalLimits(transactionLimitsDTO.getAtmWithdrawalLimits());
-						newTransactionLimitsEntity.setTapAndPayLimits(transactionLimitsDTO.getTapAndPayLimits());
-						newTransactionLimitsEntity.setDateModified(LocalDateTime.now());
-
-						transactionLimitsRepository.save(newTransactionLimitsEntity);
-						Map<String, Object> data = new HashMap<>();
-						responseDTO.setStatus("Success");
-						responseDTO.setMessage("Transaction limits is set!");
-						data.put("Transaction limits", newTransactionLimitsEntity);
-						responseDTO.setData(data);
-					} else {
-						transactionLimitsEntity.setUniqueKey(transactionLimitsDTO.getUniqueKey());
-						transactionLimitsEntity.setMerchantOutletLimits(transactionLimitsDTO.getMerchantOutletLimits());
-						transactionLimitsEntity.setOnlineShoppingLimits(transactionLimitsDTO.getOnlineShoppingLimits());
-						transactionLimitsEntity.setAtmWithdrawalLimits(transactionLimitsDTO.getAtmWithdrawalLimits());
-						transactionLimitsEntity.setTapAndPayLimits(transactionLimitsDTO.getTapAndPayLimits());
-						transactionLimitsEntity.setDateModified(LocalDateTime.now());
-
-						transactionLimitsRepository.save(transactionLimitsEntity);
-						Map<String, Object> data = new HashMap<>();
-						responseDTO.setStatus("Success");
-						responseDTO.setMessage("Transaction limits is set!");
-						data.put("Transaction limits", transactionLimitsEntity);
-						responseDTO.setData(data);
-					}
-					
-					return responseDTO;
-					
-				}
-			}
+			responseDTO.setStatus("Success");
+			responseDTO.setMessage("Transaction limits set successfully!");
+			responseDTO.setData(setResponse.getBody());
+		} catch (Exception e) {
+			logger.error("Error in setTransactionLimits : {}", e.getMessage());
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			responseDTO.setData(new HashMap<>());
 		}
-		responseDTO.setStatus("Failure");
-		responseDTO.setMessage("Something went wrong");
 		return responseDTO;
 	}
-
-
 
 	@Override
 	public GenericResponseDTO<Object> getAllTransactionLimits(String token) {
@@ -191,24 +143,186 @@ public class TransactionLimitServiceImpl implements TransactionLimitService {
 	}
 
 	@Override
-	public GenericResponseDTO<Object> getTransactionLimitsByCustId(String uniqueKey, String token) {
+	public GenericResponseDTO<Object> getTransactionLimitsByCustId(String uniqueKey) {
 
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		String userEmail = jwtTokenProvider.getUsername(token);
-		Optional<User> user = userRepository.findByEmail(userEmail);
+		String custNo = "";
+		try {
+			if (civilIdRepository.existsById(uniqueKey)) {
+				custNo = civilIdRepository.findById(uniqueKey).get().getCivilId();
+				logger.info("Fetching preferance : {}", custNo);
+			}
 
-		if (user.isPresent()) {
-			TransactionLimitsEntity transactionLimitsEntity = transactionLimitsRepository
-					.findByUniqueKey(uniqueKey);
-			Map<String, Object> data = new HashMap<>();
+			String requestBody = "{\r\n   \"entityId\": \"" + custNo + "\"\r\n}";
+
+			String apiUrl = fetchPreferenceUrl;
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("TENANT", "ALIZZ_UAT");
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+			ResponseEntity<JsonNode> responseEntity = basicAuthRestTemplate.exchange(apiUrl, HttpMethod.POST,
+					requestEntity, JsonNode.class);
+
+			JsonNode response = responseEntity.getBody().get("result");
+			CreditCardTrasactionDto creditCardTrasactionDto = new CreditCardTrasactionDto();
+			List<CreditCardTrasactionDto.LimitConfig> limitConfigs = new ArrayList<>();
+
+			response.get("limitConfig").forEach(configNode -> {
+				String channelType = configNode.get("channelType").asText();
+				String maxAmount = configNode.get("maxAmount").asText();
+
+				CreditCardTrasactionDto.LimitConfig limitConfig = CreditCardTrasactionDto.LimitConfig.builder()
+						.channelType(channelType).maxAmount(maxAmount).build();
+
+				limitConfigs.add(limitConfig);
+			});
+
+			creditCardTrasactionDto.setLimitConfig(limitConfigs);
+
+			responseDTO.setData(creditCardTrasactionDto);
+			responseDTO.setMessage("Preference fetched successfully");
 			responseDTO.setStatus("Success");
-			responseDTO.setMessage("Customer transaction limits list!");
-			data.put("list", transactionLimitsEntity);
-			responseDTO.setData(data);
+			return responseDTO;
+		} catch (Exception e) {
+			logger.error("Error occurred while fetching preference: {}", e.getMessage());
+			responseDTO.setData(new HashMap<>());
+			responseDTO.setMessage("Something went wrong while fetching details");
+			responseDTO.setStatus("Failure");
 			return responseDTO;
 		}
-		responseDTO.setStatus("Failure");
-		responseDTO.setMessage("Something went wrong");
+	}
+
+	@Override
+	public GenericResponseDTO<Object> getCardSetting(String uniqueKey) {
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		String custNo = "";
+		try {
+			if (civilIdRepository.existsById(uniqueKey)) {
+				custNo = civilIdRepository.findById(uniqueKey).get().getCivilId();
+				logger.info("Fetching preferance : {}", custNo);
+			}
+
+			String requestBody = "{\r\n   \"entityId\": \"" + custNo + "\"\r\n}";
+
+			String apiUrl = fetchPreferenceUrl;
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("TENANT", "ALIZZ_UAT");
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+			ResponseEntity<JsonNode> responseEntity = basicAuthRestTemplate.exchange(apiUrl, HttpMethod.POST,
+					requestEntity, JsonNode.class);
+
+			JsonNode response = responseEntity.getBody().get("result");
+
+			CardSettingDto cardSettingDto = new CardSettingDto();
+			cardSettingDto.setAtm(response.get("atm").asBoolean());
+			cardSettingDto.setPos(response.get("pos").asBoolean());
+			cardSettingDto.setEcom(response.get("ecom").asBoolean());
+			cardSettingDto.setContactless(response.get("contactless").asBoolean());
+
+			responseDTO.setData(cardSettingDto);
+			responseDTO.setMessage("Preference fetched successfully");
+			responseDTO.setStatus("Success");
+			return responseDTO;
+
+		} catch (Exception e) {
+			logger.error("Error on getCardSetting : {}", e.getMessage());
+			responseDTO.setData(new HashMap<>());
+			responseDTO.setMessage("Something went wrong");
+			responseDTO.setStatus("Failure");
+			return responseDTO;
+		}
+	}
+
+	@Override
+	public GenericResponseDTO<Object> setCardSetting(CardSettingDto cardSettingDto, String uniqueKey) {
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		try {
+			// Fetching Previous Limits
+			String custNo = civilIdRepository.findById(uniqueKey).get().getCivilId();
+			CreditCardTrasactionChangeDto creditCardTrasactionChangeDto = new CreditCardTrasactionChangeDto();
+			String requestBody = "{\r\n   \"entityId\": \"" + custNo + "\"\r\n}";
+			String apiUrl = fetchPreferenceUrl;
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("TENANT", "ALIZZ_UAT");
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+			ResponseEntity<JsonNode> responseEntity = basicAuthRestTemplate.exchange(apiUrl, HttpMethod.POST,
+					requestEntity, JsonNode.class);
+
+			JsonNode response = responseEntity.getBody().get("result");
+			creditCardTrasactionChangeDto = getCreditCardTrasactionChangeDto(response);
+			creditCardTrasactionChangeDto.setEntityId(custNo);
+
+			// Set New Limits
+			creditCardTrasactionChangeDto.setAtm(cardSettingDto.getAtm());
+			creditCardTrasactionChangeDto.setPos(cardSettingDto.getPos());
+			creditCardTrasactionChangeDto.setEcom(cardSettingDto.getEcom());
+			creditCardTrasactionChangeDto.setContactless(cardSettingDto.getContactless());
+			
+			ObjectMapper objectMapper = new ObjectMapper();
+			String jsonString = "";
+			jsonString = objectMapper.writeValueAsString(creditCardTrasactionChangeDto);
+			String setUrl = setPreferenceUrl;
+			HttpEntity<String> setRequest = new HttpEntity<>(jsonString, headers);
+			logger.info("Request Body: {}", setRequest);
+			ResponseEntity<JsonNode> setResponse = basicAuthRestTemplate.exchange(setUrl, HttpMethod.POST, setRequest,
+					JsonNode.class);
+
+			responseDTO.setStatus("Success");
+			responseDTO.setMessage("Card Setting set successfully!");
+			responseDTO.setData(setResponse.getBody());
+		} catch (Exception e) {
+			logger.error("Error in setCardSetting : {}", e.getMessage());
+			responseDTO.setStatus("Failure");
+			responseDTO.setMessage("Something went wrong");
+			responseDTO.setData(new HashMap<>());
+		}
 		return responseDTO;
+	}
+
+	private CreditCardTrasactionChangeDto getCreditCardTrasactionChangeDto(JsonNode jsonData) {
+		CreditCardTrasactionChangeDto creditCardTrasactionChangeDto = new CreditCardTrasactionChangeDto();
+		creditCardTrasactionChangeDto.setInternational(jsonData.get("international").asBoolean());
+		creditCardTrasactionChangeDto.setDcc(jsonData.get("dcc").asBoolean());
+		creditCardTrasactionChangeDto.setCurrency("OMR");
+		creditCardTrasactionChangeDto.setIsLimitUpgrade(true);
+		creditCardTrasactionChangeDto.setIsOverLimitAllowed(false);
+		creditCardTrasactionChangeDto.setPreferredLanguage("ES");
+		creditCardTrasactionChangeDto.setTransactionUsageType("DOMESTIC");
+		creditCardTrasactionChangeDto.setAtm(jsonData.get("atm").asBoolean());
+		creditCardTrasactionChangeDto.setEcom(jsonData.get("ecom").asBoolean());
+		creditCardTrasactionChangeDto.setPos(jsonData.get("pos").asBoolean());
+		creditCardTrasactionChangeDto.setContactless(jsonData.get("contactless").asBoolean());
+		creditCardTrasactionChangeDto.setDisallowedRuleConfig(jsonData.get("disallowedRuleConfig"));
+		List<CreditCardTrasactionChangeDto.LimitConfigs> limitConfigs = new ArrayList<>();
+		jsonData.get("limitConfig").forEach(element -> {
+			CreditCardTrasactionChangeDto.LimitConfigs limitConfig = new CreditCardTrasactionChangeDto.LimitConfigs();
+			limitConfig.setChannel(element.get("channelType").asText());
+			limitConfig.setTxnType(element.get("txnType").asText());
+			limitConfig.setDailyLimitValue(element.get("dailyLimitValue").asDouble());
+			limitConfig.setDailyLimitCnt(element.get("dailyLimitCnt").asDouble());
+			limitConfig.setMonthlyLimitValue(element.get("monthlyLimitValue").asDouble());
+			limitConfig.setMonthlyLimitCnt(element.get("monthlyLimitCnt").asDouble());
+			limitConfig.setYearlyLimitValue(element.get("yearlyLimitValue").asDouble());
+			limitConfig.setYearlyLimitCnt(element.get("yearlyLimitCnt").asDouble());
+			limitConfig.setMinAmount(element.get("minAmount").asDouble());
+			limitConfig.setMaxAmount(element.get("maxAmount").asDouble());
+			limitConfig.setCurrency(element.get("currency").asText());
+			limitConfig.setCategory(element.get("category").asText());
+			limitConfigs.add(limitConfig);
+		});
+		creditCardTrasactionChangeDto.setLimitConfigs(limitConfigs);
+		return creditCardTrasactionChangeDto;
+	}
+
+	private List<CreditCardTrasactionChangeDto.LimitConfigs> makeChanges(
+			List<CreditCardTrasactionChangeDto.LimitConfigs> limiConfigs, int updateLimits, String channelType) {
+		limiConfigs.forEach(element -> {
+			if (element.getChannel().equals(channelType)) {
+				element.setMaxAmount(updateLimits);
+			}
+		});
+		return limiConfigs;
 	}
 }
