@@ -136,16 +136,16 @@ public class ACHServiceImpl implements ACHService {
 						return getErrorResponseGenericDTO(alizzTransferRequestDto, "Sender Account Invalid");
 					}
 
-					AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails = getIslamicAccount(
-							alizzTransferRequestDto.getToAccountNumber());
-
-					if (Objects.isNull(receiverAccDetails)) {
-						return getErrorResponseGenericDTO(alizzTransferRequestDto, "Receiver Account Invalid");
-					}
+//					AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails = getIslamicAccount(
+//							alizzTransferRequestDto.getToAccountNumber());
+//
+//					if (Objects.isNull(receiverAccDetails)) {
+//						return getErrorResponseGenericDTO(alizzTransferRequestDto, "Receiver Account Invalid");
+//					}
 
 					AlizzTransferDto.Sender sender = getSenderDetails(alizzTransferRequestDto, senderAccDetails);
 
-					AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto, receiverAccDetails);
+					AlizzTransferDto.Receiver receiver = getReceiverDetails(alizzTransferRequestDto);
 
 					double avlBalance = apiCaller.getAvailableBalance(alizzTransferRequestDto.getFromAccountNumber());
 					if (avlBalance > alizzTransferRequestDto.getTransactionAmount()) {
@@ -328,12 +328,11 @@ public class ACHServiceImpl implements ACHService {
 		return responseDTO;
 	}
 
-	private AlizzTransferDto.Receiver getReceiverDetails(AlizzTransferRequestDto alizzTransferRequestDto,
-			AccountDetails.Response.Payload.CustSummaryDetails.IslamicAccount receiverAccDetails) {
+	private AlizzTransferDto.Receiver getReceiverDetails(AlizzTransferRequestDto alizzTransferRequestDto) {
 		try {
 			BankList banklist = bankListRepo.findByBicCode(alizzTransferRequestDto.getToBankName());
 			return AlizzTransferDto.Receiver.builder().notesToReceiver("/INT/" + alizzTransferRequestDto.getNotesToReceiver())
-					.accountName(alizzTransferRequestDto.getToAccountName()).accountNumber(receiverAccDetails.getAcc())
+					.accountName(alizzTransferRequestDto.getToAccountName()).accountNumber(alizzTransferRequestDto.getToAccountNumber())
 					.bankCode(Objects.nonNull(banklist) ? banklist.getBicCode() : "")
 					.bankName(Objects.nonNull(banklist) ? banklist.getBankName() : "")
 					.branchCode(Objects.nonNull(banklist) ? banklist.getBicCode() : "").iBanAccountNumber("")
