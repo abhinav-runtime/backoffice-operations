@@ -16,7 +16,7 @@ import org.hibernate.annotations.GenericGenerator;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "az_user_limit_trxnbk")
+@Table(name = "az_user_limit_trxn_bk")
 public class UserLimitTrxnEntity {
 
     @Id
