@@ -27,7 +27,8 @@ public class BiometricAttemptParameterController {
 	private BOUserToken boUserToken;
 
 	@PutMapping("/update")
-	public ResponseEntity<Object> updateBiometricAttemptParameter(@RequestBody BiometricAttemptParameterDto requestDto) {
+	public ResponseEntity<Object> updateBiometricAttemptParameter(
+			@RequestBody BiometricAttemptParameterDto requestDto) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -73,7 +74,8 @@ public class BiometricAttemptParameterController {
 	}
 
 	@PostMapping("/insert")
-	public ResponseEntity<Object> insertBiometricAttemptParameter(@RequestBody BiometricAttemptParameterDto requestDto) {
+	public ResponseEntity<Object> insertBiometricAttemptParameter(
+			@RequestBody BiometricAttemptParameterDto requestDto) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		if (boUserToken.getRolesFromToken().isEmpty()) {
 			response.setMessage("Something went wrong.");
@@ -94,7 +96,7 @@ public class BiometricAttemptParameterController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
-	
+
 	@DeleteMapping("/delete")
 	public ResponseEntity<Object> deleteBiometricAttemptParameter() {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
@@ -116,5 +118,47 @@ public class BiometricAttemptParameterController {
 			response.setStatus("Success");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
+	}
+}
+
+@RestController
+@RequestMapping("/api/v1/biometric-attempt-parameter")
+class BiometricAttemptParameterControllerAPK {
+	@Autowired
+	private BiometricAttemptService biometricAttemptService;
+
+	@PutMapping("/update")
+	public ResponseEntity<Object> updateBiometricAttemptParameter(
+			@RequestBody BiometricAttemptParameterDto requestDto) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		BiometricAttemptParameterDto data = biometricAttemptService.updateBiometricAttemptParameter(requestDto);
+		if (data == null || data.equals(null)) {
+			response.setMessage("Bimetric Attempt parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Bimetric Attempt parameter updated successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping("/get")
+	public ResponseEntity<Object> getBiometricAttemptParameter() {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		BiometricAttemptParameterDto data = biometricAttemptService.getBiometricAttemptParameter();
+		if (data == null || data.equals(null)) {
+			response.setMessage("Bimetric Attempt parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Bimetric Attempt parameter fetched successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 }

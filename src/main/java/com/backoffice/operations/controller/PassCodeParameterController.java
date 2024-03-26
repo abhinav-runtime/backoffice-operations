@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,6 +18,7 @@ import com.backoffice.operations.payloads.PassCodeParameterDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.PassCodeParameterService;
+import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequestMapping("/bo/v1/passcode-parameter")
@@ -94,7 +96,7 @@ public class PassCodeParameterController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
-	
+
 	@DeleteMapping("/delete")
 	public ResponseEntity<Object> deletePassCodeParameter() {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
@@ -116,5 +118,47 @@ public class PassCodeParameterController {
 			response.setStatus("Success");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
+	}
+}
+
+@RestController
+@RequestMapping("/api/v1/passcode-parameter")
+class PassCodeParameterControllerAPK {
+	@Autowired
+	private PassCodeParameterService parameterService;
+
+	@PutMapping("/update")
+	public ResponseEntity<Object> updatePassCodeParameter(@RequestBody PassCodeParameterDTO requestDto,
+			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		PassCodeParameterDTO data = parameterService.updatePasscodeParameter(requestDto);
+		if (data == null || data.equals(null)) {
+			response.setMessage("Pass Code parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Pass Code parameter updated successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping("/get")
+	public ResponseEntity<Object> getPassCodeParameter(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		PassCodeParameterDTO data = parameterService.getPasscodeParameter();
+		if (data == null || data.equals(null)) {
+			response.setMessage("Pass Code parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Pass Code parameter fetched successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 }
