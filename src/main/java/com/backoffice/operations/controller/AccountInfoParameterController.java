@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,6 +18,8 @@ import com.backoffice.operations.payloads.AccountInfoParameterDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.security.BOUserToken;
 import com.backoffice.operations.service.AccountInfoParameterService;
+
+import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequestMapping("/bo/v1/account-info-parameter")
@@ -116,5 +119,47 @@ public class AccountInfoParameterController {
 			response.setData(data);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
+	}
+}
+
+@RestController
+@RequestMapping("/api/v1/account-info-parameter")
+class AccountInfoParameterControllerForAPK {
+	@Autowired
+	private AccountInfoParameterService accountInfoParameterService;
+
+	@GetMapping("/get")
+	public ResponseEntity<Object> getAccountParameterParameter(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		AccountInfoParameterDto data = accountInfoParameterService.getAccountInfoParameter();
+		if (data == null || data.equals(null)) {
+			response.setMessage("Account parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Account parameter fetched successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@PutMapping("/update")
+	public ResponseEntity<Object> updateAccountParameterParameter(@RequestBody AccountInfoParameterDto requestDto,
+			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		AccountInfoParameterDto data = accountInfoParameterService.updateAccountInfoParameter(requestDto);
+		if (data == null || data.equals(null)) {
+			response.setMessage("Account parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Account parameter updated successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 }
