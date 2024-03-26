@@ -114,6 +114,7 @@ public class SecurityConfig {
         config.addAllowedOrigin("https://alizz.nuzion.in");
         config.addAllowedOrigin("http://217.21.91.165");
         config.addAllowedOrigin("https://217.21.91.165");
+        config.addAllowedOrigin("https://back-office-api-integration-2.netlify.app");
         config.addAllowedHeader("*");
         config.setAllowedMethods(Arrays.asList(
                 HttpMethod.GET.name(),

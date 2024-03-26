@@ -12,19 +12,18 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
+import com.backoffice.operations.entity.CardServiceLog;
 import com.backoffice.operations.payloads.CardStatusDto;
 import com.backoffice.operations.payloads.CardStatusDto.cardStatusDto;
-import com.backoffice.operations.payloads.CreditCardTrasactionChangeDto;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
+import com.backoffice.operations.repository.CardServiceLogRepo;
 import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.service.CardService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.xml.bind.Element;
 
 @Service
 public class CardServiceImp implements CardService {
@@ -41,6 +40,9 @@ public class CardServiceImp implements CardService {
 
 	@Autowired
 	private RestTemplate restTemplate;
+
+	@Autowired
+	private CardServiceLogRepo cardServiceLogRepo;
 
 	@Override
 	public GenericResponseDTO<Object> getCardStatus(String uniqueKey) {
@@ -80,7 +82,6 @@ public class CardServiceImp implements CardService {
 	public GenericResponseDTO<Object> tempBlockAndUnblock(String uniqueKey, CardStatusDto.requestDto requestDto) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
-			boolean isLocked = false;
 			String custNo = civilIdRepository.findById(uniqueKey).get().getCivilId();
 			String requestBody = "{\r\n   \"customerId\": \"" + custNo + "\"\r\n}";
 			String apiUrl = cardServiceUrl;
@@ -114,6 +115,10 @@ public class CardServiceImp implements CardService {
 				response.setStatus("Faluire");
 				response.setMessage("Card is already in requested state.");
 				response.setData(new HashMap<>());
+
+				cardServiceLogRepo.save(CardServiceLog.builder().entityId(custNo).kitNo(requestData.getKitNo())
+						.flag(requestDto.getFlag()).reason(requestDto.getReason()).uniqueKey(uniqueKey)
+						.status("Card is already in requested state.").build());
 				return response;
 			}
 
@@ -123,17 +128,24 @@ public class CardServiceImp implements CardService {
 			HttpEntity<String> blockUnblockRequest = new HttpEntity<>(body, headers);
 			ResponseEntity<JsonNode> blockUnblockResponse = restTemplate.exchange(blockUnblockUrl, HttpMethod.POST,
 					blockUnblockRequest, JsonNode.class);
-
 			response.setMessage("Success");
 			response.setStatus("Success");
 			response.setData(blockUnblockResponse.getBody());
+
+			cardServiceLogRepo.save(
+					CardServiceLog.builder().entityId(custNo).kitNo(requestData.getKitNo()).flag(requestDto.getFlag())
+							.reason(requestDto.getReason()).uniqueKey(uniqueKey).status("Success").build());
 			return response;
 		} catch (Exception e) {
 			logger.error("Error in tempBlockAndUnblock : {}", e.getMessage());
 			response.setStatus("Faluire");
 			response.setMessage("Something went wrong.");
 			response.setData(new HashMap<>());
+			
+			cardServiceLogRepo.save(CardServiceLog.builder().flag(requestDto.getFlag()).reason(requestDto.getReason())
+					.uniqueKey(uniqueKey).status(e.getMessage()).build());
 			return response;
 		}
 	}
+
 }

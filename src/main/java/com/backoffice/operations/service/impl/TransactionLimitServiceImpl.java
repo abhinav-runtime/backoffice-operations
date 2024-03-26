@@ -1,11 +1,9 @@
 package com.backoffice.operations.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -15,36 +13,31 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.backoffice.operations.entity.CardEntity;
+import com.backoffice.operations.entity.CardSettingLog;
 import com.backoffice.operations.entity.TransactionLimitsEntity;
-import com.backoffice.operations.entity.TransactionMaxMinLimitsParameter;
+import com.backoffice.operations.entity.TransectionLimitsLog;
 import com.backoffice.operations.entity.User;
 import com.backoffice.operations.payloads.CardSettingDto;
 import com.backoffice.operations.payloads.CreditCardTrasactionChangeDto;
 import com.backoffice.operations.payloads.CreditCardTrasactionDto;
-import com.backoffice.operations.payloads.PurposeResponseDto;
 import com.backoffice.operations.payloads.TransactionLimitsDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.CardRepository;
+import com.backoffice.operations.repository.CardSettingLogRepo;
 import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.TransactionLimitsRepository;
 import com.backoffice.operations.repository.TransactionMaxMinLimitsParameterRepo;
+import com.backoffice.operations.repository.TransectionLimitsLogRepo;
 import com.backoffice.operations.repository.UserRepository;
 import com.backoffice.operations.security.JwtTokenProvider;
 import com.backoffice.operations.service.TransactionLimitService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import jakarta.xml.bind.Element;
 
 @Service
 public class TransactionLimitServiceImpl implements TransactionLimitService {
@@ -75,6 +68,12 @@ public class TransactionLimitServiceImpl implements TransactionLimitService {
 
 	@Autowired
 	private CivilIdRepository civilIdRepository;
+
+	@Autowired
+	private CardSettingLogRepo cardSettingLogRepo;
+
+	@Autowired
+	private TransectionLimitsLogRepo transectionLimitsLogRepo;
 
 	@Override
 	public GenericResponseDTO<Object> setTransactionLimits(TransactionLimitsDTO transactionLimitsDTO) {
@@ -112,11 +111,19 @@ public class TransactionLimitServiceImpl implements TransactionLimitService {
 			responseDTO.setStatus("Success");
 			responseDTO.setMessage("Transaction limits set successfully!");
 			responseDTO.setData(setResponse.getBody());
+
+			transectionLimitsLogRepo.save(TransectionLimitsLog.builder().uniqueKey(transactionLimitsDTO.getUniqueKey())
+					.requestType(transactionLimitsDTO.getRequestType()).newLimits(transactionLimitsDTO.getNewLimits())
+					.status("Transaction limits set successfully").build());
 		} catch (Exception e) {
 			logger.error("Error in setTransactionLimits : {}", e.getMessage());
 			responseDTO.setStatus("Failure");
 			responseDTO.setMessage("Something went wrong");
 			responseDTO.setData(new HashMap<>());
+			
+			transectionLimitsLogRepo.save(TransectionLimitsLog.builder().uniqueKey(transactionLimitsDTO.getUniqueKey())
+					.requestType(transactionLimitsDTO.getRequestType()).newLimits(transactionLimitsDTO.getNewLimits())
+					.status(e.getMessage()).build());
 		}
 		return responseDTO;
 	}
@@ -259,7 +266,7 @@ public class TransactionLimitServiceImpl implements TransactionLimitService {
 			creditCardTrasactionChangeDto.setPos(cardSettingDto.getPos());
 			creditCardTrasactionChangeDto.setEcom(cardSettingDto.getEcom());
 			creditCardTrasactionChangeDto.setContactless(cardSettingDto.getContactless());
-			
+
 			ObjectMapper objectMapper = new ObjectMapper();
 			String jsonString = "";
 			jsonString = objectMapper.writeValueAsString(creditCardTrasactionChangeDto);
@@ -272,12 +279,21 @@ public class TransactionLimitServiceImpl implements TransactionLimitService {
 			responseDTO.setStatus("Success");
 			responseDTO.setMessage("Card Setting set successfully!");
 			responseDTO.setData(setResponse.getBody());
+
+			cardSettingLogRepo.save(CardSettingLog.builder().atm(cardSettingDto.getAtm()).pos(cardSettingDto.getPos())
+					.ecom(cardSettingDto.getEcom()).contactless(cardSettingDto.getContactless()).uniqueKey(uniqueKey)
+					.status("Card Setting set successfully").build());
 		} catch (Exception e) {
 			logger.error("Error in setCardSetting : {}", e.getMessage());
 			responseDTO.setStatus("Failure");
 			responseDTO.setMessage("Something went wrong");
 			responseDTO.setData(new HashMap<>());
+
+			cardSettingLogRepo.save(CardSettingLog.builder().atm(cardSettingDto.getAtm()).pos(cardSettingDto.getPos())
+					.ecom(cardSettingDto.getEcom()).contactless(cardSettingDto.getContactless()).uniqueKey(uniqueKey)
+					.status(e.getMessage()).build());
 		}
+
 		return responseDTO;
 	}
 
