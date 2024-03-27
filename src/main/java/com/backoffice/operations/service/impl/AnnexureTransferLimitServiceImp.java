@@ -234,9 +234,10 @@ public class AnnexureTransferLimitServiceImp implements AnnexureTransferLimitSer
 	public GenericResponseDTO<Object> createAnnexureTransferWithSubLimits(
 			AnnexureTransferWithSubLimitsDTO.AnnexureTransferWithSubLimitsRequestDTO annexureTransferWithSubLimits) {
 		GenericResponseDTO<Object> respose = new GenericResponseDTO<Object>();
-		AnnexureTransferWithSubLimits annrexureTransferWithSubLimitsEntity = new AnnexureTransferWithSubLimits();
 		try {
-			annrexureTransferWithSubLimitsEntity.setSubTypeLimit(annexureTransferWithSubLimits.getSubTypeLimit());
+			AnnexureTransferWithSubLimits annrexureTransferWithSubLimitsEntity = modelMapper.map(annexureTransferWithSubLimits,
+					AnnexureTransferWithSubLimits.class);
+//			annrexureTransferWithSubLimitsEntity.setSubTypeLimit(annexureTransferWithSubLimits.getSubTypeLimit());
 			annrexureTransferWithSubLimitsEntity.setAnnexureTransferLimits(annexureTransferLimitsRepo
 					.findById(annexureTransferWithSubLimits.getAnnexureTransferLimitsId()).get());
 			annrexureTransferWithSubLimitsEntity = annexureTransferSubLimitsRepo

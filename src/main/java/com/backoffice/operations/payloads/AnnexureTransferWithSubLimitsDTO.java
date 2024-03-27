@@ -32,5 +32,13 @@ public class AnnexureTransferWithSubLimitsDTO {
 		private String id;
 		private String subTypeLimit;
 		private String annexureTransferLimitsId;
+		private String globalLimit;
+	    private String segment;
+	    private long minPerTrxnAmt;
+	    private long maxPerTrxnAmt;
+	    private long dailyAmt;
+	    private long monthlyAmt;
+	    private long dailyCount;
+	    private long monthlyCount;
 	}
 }
