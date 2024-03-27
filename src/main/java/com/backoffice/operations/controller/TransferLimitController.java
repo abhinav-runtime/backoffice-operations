@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/transferLimit")
+    @RequestMapping("/api/v1/transferLimit")
 public class TransferLimitController {
 
     private final TransferLimitService transferLimitService;
@@ -21,8 +21,8 @@ public class TransferLimitController {
     public ResponseEntity<GenericResponseDTO<Object>> getTransferLimit(@RequestParam String customerType,
                                                                        @RequestParam String uniqueKey,
                                                                        @RequestParam String transactionType,
-                                                                       @RequestParam Double transactionAmount,
-                                                                       @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+                                                                       @RequestParam Double transactionAmount){
+//                                                                       @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         return new ResponseEntity<>(transferLimitService.getTransferLimit(customerType, uniqueKey, transactionType,
                 transactionAmount), HttpStatus.OK);
 

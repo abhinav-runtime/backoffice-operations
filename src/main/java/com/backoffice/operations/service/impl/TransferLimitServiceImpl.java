@@ -53,65 +53,83 @@ public class TransferLimitServiceImpl implements TransferLimitService {
 
             AnnexureTransferLimits annexureTransferLimits = annexureTransferLimitsRepo.findBySegmentAndGlobalLimit(segment, globalType);
 
-            AnnexureTransferWithSubLimits annexureTransferWithSubLimits = annexureTransferSubLimitsRepo.findByAnnexureTransferLimitsAndSubTypeLimit(annexureTransferLimits, subType);
+            if (Objects.nonNull(annexureTransferLimits)) {
+                AnnexureTransferWithSubLimits annexureTransferWithSubLimits = annexureTransferSubLimitsRepo.findByAnnexureTransferLimitsAndSubTypeLimit(annexureTransferLimits, subType);
+                if (Objects.nonNull(annexureTransferWithSubLimits)) {
+                    long dailyAmt = Objects.isNull(annexureTransferWithSubLimits.getDailyAmt()) ? annexureTransferWithSubLimits.getDailyAmt() : 0;
+                    long dailyCount = annexureTransferWithSubLimits.getDailyCount();
+                    long maxPerTrxnAmt = annexureTransferWithSubLimits.getMaxPerTrxnAmt();
+                    long minPerTrxnAmt = annexureTransferWithSubLimits.getMinPerTrxnAmt();
+                    long monthlyAmt = annexureTransferWithSubLimits.getMonthlyAmt();
+                    long monthlyCount = annexureTransferWithSubLimits.getMonthlyCount();
+                    long globalDailyAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyAmt();
+                    long globalDailyCount = annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyCount();
+                    long globalMaxPerTrxnAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMaxPerTrxnAmt();
+                    long globalMinPerTrxnAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMinPerTrxnAmt();
+                    long globalMonthlyAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyAmt();
+                    long globalMonthlyCount = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyCount();
 
-            long dailyAmt = annexureTransferWithSubLimits.getDailyAmt();
-            long dailyCount = annexureTransferWithSubLimits.getDailyCount();
-            long maxPerTrxnAmt = annexureTransferWithSubLimits.getMaxPerTrxnAmt();
-            long minPerTrxnAmt = annexureTransferWithSubLimits.getMinPerTrxnAmt();
-            long monthlyAmt = annexureTransferWithSubLimits.getMonthlyAmt();
-            long monthlyCount = annexureTransferWithSubLimits.getMonthlyCount();
-            long globalDailyAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyAmt();
-            long globalDailyCount = annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyCount();
-            long globalMaxPerTrxnAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMaxPerTrxnAmt();
-            long globalMinPerTrxnAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMinPerTrxnAmt();
-            long globalMonthlyAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyAmt();
-            long globalMonthlyCount = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyCount();
 
-
-            UserLimitTrxnEntity userLimitTrxnEntity = userLimitTrxnEntityRepo.findByUniqueKey(uniqueKey);
-            if (transactionAmt >= minPerTrxnAmt) {
-                if (transactionAmt <= maxPerTrxnAmt) {
-                    if (userLimitTrxnEntity.getMonthlyTrxnCount() < monthlyCount) {
-                        if (userLimitTrxnEntity.getMonthlyTrxnLimit() < monthlyAmt
-                                && userLimitTrxnEntity.getMonthlyTrxnLimit() + transactionAmt < monthlyAmt) {
-                            if (userLimitTrxnEntity.getDailyTrxnCount() < dailyCount) {
-                                if (userLimitTrxnEntity.getDailyTrxnLimit() < dailyAmt
-                                        && userLimitTrxnEntity.getDailyTrxnLimit() + transactionAmt < dailyAmt) {
-                                    dataMap.put("isTrxnAllowed", true);
+                    UserLimitTrxnEntity userLimitTrxnEntity = userLimitTrxnEntityRepo.findByUniqueKey(uniqueKey);
+                    if (transactionAmt >= minPerTrxnAmt) {
+                        if (transactionAmt <= maxPerTrxnAmt) {
+                            if (userLimitTrxnEntity.getMonthlyTrxnCount() < monthlyCount) {
+                                if (userLimitTrxnEntity.getMonthlyTrxnLimit() < monthlyAmt
+                                        && userLimitTrxnEntity.getMonthlyTrxnLimit() + transactionAmt < monthlyAmt) {
+                                    if (userLimitTrxnEntity.getDailyTrxnCount() < dailyCount) {
+                                        if (userLimitTrxnEntity.getDailyTrxnLimit() < dailyAmt
+                                                && userLimitTrxnEntity.getDailyTrxnLimit() + transactionAmt < dailyAmt) {
+                                            dataMap.put("isTrxnAllowed", true);
+                                        } else {
+                                            dataMap.put("isTrxnAllowed", false);
+                                            dataMap.put("message", "User daily transaction limit exceeded");
+                                        }
+                                    } else {
+                                        dataMap.put("isTrxnAllowed", false);
+                                        dataMap.put("message", "User daily transaction count exceeded");
+                                    }
                                 } else {
                                     dataMap.put("isTrxnAllowed", false);
-                                    dataMap.put("message", "User daily transaction limit exceeded");
+                                    dataMap.put("message", "User monthly transaction limit exceeded");
                                 }
                             } else {
                                 dataMap.put("isTrxnAllowed", false);
-                                dataMap.put("message", "User daily transaction count exceeded");
+                                dataMap.put("message", "User monthly transaction count exceeded");
                             }
                         } else {
                             dataMap.put("isTrxnAllowed", false);
-                            dataMap.put("message", "User monthly transaction limit exceeded");
+                            dataMap.put("message", "Max limit per transaction exceeded");
                         }
                     } else {
                         dataMap.put("isTrxnAllowed", false);
-                        dataMap.put("message", "User monthly transaction count exceeded");
+                        dataMap.put("message", "Min limit per transaction to proceed is less");
                     }
-                } else {
+                    dataMap.put("uniqueKey", uniqueKey);
+                    responseDTO.setData(dataMap);
+                    responseDTO.setStatus("Success");
+                    responseDTO.setMessage("Success");
+
+                    return responseDTO;
+                }else {
+                    dataMap.put("uniqueKey", uniqueKey);
                     dataMap.put("isTrxnAllowed", false);
-                    dataMap.put("message", "Max limit per transaction exceeded");
+                    responseDTO.setData(dataMap);
+                    responseDTO.setStatus("Failure");
+                    responseDTO.setMessage("User Not Found");
+                    return responseDTO;
                 }
             } else {
+                dataMap.put("uniqueKey", uniqueKey);
                 dataMap.put("isTrxnAllowed", false);
-                dataMap.put("message", "Min limit per transaction to proceed is less");
+                responseDTO.setData(dataMap);
+                responseDTO.setStatus("Failure");
+                responseDTO.setMessage("User Not Found");
+                return responseDTO;
             }
-            dataMap.put("uniqueKey", uniqueKey);
-            responseDTO.setData(dataMap);
-            responseDTO.setStatus("Success");
-            responseDTO.setMessage("Success");
-
-            return responseDTO;
         } catch (Exception e) {
             logger.error("Error in TransferLimitServiceImpl getTransferLimit {}", e.getMessage());
             dataMap.put("uniqueKey", uniqueKey);
+            dataMap.put("isTrxnAllowed", false);
             responseDTO.setData(dataMap);
             responseDTO.setStatus("Failure");
             responseDTO.setMessage("Validation Failure");
