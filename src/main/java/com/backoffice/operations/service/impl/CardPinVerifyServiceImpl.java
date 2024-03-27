@@ -1,10 +1,10 @@
 package com.backoffice.operations.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,7 +47,7 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 		int cardPinMaxAttempts = cardPinParameter.getCardPinMaximumAttempts();
 		int cardPinCooldownPeriodSeconds = cardPinParameter.getCardPinCooldownInSec();
 		
-		int attempts = attemptsMap.getOrDefault(entityIdDTO.getUniqueKey(), 0);
+//		int attempts = attemptsMap.getOrDefault(entityIdDTO.getUniqueKey(), 0);
 		
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
@@ -59,6 +59,7 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 			EntityIdDTO.StoredCardPin storedPin = new EntityIdDTO.StoredCardPin();
 			storedPin.setStoredCardPin("2233");
 			CardEntity cardEntity = cardRepository.findByUniqueKeyCivilId(entityIdDTO.getUniqueKey());
+			int attempts = cardEntity.getAttempts();
 			
 			//If CiviId UniqueKey and System UniqueKey is match
 			if(Objects.nonNull(cardEntity))
@@ -69,20 +70,58 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
 					 responseDTO.setMessage("Maximum attempts reached. Please try again later.");
 						return responseDTO;
 			        }
-				 
+
+				 //If Pin length is not correct
+				if (null == entityIdDTO.getCardPin() || entityIdDTO.getCardPin().length() > cardPinParameter.getPinLength()) {
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Pin Length for the card is incorrect. Please try again later.");
+					return responseDTO;
+				}
+
+				//If Max Sequential Digit Limit is exceeds
+				if (maxSequentialDigits(entityIdDTO.getCardPin()) > cardPinParameter.getSequentialDigits()){
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Number of maximum sequential digits in PIN Exceeded. Please try again later.");
+					return responseDTO;
+				}
+
+				if (ChronoUnit.SECONDS.between(cardEntity.getLastMaxAttemptTime(),
+						LocalDateTime.now()) < cardPinParameter.getSessionExpiry()) {
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Session Is Blocked. Please try again later.");
+					return responseDTO;
+				}
+
+				if (ChronoUnit.SECONDS.between(cardEntity.getLastMaxAttemptTime(),
+						LocalDateTime.now()) < cardPinParameter.getCardPinCooldownInSec()) {
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Session Is Blocked. Please try again later.");
+					return responseDTO;
+				}
+
+				//If Number of maximum repetitive digits in PIN (111) Excceds
+				if (maxRepetitiveDigits(entityIdDTO.getCardPin()) > cardPinParameter.getRepetitiveDigits()){
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Number of maximum repetitive digits in PIN Exceeded. Please try again later.");
+					return responseDTO;
+				}
+
 				//If Card Pin is Empty or does not match
-				if (!storedPin.getStoredCardPin().equals(entityIdDTO.getCardPin())) 
+				if (!storedPin.getStoredCardPin().equals(entityIdDTO.getCardPin()))
 				{
 					attempts++;
 		            attemptsMap.put(entityIdDTO.getUniqueKey(), attempts);
-
+					cardEntity.setAttempts(attempts);
+					cardEntity.setLastAttemptTime(LocalDateTime.now());
+					cardRepository.save(cardEntity);
 					
 					//Max Attempted Done
 					if (attempts >= cardPinMaxAttempts){
 						
 						//Start coolDown for user
 						cooldownMap.put(entityIdDTO.getUniqueKey(), LocalDateTime.now());
-						
+						cardEntity.setLastMaxAttemptTime(LocalDateTime.now());
+						cardRepository.save(cardEntity);
 						responseDTO.setStatus("Failure");
 						responseDTO.setMessage("Maximum attempts reached. Please try again later.");
 						return responseDTO;
@@ -118,4 +157,22 @@ public class CardPinVerifyServiceImpl implements CardPinVerifyService {
         }
 		return lastAttemptTime.plusSeconds(cardPinCooldownPeriodSeconds).isAfter(LocalDateTime.now());
     }
+
+	private int maxSequentialDigits(String pin) {
+		return Arrays.stream(pin.split("(?<=(.))(?!\\1)"))
+				.mapToInt(String::length)
+				.max()
+				.orElse(0);
+	}
+
+	private int maxRepetitiveDigits(String pin) {
+		Matcher matcher = Pattern.compile("(\\d)\\1*").matcher(pin);
+		int maxCount = 0;
+
+		while (matcher.find()) {
+			maxCount += matcher.group().length();
+		}
+
+		return maxCount;
+	}
 }

@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,5 +33,16 @@ public class Profile {
     private String civilId;
     private String expiryDate;
     private String userId;
+    private int mobileChangeAttemptLimit;
+    private LocalDateTime mobileChangeLockoutDuration;
+    private LocalDate mobileNoChangedLockoutDaysDuration;
+    private int emailIdChangeAttemptLimit;
+    private int emailIdVerificationLinkResendAttempts;
+    private LocalDateTime emailIdVerificationLinkTimeout;
+    private LocalDateTime emailIdChangeLockoutDuration;
+    private LocalDate emailIdChangedLockoutDaysDuration;
+    private int emailStatementEnableDisable;
+
+
 
 }

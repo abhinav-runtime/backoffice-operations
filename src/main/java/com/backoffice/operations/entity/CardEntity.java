@@ -1,5 +1,6 @@
 package com.backoffice.operations.entity;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -38,6 +39,9 @@ public class CardEntity {
 	private Date cardIssueDate;
 	private String pinStatus;
 	private String cardNetworkType;
+	private int attempts;
+	private LocalDateTime lastAttemptTime;
+	private LocalDateTime lastMaxAttemptTime;
 
 	public String getCivilId() {
 		return civilId;
