@@ -75,7 +75,7 @@ public class TrxnLimitsDisplayServiceImp implements TrxnLimitsDisplayService {
 		TexnLimitsDisplayDto.AmmountDetails result = new TexnLimitsDisplayDto.AmmountDetails();
 		result.setTotal(total);
 		result.setUsed(uses);
-		result.setAvailable(total - uses);
+		result.setAvailable(total - uses < 0 ? 0 : total - uses);
 
 		return result;
 	}
@@ -84,7 +84,7 @@ public class TrxnLimitsDisplayServiceImp implements TrxnLimitsDisplayService {
 		TexnLimitsDisplayDto.CountDetails result = new TexnLimitsDisplayDto.CountDetails();
 		result.setTotal(total);
 		result.setUsed(uses);
-		result.setAvailable(total - uses);
+		result.setAvailable(total - uses < 0 ? 0 : total - uses);
 
 		return result;
 	}
