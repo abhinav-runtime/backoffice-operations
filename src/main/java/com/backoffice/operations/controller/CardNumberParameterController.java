@@ -1,5 +1,6 @@
 package com.backoffice.operations.controller;
 
+import org.springframework.http.HttpHeaders;
 import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -94,7 +96,7 @@ public class CardNumberParameterController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
-	
+
 	@DeleteMapping("/delete")
 	public ResponseEntity<Object> deleteCardNumberParameter() {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
@@ -116,5 +118,47 @@ public class CardNumberParameterController {
 			response.setStatus("Success");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
+	}
+}
+
+@RestController
+@RequestMapping("/api/v1/cardNumberParameter")
+class CardNumberParameterControllerAPK {
+	@Autowired
+	private CardNumberParameterService cardNumberParameterService;
+
+	@PutMapping("/update")
+	public ResponseEntity<Object> updateCardNumberParameter(@RequestBody CardNumberParameterDTO requestDto,
+			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		CardNumberParameterDTO data = cardNumberParameterService.updateCardNumberParameter(requestDto);
+		if (data == null || data.equals(null)) {
+			response.setMessage("Card number parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Card number parameter updated successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping("/get")
+	public ResponseEntity<Object> getCardNumberParameter(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		CardNumberParameterDTO data = cardNumberParameterService.getCardNumberParameter();
+		if (data == null || data.equals(null)) {
+			response.setMessage("Card number parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Card number parameter fetched successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 }

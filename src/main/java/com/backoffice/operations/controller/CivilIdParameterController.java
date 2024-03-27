@@ -1,5 +1,6 @@
 package com.backoffice.operations.controller;
 
+import org.springframework.http.HttpHeaders;
 import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -96,7 +98,7 @@ public class CivilIdParameterController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
-	
+
 	@DeleteMapping("/delete")
 	public ResponseEntity<Object> deleteCivilIdParameter() {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
@@ -118,5 +120,48 @@ public class CivilIdParameterController {
 			response.setData(data);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
+	}
+}
+
+@RestController
+@RequestMapping("/api/v1/civil-id-parameter")
+class CivilIdParameterControllerAPK {
+	@Autowired
+	private CivilIdParameterService civilIdParameterService;
+
+	@PutMapping("/update")
+	public ResponseEntity<Object> updateCivilIdParameter(@RequestBody CivilIdParameterDTO requestDto,
+			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		CivilIdParameterDTO data = civilIdParameterService.updateCivilIdParameter(requestDto);
+		if (data == null || data.equals(null)) {
+			response.setMessage("Civil id parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Civil id parameter updated successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+
+	}
+
+	@GetMapping("/get")
+	public ResponseEntity<Object> getCivilParameter(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
+
+		CivilIdParameterDTO data = civilIdParameterService.getCivilIdParameter();
+		if (data == null || data.equals(null)) {
+			response.setMessage("Civil id parameter not found");
+			response.setStatus("Failure");
+			response.setData(new HashMap<>());
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		response.setData(data);
+		response.setMessage("Civil id parameter fetched successfully");
+		response.setStatus("Success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 }
