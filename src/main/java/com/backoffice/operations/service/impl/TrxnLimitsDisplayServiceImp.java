@@ -44,8 +44,13 @@ public class TrxnLimitsDisplayServiceImp implements TrxnLimitsDisplayService {
 					.findBySegmentAndGlobalLimit(segment, globalLimit);
 			AnnexureTransferWithSubLimits annexureTransferWithSubLimits = annexureTransferSubLimitsRepo
 					.findByAnnexureTransferLimitsAndSubTypeLimit(annexureTransferLimits, subType);
-			UserLimitTrxnEntity userLimitTrxnEntity = userLimitTrxnEntityRepo
-					.findByUniqueKey(requestDTO.getUniqueKey());
+			UserLimitTrxnEntity userLimitTrxnEntity = new UserLimitTrxnEntity();
+			if (userLimitTrxnEntityRepo.existsByUniqueKey(requestDTO.getUniqueKey())) {
+				userLimitTrxnEntity = userLimitTrxnEntityRepo.findByUniqueKey(requestDTO.getUniqueKey());
+			} else {
+				userLimitTrxnEntity = UserLimitTrxnEntity.builder().dailyTrxnLimit(0.0).dailyTrxnCount(0).monthlyTrxnCount(0)
+						.monthlyTrxnLimit(0.0).build();
+			}
 
 			TexnLimitsDisplayDto.ResponseDTO responseData = new TexnLimitsDisplayDto.ResponseDTO();
 			responseData.setMin_amount_per_trans(annexureTransferWithSubLimits.getMinPerTrxnAmt());
