@@ -203,6 +203,16 @@ public class ACHServiceImpl implements ACHService {
 									alizzTransferRequestDto.getFromAccountNumber());
 						}
 						return responseDTO;
+					} else {
+						data.put("message", "User Transaction Limit Exceeded");
+						data.put("transactionID", txnRefId);
+						data.put("transactionDateTime", trnxDate);
+						data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
+						data.put("status", "Failure");
+						responseDTO.setStatus("Success");
+						responseDTO.setMessage("Failure");
+						responseDTO.setData(data);
+						return responseDTO;
 					}
 				}
 			} else {

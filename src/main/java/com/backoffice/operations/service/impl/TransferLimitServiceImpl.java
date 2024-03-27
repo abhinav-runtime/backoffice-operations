@@ -56,29 +56,44 @@ public class TransferLimitServiceImpl implements TransferLimitService {
             if (Objects.nonNull(annexureTransferLimits)) {
                 AnnexureTransferWithSubLimits annexureTransferWithSubLimits = annexureTransferSubLimitsRepo.findByAnnexureTransferLimitsAndSubTypeLimit(annexureTransferLimits, subType);
                 if (Objects.nonNull(annexureTransferWithSubLimits)) {
-                    long dailyAmt = Objects.isNull(annexureTransferWithSubLimits.getDailyAmt()) ? annexureTransferWithSubLimits.getDailyAmt() : 0;
-                    long dailyCount = annexureTransferWithSubLimits.getDailyCount();
-                    long maxPerTrxnAmt = annexureTransferWithSubLimits.getMaxPerTrxnAmt();
-                    long minPerTrxnAmt = annexureTransferWithSubLimits.getMinPerTrxnAmt();
-                    long monthlyAmt = annexureTransferWithSubLimits.getMonthlyAmt();
-                    long monthlyCount = annexureTransferWithSubLimits.getMonthlyCount();
-                    long globalDailyAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyAmt();
-                    long globalDailyCount = annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyCount();
-                    long globalMaxPerTrxnAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMaxPerTrxnAmt();
-                    long globalMinPerTrxnAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMinPerTrxnAmt();
-                    long globalMonthlyAmt = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyAmt();
-                    long globalMonthlyCount = annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyCount();
+                    long dailyAmt = Objects.nonNull(annexureTransferWithSubLimits.getDailyAmt()) ? annexureTransferWithSubLimits.getDailyAmt() : 0;
+                    long dailyCount = Objects.nonNull(annexureTransferWithSubLimits.getDailyCount()) ? annexureTransferWithSubLimits.getDailyCount() : 0;
+                    long maxPerTrxnAmt = Objects.nonNull(annexureTransferWithSubLimits.getMaxPerTrxnAmt()) ? annexureTransferWithSubLimits.getMaxPerTrxnAmt() : 0;
+                    long minPerTrxnAmt = Objects.nonNull(annexureTransferWithSubLimits.getMinPerTrxnAmt()) ? annexureTransferWithSubLimits.getMinPerTrxnAmt() : 0;
+                    long monthlyAmt = Objects.nonNull(annexureTransferWithSubLimits.getMonthlyAmt()) ? annexureTransferWithSubLimits.getMonthlyAmt() : 0;
+                    long monthlyCount = Objects.nonNull(annexureTransferWithSubLimits.getMonthlyCount()) ? annexureTransferWithSubLimits.getMonthlyCount() : 0;
+                    long globalDailyAmt = Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits()) &&
+                            Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyAmt()) ?
+                            annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyAmt() : 0;
+                    long globalDailyCount = Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits()) &&
+                            Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyCount()) ?
+                            annexureTransferWithSubLimits.getAnnexureTransferLimits().getDailyCount() : 0;
+                    long globalMaxPerTrxnAmt = Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits()) &&
+                            Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits().getMaxPerTrxnAmt()) ?
+                            annexureTransferWithSubLimits.getAnnexureTransferLimits().getMaxPerTrxnAmt() : 0;
+                    long globalMinPerTrxnAmt = Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits()) &&
+                            Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits().getMinPerTrxnAmt()) ?
+                            annexureTransferWithSubLimits.getAnnexureTransferLimits().getMinPerTrxnAmt() : 0;
+                    long globalMonthlyAmt = Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits()) &&
+                            Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyAmt()) ?
+                            annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyAmt() : 0;
+                    long globalMonthlyCount = Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits()) &&
+                            Objects.nonNull(annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyCount()) ?
+                            annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyCount() : 0;
 
 
                     UserLimitTrxnEntity userLimitTrxnEntity = userLimitTrxnEntityRepo.findByUniqueKey(uniqueKey);
-                    if (transactionAmt >= minPerTrxnAmt) {
+                    if (Objects.nonNull(userLimitTrxnEntity) && transactionAmt >= minPerTrxnAmt) {
                         if (transactionAmt <= maxPerTrxnAmt) {
-                            if (userLimitTrxnEntity.getMonthlyTrxnCount() < monthlyCount) {
-                                if (userLimitTrxnEntity.getMonthlyTrxnLimit() < monthlyAmt
-                                        && userLimitTrxnEntity.getMonthlyTrxnLimit() + transactionAmt < monthlyAmt) {
-                                    if (userLimitTrxnEntity.getDailyTrxnCount() < dailyCount) {
-                                        if (userLimitTrxnEntity.getDailyTrxnLimit() < dailyAmt
-                                                && userLimitTrxnEntity.getDailyTrxnLimit() + transactionAmt < dailyAmt) {
+                            Integer monthlyTrxnCount = Objects.nonNull(userLimitTrxnEntity.getMonthlyTrxnCount()) ? userLimitTrxnEntity.getMonthlyTrxnCount() : 0;
+                            if (monthlyTrxnCount < monthlyCount) {
+                                double monthlyTrxnLimit = Objects.nonNull(userLimitTrxnEntity.getMonthlyTrxnLimit()) ? userLimitTrxnEntity.getMonthlyTrxnLimit() : 0;
+                                if (monthlyTrxnLimit < monthlyAmt
+                                        && monthlyTrxnLimit + transactionAmt < monthlyAmt) {
+                                    double dailyTrxnCount = Objects.nonNull(userLimitTrxnEntity.getDailyTrxnCount()) ? userLimitTrxnEntity.getDailyTrxnCount() : 0;
+                                    if (dailyTrxnCount < dailyCount) {
+                                        if (dailyTrxnCount < dailyAmt
+                                                && dailyTrxnCount + transactionAmt < dailyAmt) {
                                             dataMap.put("isTrxnAllowed", true);
                                         } else {
                                             dataMap.put("isTrxnAllowed", false);
