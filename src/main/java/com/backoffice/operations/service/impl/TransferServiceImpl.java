@@ -195,7 +195,17 @@ public class TransferServiceImpl implements TransferService {
 
             responseDTO = getResponseDto(selfTransferDTO.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(),
                     fundTransferResponseDto, txnRefId, trnxDate, selfTransferDTO.getTransactionAmount(), selfTransferDTO.getFromAccountNumber());
-        }
+        }else {
+                data.put("message", "User Transaction Limit Exceeded");
+                data.put("transactionID", txnRefId);
+                data.put("transactionDateTime", trnxDate);
+                data.put("uniqueKey", selfTransferDTO.getUniqueKey());
+                data.put("status", "Failure");
+                responseDTO.setStatus("Success");
+                responseDTO.setMessage("Failure");
+                responseDTO.setData(data);
+                return responseDTO;
+            }
         } catch (Exception e) {
             logger.error("ERROR in class TransferServiceImpl method transferToBank", e);
             data.put("message", "Payment failed!");
