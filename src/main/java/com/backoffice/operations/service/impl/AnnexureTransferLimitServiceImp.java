@@ -116,10 +116,10 @@ public class AnnexureTransferLimitServiceImp implements AnnexureTransferLimitSer
 				resposeDto.setMessage("Annexure Transfer Limits Not Found");
 				return resposeDto;
 			}
-			if (annexureTransferLimits.getGlobalLimit() != null || annexureTransferLimits.getGlobalLimit() != "") {
+			if (annexureTransferLimits.getGlobalLimit() != null && annexureTransferLimits.getGlobalLimit() != "") {
 				annexureTransferLimitsEntity.setGlobalLimit(annexureTransferLimits.getGlobalLimit());
 			}
-			if (annexureTransferLimits.getSegment() != null || annexureTransferLimits.getSegment() != "") {
+			if (annexureTransferLimits.getSegment() != null && annexureTransferLimits.getSegment() != "") {
 				annexureTransferLimitsEntity.setSegment(annexureTransferLimits.getSegment());
 			}
 			if (annexureTransferLimits.getDailyAmt() != 0) {
@@ -234,9 +234,10 @@ public class AnnexureTransferLimitServiceImp implements AnnexureTransferLimitSer
 	public GenericResponseDTO<Object> createAnnexureTransferWithSubLimits(
 			AnnexureTransferWithSubLimitsDTO.AnnexureTransferWithSubLimitsRequestDTO annexureTransferWithSubLimits) {
 		GenericResponseDTO<Object> respose = new GenericResponseDTO<Object>();
-		AnnexureTransferWithSubLimits annrexureTransferWithSubLimitsEntity = new AnnexureTransferWithSubLimits();
 		try {
-			annrexureTransferWithSubLimitsEntity.setSubTypeLimit(annexureTransferWithSubLimits.getSubTypeLimit());
+			AnnexureTransferWithSubLimits annrexureTransferWithSubLimitsEntity = modelMapper
+					.map(annexureTransferWithSubLimits, AnnexureTransferWithSubLimits.class);
+//			annrexureTransferWithSubLimitsEntity.setSubTypeLimit(annexureTransferWithSubLimits.getSubTypeLimit());
 			annrexureTransferWithSubLimitsEntity.setAnnexureTransferLimits(annexureTransferLimitsRepo
 					.findById(annexureTransferWithSubLimits.getAnnexureTransferLimitsId()).get());
 			annrexureTransferWithSubLimitsEntity = annexureTransferSubLimitsRepo
@@ -270,14 +271,41 @@ public class AnnexureTransferLimitServiceImp implements AnnexureTransferLimitSer
 				return respose;
 			}
 			if (annexureTransferWithSubLimits.getAnnexureTransferLimitsId() != null
-					|| annexureTransferWithSubLimits.getAnnexureTransferLimitsId() != "") {
+					&& annexureTransferWithSubLimits.getAnnexureTransferLimitsId() != "") {
 				annrexureTransferWithSubLimitsEntity.setAnnexureTransferLimits(annexureTransferLimitsRepo
 						.findById(annexureTransferWithSubLimits.getAnnexureTransferLimitsId()).get());
 			}
 			if (annexureTransferWithSubLimits.getSubTypeLimit() != null
-					|| annexureTransferWithSubLimits.getSubTypeLimit() != "") {
+					&& !annexureTransferWithSubLimits.getSubTypeLimit().isBlank()) {
 				annrexureTransferWithSubLimitsEntity.setSubTypeLimit(annexureTransferWithSubLimits.getSubTypeLimit());
 			}
+			if (annexureTransferWithSubLimits.getGlobalLimit() != null
+					&& !annexureTransferWithSubLimits.getGlobalLimit().isEmpty()) {
+				annrexureTransferWithSubLimitsEntity.setGlobalLimit(annexureTransferWithSubLimits.getGlobalLimit());
+			}
+			if (annexureTransferWithSubLimits.getSegment() != null
+					&& !annexureTransferWithSubLimits.getSegment().isEmpty()) {
+				annrexureTransferWithSubLimitsEntity.setSegment(annexureTransferWithSubLimits.getSegment());
+			}
+			if (annexureTransferWithSubLimits.getMinPerTrxnAmt() != 0) {
+				annrexureTransferWithSubLimitsEntity.setMinPerTrxnAmt(annexureTransferWithSubLimits.getMinPerTrxnAmt());
+			}
+			if (annexureTransferWithSubLimits.getMaxPerTrxnAmt() != 0) {
+				annrexureTransferWithSubLimitsEntity.setMaxPerTrxnAmt(annexureTransferWithSubLimits.getMaxPerTrxnAmt());
+			}
+			if (annexureTransferWithSubLimits.getDailyAmt() != 0) {
+				annrexureTransferWithSubLimitsEntity.setDailyAmt(annexureTransferWithSubLimits.getDailyAmt());
+			}
+			if (annexureTransferWithSubLimits.getMonthlyAmt() != 0) {
+				annrexureTransferWithSubLimitsEntity.setMonthlyAmt(annexureTransferWithSubLimits.getMonthlyAmt());
+			}
+			if (annexureTransferWithSubLimits.getDailyCount() != 0) {
+				annrexureTransferWithSubLimitsEntity.setDailyCount(annexureTransferWithSubLimits.getDailyCount());
+			}
+			if (annexureTransferWithSubLimits.getMonthlyCount() != 0) {
+				annrexureTransferWithSubLimitsEntity.setMonthlyCount(annexureTransferWithSubLimits.getMonthlyCount());
+			}
+
 			annrexureTransferWithSubLimitsEntity = annexureTransferSubLimitsRepo
 					.save(annrexureTransferWithSubLimitsEntity);
 			respose.setData(
