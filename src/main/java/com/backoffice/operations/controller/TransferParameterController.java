@@ -1,6 +1,7 @@
 package com.backoffice.operations.controller;
 
 import com.backoffice.operations.exceptions.DuplicateEntryException;
+import com.backoffice.operations.exceptions.ResourceNotFoundException;
 import com.backoffice.operations.payloads.TransferParameterDTO;
 import com.backoffice.operations.payloads.TransfersParameterDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
@@ -101,18 +102,17 @@ public class TransferParameterController {
 
 	// DeleteMapping for deleting a transfer parameter
 	@DeleteMapping("/delete/{id}")
-	public GenericResponseDTO<Object> deleteTransferParameter(@PathVariable Long id
-															  ) {
+	public GenericResponseDTO<Object> deleteTransferParameter(@PathVariable Long id) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
-		try {
-			TransferParameterService.delete(id);
+		boolean deletionSuccessful = TransferParameterService.delete(id);
+		if (deletionSuccessful) {
 			response.setStatus("Success");
 			response.setMessage("TransferParameter deleted successfully");
 			response.setData(null);
-		} catch (Exception e) {
-			LOGGER.error("Error in deleteTransferParameter {}",e);
+		} else {
+			LOGGER.error("TransferParameter not found with ID: {}", id);
 			response.setStatus("Failure");
-			response.setMessage("Error occurred while deleting TransferParameter with ID: " + id);
+			response.setMessage("TransferParameter not found with ID: " + id);
 			response.setData(null);
 		}
 		return response;

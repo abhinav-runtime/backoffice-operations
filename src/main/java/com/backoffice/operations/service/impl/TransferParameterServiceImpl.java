@@ -1,9 +1,12 @@
 package com.backoffice.operations.service.impl;
 import com.backoffice.operations.entity.TransfersParameter;
+import com.backoffice.operations.exceptions.ResourceNotFoundException;
 import com.backoffice.operations.payloads.TransfersParameterDTO;
 import com.backoffice.operations.repository.TransferParameterRepository;
 import com.backoffice.operations.service.TransferParameterService;
+import org.modelmapper.Conditions;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -49,7 +52,10 @@ public class TransferParameterServiceImpl implements TransferParameterService {
         Optional<TransfersParameter> existingTransferParameterOptional = transfersParameterRepository.findById(id);
         if (existingTransferParameterOptional.isPresent()) {
             TransfersParameter existingTransferParameter = existingTransferParameterOptional.get();
-            // Configure ModelMapper to only map non-null fields from DTO to entity
+            // Configure ModelMapper to ignore null values during mapping
+            modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT)
+                    .setPropertyCondition(Conditions.isNotNull());
+            // Map only non-null fields from DTO to entity
             modelMapper.map(transferParameterDTO, existingTransferParameter);
             // Save the updated entity
             TransfersParameter updatedTransferParameter = transfersParameterRepository.save(existingTransferParameter);
@@ -59,7 +65,13 @@ public class TransferParameterServiceImpl implements TransferParameterService {
     }
 
     @Override
-    public void delete(Long id) {
-        transfersParameterRepository.deleteById(id);
+    public boolean delete(Long id) {
+        Optional<TransfersParameter> transferParameterOptional = transfersParameterRepository.findById(id);
+        if (transferParameterOptional.isPresent()) {
+            transfersParameterRepository.deleteById(id);
+            return true; // Deletion successful
+        } else {
+            return false; // TransferParameter with the given ID not found
+        }
     }
 }

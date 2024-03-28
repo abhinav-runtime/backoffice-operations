@@ -16,5 +16,5 @@ public interface TransferParameterService {
 
     TransfersParameterDTO update(Long id, TransfersParameterDTO transferParameterDTO);
 
-    void delete(Long id);
+    boolean delete(Long id);
 }
