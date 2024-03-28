@@ -23,9 +23,10 @@ public class BoSystemDetailsController {
 	private BoSystemDetailsService boSystemDetailsService;
 
 	@GetMapping("/{custNo}")
-	public ResponseEntity<Object> getSystemDetails(@PathVariable(name = "custNo") String custNo) {
+	public ResponseEntity<Object> getSystemDetails(@PathVariable(name = "custNo") String custNo,
+			@RequestParam(name = "page") int page, @RequestParam(name = "size") int size) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
-		List<BoSystemDetailsResponseDTO> data = boSystemDetailsService.getSystemDetails(custNo);
+		List<BoSystemDetailsResponseDTO> data = boSystemDetailsService.getSystemDetails(custNo, page, size);
 		if (data != null) {
 			if (data.size() == 0) {
 				response.setMessage("System details not found");
