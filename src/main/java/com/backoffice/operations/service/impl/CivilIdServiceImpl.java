@@ -30,6 +30,8 @@ import org.springframework.web.client.RestTemplate;
 import com.backoffice.operations.entity.AccessToken;
 import com.backoffice.operations.entity.BlockUnblockAction;
 import com.backoffice.operations.entity.CardEntity;
+import com.backoffice.operations.entity.CardNumberEntityLog;
+import com.backoffice.operations.entity.CardNumberParameter;
 import com.backoffice.operations.entity.CivilIdEntity;
 import com.backoffice.operations.entity.CivilIdParameter;
 import com.backoffice.operations.entity.OtpEntity;
@@ -41,6 +43,8 @@ import com.backoffice.operations.payloads.common.GenericResponseDTO;
 // import com.backoffice.operations.payloads.ValidationResultDTO;
 import com.backoffice.operations.repository.AccessTokenRepository;
 import com.backoffice.operations.repository.BlockUnblockActionRepository;
+import com.backoffice.operations.repository.CardNumberEntityLogRepo;
+import com.backoffice.operations.repository.CardNumberParameterRepo;
 import com.backoffice.operations.repository.CardRepository;
 import com.backoffice.operations.repository.CivilIdParameterRepository;
 import com.backoffice.operations.repository.CivilIdRepository;
@@ -82,6 +86,10 @@ public class CivilIdServiceImpl implements CivilIdService {
 	@Autowired
 	private OtpRepository otpRepository;
 	@Autowired
+	private CardNumberEntityLogRepo cardNumberEntityLogRepo;
+	@Autowired
+	private CardNumberParameterRepo cardNumberParameterRepo;
+	@Autowired
 	private CardRepository cardRepository;
 	@Autowired
 	private CivilIdParameterRepository civilIdParameterRepository;
@@ -109,7 +117,6 @@ public class CivilIdServiceImpl implements CivilIdService {
 	@Override
 	public GenericResponseDTO<Object> validateCivilId(String entityId, String token) {
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-//        long id = 1;
 		List<CivilIdParameter> civilIdParameterList = civilIdParameterRepository.findAll();
 		if (civilIdParameterList.size() == 0) {
 			Map<String, String> data = new HashMap<>();
@@ -124,6 +131,8 @@ public class CivilIdServiceImpl implements CivilIdService {
 
 		int allowedAttempts = civilIdParameter.getCivilIdMaxAttempts();
 		int timeoutSeconds = civilIdParameter.getCivilIdCooldownInSec();
+		int deviceLevelAttempts = civilIdParameter.getDeviceAttempts();
+		int overallAttempts = civilIdParameter.getOverrallMaxAttempts();
 
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
@@ -138,49 +147,114 @@ public class CivilIdServiceImpl implements CivilIdService {
 
 			Optional<CivilIdEntity> civilIdEntityDB = civilIdRepository.findByEntityId(entityId);
 			if (civilIdEntityDB.isPresent()) {
+				if (ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
+						LocalDateTime.now()) > timeoutSeconds
+						&& civilIdEntityDB.get().getOverallAttempts() < overallAttempts) {
+					civilIdEntityDB.get().setAttempts(0);
+				}
 				if (StringUtils.hasLength(civilIdEntityDB.get().getCivilId())) {
-					Map<String, String> data = new HashMap<>();
+					civilIdEntityDB.get().setAttempts(0);
+					civilIdEntityDB.get().setLastAttemptTime(LocalDateTime.now());
+					civilIdEntityDB.get().setOverallAttempts(0);
+					civilIdRepository.save(civilIdEntityDB.get());
+
+					Map<String, Object> data = new HashMap<>();
 					responseDTO.setStatus("Success");
 					responseDTO.setMessage("Success");
 					data.put("uniqueKey", civilIdEntityDB.get().getId());
+					data.put("attempts", 0);
+					data.put("timeoutSeconds", 0);
+					data.put("overallAttempts", 0);
+
 					responseDTO.setData(data);
 					return responseDTO;
+				} else if (civilIdEntityDB.get().getOverallAttempts() >= overallAttempts) {
+					Map<String, Object> data = new HashMap<>();
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Ovarall Attempts Exceeded");
+					data.put("uniqueKey", civilIdEntityDB.get().getId().toString());
+					data.put("attempts", civilIdEntityDB.get().getAttempts());
+					data.put("timeoutSeconds",
+							timeoutSeconds - ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
+									LocalDateTime.now()) < 0 ? 0
+											: timeoutSeconds - ChronoUnit.SECONDS.between(
+													civilIdEntityDB.get().getLastAttemptTime(), LocalDateTime.now()));
+					data.put("overallAttempts", civilIdEntityDB.get().getOverallAttempts());
+
+					responseDTO.setData(data);
+					return responseDTO;
+
 				} else if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
 					// Valid attempt, update the entity
+					if (civilIdEntityDB.get().getAttempts() + 1 == allowedAttempts) {
+						civilIdEntityDB.get().setOverallAttempts(civilIdEntityDB.get().getOverallAttempts() + 1);
+					}
 					civilIdEntityDB.get().setAttempts(civilIdEntityDB.get().getAttempts() + 1);
 					civilIdEntityDB.get().setLastAttemptTime(LocalDateTime.now());
 
 					civilIdRepository.save(civilIdEntityDB.get());
-					Map<String, String> data = new HashMap<>();
+					Map<String, Object> data = new HashMap<>();
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Something went wrong");
 					data.put("uniqueKey", civilIdEntityDB.get().getId().toString());
+					data.put("attempts", civilIdEntityDB.get().getAttempts());
+					data.put("timeoutSeconds",
+							timeoutSeconds - ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
+									LocalDateTime.now()) < 0 ? 0
+											: timeoutSeconds - ChronoUnit.SECONDS.between(
+													civilIdEntityDB.get().getLastAttemptTime(), LocalDateTime.now()));
+					data.put("overallAttempts", civilIdEntityDB.get().getOverallAttempts());
+
 					responseDTO.setData(data);
 					return responseDTO;
 
 				} else if (ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
 						LocalDateTime.now()) < timeoutSeconds) {
 					logger.error("Session Is Blocked");
-					Map<String, String> data = new HashMap<>();
+					Map<String, Object> data = new HashMap<>();
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Session Is Blocked");
 					data.put("uniqueKey", civilIdEntityDB.get().getId());
+					data.put("attempts", civilIdEntityDB.get().getAttempts());
+					data.put("timeoutSeconds",
+							timeoutSeconds - ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
+									LocalDateTime.now()) < 0 ? 0
+											: timeoutSeconds - ChronoUnit.SECONDS.between(
+													civilIdEntityDB.get().getLastAttemptTime(), LocalDateTime.now()));
+					data.put("overallAttempts", civilIdEntityDB.get().getOverallAttempts());
+
 					responseDTO.setData(data);
 					return responseDTO;
 				} else if (civilIdEntityDB.get().getAttempts() < allowedAttempts) {
 					logger.error("Civil Id Blocked, Too many attempts or timeout exceeded");
-					Map<String, String> data = new HashMap<>();
+					Map<String, Object> data = new HashMap<>();
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Civil Id Blocked");
 					data.put("uniqueKey", civilIdEntityDB.get().getId());
+					data.put("attempts", civilIdEntityDB.get().getAttempts());
+					data.put("timeoutSeconds",
+							timeoutSeconds - ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
+									LocalDateTime.now()) < 0 ? 0
+											: timeoutSeconds - ChronoUnit.SECONDS.between(
+													civilIdEntityDB.get().getLastAttemptTime(), LocalDateTime.now()));
+					data.put("overallAttempts", civilIdEntityDB.get().getOverallAttempts());
+
 					responseDTO.setData(data);
 					return responseDTO;
 				} else {
 					logger.error("Device Blocked");
-					Map<String, String> data = new HashMap<>();
+					Map<String, Object> data = new HashMap<>();
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Device Blocked");
 					data.put("uniqueKey", civilIdEntityDB.get().getId());
+					data.put("attempts", civilIdEntityDB.get().getAttempts());
+					data.put("timeoutSeconds",
+							timeoutSeconds - ChronoUnit.SECONDS.between(civilIdEntityDB.get().getLastAttemptTime(),
+									LocalDateTime.now()) < 0 ? 0
+											: timeoutSeconds - ChronoUnit.SECONDS.between(
+													civilIdEntityDB.get().getLastAttemptTime(), LocalDateTime.now()));
+					data.put("overallAttempts", civilIdEntityDB.get().getOverallAttempts());
+
 					responseDTO.setData(data);
 					return responseDTO;
 				}
@@ -238,7 +312,7 @@ public class CivilIdServiceImpl implements CivilIdService {
 				}
 			}
 		} catch (Exception e) {
-			logger.error("Error in calling token API : ", e);
+			logger.error("Error in calling token API : {}", e.getMessage());
 			Map<String, String> data = new HashMap<>();
 			data.put("uniqueKey", null);
 			responseDTO.setStatus("Failure");
@@ -286,8 +360,9 @@ public class CivilIdServiceImpl implements CivilIdService {
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-		Map<String, String> data = new HashMap<>();
+		Map<String, Object> data = new HashMap<>();
 		try {
+			CardNumberParameter cardNumberParameter = cardNumberParameterRepo.findAll().get(0);
 			if (user.isPresent()) {
 				Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(entityIdDTO.getUniqueKey());
 				if (civilIdEntity.isPresent()) {
@@ -302,51 +377,101 @@ public class CivilIdServiceImpl implements CivilIdService {
 
 					if (Objects.requireNonNull(responseEntity.getBody()).getResult() != null) {
 						List<Card> cardList = responseEntity.getBody().getResult().getCardList();
-						for (Card card : cardList) {
-							String actualFirstFourDigits = card.getCardNo().substring(0, 4);
-							String actualLastFourDigits = card.getCardNo().substring(card.getCardNo().length() - 4);
-							if (entityIdDTO.getFirstFourDigitscardNo().equals(actualFirstFourDigits)
-									&& entityIdDTO.getLastFourDigitscardNo().equals(actualLastFourDigits)) {
-								if (card.getStatus().equalsIgnoreCase(CardStatus.LOCKED.name())) {
-									responseDTO.setStatus("Success");
-									responseDTO.setMessage("Your card is locked");
-									data.put("uniqueKey", entityIdDTO.getUniqueKey());
-									responseDTO.setData(data);
-									return responseDTO;
-								} else if (card.getStatus().equalsIgnoreCase(CardStatus.BLOCKED.name())) {
-									responseDTO.setStatus("Failure");
-									responseDTO.setMessage("Your card is permanently blocked");
-									data.put("uniqueKey", entityIdDTO.getUniqueKey());
-									responseDTO.setData(data);
-									return responseDTO;
-								} else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
-									// send OTP
-									sendOtp(civilIdEntity, responseDTO);
-									CardEntity cardEntity = getCardEntity(card, civilIdEntity, responseEntity);
-									cardRepository.save(cardEntity);
-									responseDTO.setStatus("Success");
-									responseDTO.setMessage("Success");
-									data.put("uniqueKey", entityIdDTO.getUniqueKey());
-									responseDTO.setData(data);
-									return responseDTO;
-								} else if (card.getStatus().equalsIgnoreCase(CardStatus.REPLACED.name())){
-									responseDTO.setStatus("Failure");
-									responseDTO.setMessage("Kindly use your newly issued credit card to onboard yourself into the application.");
-									data.put("uniqueKey", entityIdDTO.getUniqueKey());
-									responseDTO.setData(data);
-									return responseDTO;
+						CardNumberEntityLog cardNumberEntityLog = new CardNumberEntityLog();
+						if (!cardNumberEntityLogRepo.existsByUniqueKey(entityIdDTO.getUniqueKey())) {
+							cardNumberEntityLog = CardNumberEntityLog.builder().uniqueKey(entityIdDTO.getUniqueKey())
+									.entryTime(LocalDateTime.now())
+									.cardFirstDigit(entityIdDTO.getFirstFourDigitscardNo())
+									.cardLastDigit(entityIdDTO.getLastFourDigitscardNo()).build();
+							cardNumberEntityLog = cardNumberEntityLogRepo.save(cardNumberEntityLog);
+						} else {
+							cardNumberEntityLog = cardNumberEntityLogRepo.findByUniqueKey(entityIdDTO.getUniqueKey());
+						}
+						if (cardNumberParameter.getEntryTimeOut()
+								- ChronoUnit.SECONDS.between(cardNumberEntityLog.getEntryTime(),
+										LocalDateTime.now()) < 0
+								&& cardNumberEntityLog.getAttempt() == cardNumberParameter.getInputRetryLimit()) {
+							cardNumberEntityLog.setAttempt(0);
+						}
+						if (cardNumberEntityLog.getAttempt() >= cardNumberParameter.getInputRetryLimit()) {
+							responseDTO.setStatus("Failure");
+							responseDTO.setMessage("You have reached maximum attempts for this card.");
+							data.put("uniqueKey", entityIdDTO.getUniqueKey());
+							data.put("attempt", cardNumberEntityLog.getAttempt());
+							data.put("entryTimeOut",
+									cardNumberParameter.getEntryTimeOut() - ChronoUnit.SECONDS
+											.between(cardNumberEntityLog.getEntryTime(), LocalDateTime.now()) < 0
+													? 0
+													: cardNumberParameter.getEntryTimeOut() - ChronoUnit.SECONDS
+															.between(cardNumberEntityLog.getEntryTime(),
+																	LocalDateTime.now()));
+							responseDTO.setData(data);
+							return responseDTO;
+						} else {
+							for (Card card : cardList) {
+								String actualFirstFourDigits = card.getCardNo().substring(0, 4);
+								String actualLastFourDigits = card.getCardNo().substring(card.getCardNo().length() - 4);
+								if (entityIdDTO.getFirstFourDigitscardNo().equals(actualFirstFourDigits)
+										&& entityIdDTO.getLastFourDigitscardNo().equals(actualLastFourDigits)) {
+									if (card.getStatus().equalsIgnoreCase(CardStatus.LOCKED.name())) {
+										responseDTO.setStatus("Success");
+										responseDTO.setMessage("Your card is locked");
+										data.put("uniqueKey", entityIdDTO.getUniqueKey());
+										responseDTO.setData(data);
+
+										cardNumberEntityLog.setEntryTime(LocalDateTime.now());
+										cardNumberEntityLogRepo.save(cardNumberEntityLog);
+										return responseDTO;
+									} else if (card.getStatus().equalsIgnoreCase(CardStatus.BLOCKED.name())) {
+										responseDTO.setStatus("Failure");
+										responseDTO.setMessage("Your card is permanently blocked");
+										data.put("uniqueKey", entityIdDTO.getUniqueKey());
+										responseDTO.setData(data);
+
+										cardNumberEntityLog.setEntryTime(LocalDateTime.now());
+										cardNumberEntityLogRepo.save(cardNumberEntityLog);
+										return responseDTO;
+									} else if (card.getStatus().equalsIgnoreCase(CardStatus.ALLOCATED.name())) {
+										// send OTP
+										sendOtp(civilIdEntity, responseDTO);
+										CardEntity cardEntity = getCardEntity(card, civilIdEntity, responseEntity);
+										cardRepository.save(cardEntity);
+										responseDTO.setStatus("Success");
+										responseDTO.setMessage("Success");
+										data.put("uniqueKey", entityIdDTO.getUniqueKey());
+										responseDTO.setData(data);
+
+										cardNumberEntityLog.setEntryTime(LocalDateTime.now());
+										cardNumberEntityLogRepo.save(cardNumberEntityLog);
+										return responseDTO;
+									} else if (card.getStatus().equalsIgnoreCase(CardStatus.REPLACED.name())) {
+										responseDTO.setStatus("Failure");
+										responseDTO.setMessage(
+												"Kindly use your newly issued credit card to onboard yourself into the application.");
+										data.put("uniqueKey", entityIdDTO.getUniqueKey());
+										responseDTO.setData(data);
+
+										cardNumberEntityLog.setEntryTime(LocalDateTime.now());
+										cardNumberEntityLogRepo.save(cardNumberEntityLog);
+										return responseDTO;
+									} else {
+										responseDTO.setStatus("Failure");
+										responseDTO.setMessage("Something went wrong");
+										data.put("uniqueKey", entityIdDTO.getUniqueKey());
+										data.put("Attempt", cardNumberEntityLog.getAttempt());
+										responseDTO.setData(data);
+									}
 								} else {
 									responseDTO.setStatus("Failure");
-									responseDTO.setMessage("Something went wrong");
+									responseDTO.setMessage("Please verify card first/last four digits.");
 									data.put("uniqueKey", entityIdDTO.getUniqueKey());
+									data.put("Attempt", cardNumberEntityLog.getAttempt());
 									responseDTO.setData(data);
 								}
-							} else {
-								responseDTO.setStatus("Failure");
-								responseDTO.setMessage("Please verify card first/last four digits.");
-								data.put("uniqueKey", entityIdDTO.getUniqueKey());
-								responseDTO.setData(data);
 							}
+							cardNumberEntityLog.setEntryTime(LocalDateTime.now());
+							cardNumberEntityLog.setAttempt(cardNumberEntityLog.getAttempt() + 1);
+							cardNumberEntityLogRepo.save(cardNumberEntityLog);
 						}
 					}
 				} else {

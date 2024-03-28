@@ -22,16 +22,21 @@ import lombok.Setter;
 public class OtpEntity {
 
 	@Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "id", unique = true, nullable = false)
-    private String id;
+	@GeneratedValue(generator = "uuid")
+	@GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
+	@Column(name = "id", unique = true, nullable = false)
+	private String id;
 	private String uniqueKeyCivilId;
 	private String otp;
 	private int attempts;
 	@Column(columnDefinition = "boolean default false")
 	private boolean transferWithinAlizzValidate;
 	private LocalDateTime lastAttemptTime;
+	@Column(columnDefinition = "int default 0")
+	private int resendAttempts;
+	@Column(nullable = true)
+	private LocalDateTime lastResendTime;
+
 
 	public String getUniqueKeyCivilId() {
 		return uniqueKeyCivilId;

@@ -9,6 +9,7 @@ public interface CardRepository extends JpaRepository<CardEntity, String> {
 //    List<CardEntity> findByCivilId(String civilId);
 
 	CardEntity findByUniqueKeyCivilId(String uniqueKeyCivilId);
-
+	
 	List<CardEntity> findAllByUniqueKeyCivilId(String uniqueKeyCivilId);
+	Boolean existsByUniqueKeyCivilId(String uniqueKeyCivilId);
 }

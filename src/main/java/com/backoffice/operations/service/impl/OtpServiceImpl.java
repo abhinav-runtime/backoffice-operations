@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -68,7 +69,7 @@ public class OtpServiceImpl implements OtpService {
 //		long id = 1;
 		String userEmail = jwtTokenProvider.getUsername(token);
 		Optional<User> user = userRepository.findByEmail(userEmail);
-		Map<String, String> data = new HashMap<>();
+		Map<String, Object> data = new HashMap<>();
 		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
 		try {
 			OtpParameter otpParameter = otpParameterRepository.findAll().get(0);
@@ -79,10 +80,31 @@ public class OtpServiceImpl implements OtpService {
 				OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(otpRequest.getUniqueKey());
 //				otpEntity.setOtp("123456");
 
-				if (otpRequest.getOtp() == null) {
+				if (otpRequest.getOtp() == null || ChronoUnit.SECONDS.between(otpEntity.getLastAttemptTime(),
+						LocalDateTime.now()) >= otpParameter.getOtpResentTime()) {
 					data.put("uniqueKey", civilIdEntity.get().getId());
 					responseDTO.setStatus("Failure");
 					responseDTO.setMessage("Invalid OTP or OTP expired");
+					data.put("resendTime",
+							otpParameter.getOtpResentTime()
+									- ChronoUnit.SECONDS.between(otpEntity.getLastResendTime(), LocalDateTime.now()) < 0
+											? 0
+											: otpParameter.getOtpResentTime() - ChronoUnit.SECONDS
+													.between(otpEntity.getLastResendTime(), LocalDateTime.now()));
+					responseDTO.setData(data);
+					return responseDTO;
+				}
+				if (otpEntity.getAttempts() >= otpMaxAttempts) {
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Maximum attempts reached. Please try again later.");
+					data.put("uniqueKey", civilIdEntity.get().getId());
+					data.put("maxAttempt", otpEntity.getAttempts());
+					data.put("resendTime",
+							otpParameter.getOtpResentTime()
+									- ChronoUnit.SECONDS.between(otpEntity.getLastResendTime(), LocalDateTime.now()) < 0
+											? 0
+											: otpParameter.getOtpResentTime() - ChronoUnit.SECONDS
+													.between(otpEntity.getLastResendTime(), LocalDateTime.now()));
 					responseDTO.setData(data);
 					return responseDTO;
 				}
@@ -92,20 +114,13 @@ public class OtpServiceImpl implements OtpService {
 					otpEntity.setLastAttemptTime(LocalDateTime.now());
 					otpRepository.save(otpEntity);
 
-					if (otpEntity.getAttempts() >= otpMaxAttempts) {
-						responseDTO.setStatus("Failure");
-						responseDTO.setMessage("Maximum attempts reached. Please try again later.");
-						data.put("uniqueKey", civilIdEntity.get().getId());
-						responseDTO.setData(data);
-						return responseDTO;
-					} else {
-						responseDTO.setStatus("Failure");
-						responseDTO.setMessage(
-								"Invalid OTP. Attempts left: " + (otpMaxAttempts - otpEntity.getAttempts()));
-						data.put("uniqueKey", civilIdEntity.get().getId());
-						responseDTO.setData(data);
-						return responseDTO;
-					}
+					responseDTO.setStatus("Failure");
+					responseDTO.setMessage("Invalid OTP.");
+					data.put("uniqueKey", civilIdEntity.get().getId());
+					data.put("Attempts left", (otpMaxAttempts - otpEntity.getAttempts()));
+					responseDTO.setData(data);
+					return responseDTO;
+
 				}
 
 				// Check expiration time (e.g., within the last 10 minutes)
@@ -164,32 +179,51 @@ public class OtpServiceImpl implements OtpService {
 			logger.error("Error: {}", e.getMessage());
 			data.put("uniqueKey", otpRequest.getUniqueKey());
 			responseDTO.setStatus("Failure");
-			responseDTO.setMessage("Server Error");
+			responseDTO.setMessage("Something went wrong. Please try again later.");
 			responseDTO.setData(data);
 			return responseDTO;
 		}
 		data.put("uniqueKey", otpRequest.getUniqueKey());
 		responseDTO.setStatus("Failure");
-		responseDTO.setMessage("Server Error");
+		responseDTO.setMessage("Something went wrong.");
 		responseDTO.setData(data);
 		return responseDTO;
 	}
 
 	@Override
-	public GenericResponseDTO<Object> transferOTP(String uniqueKey, String otp)
-			throws OtpValidationException {
+	public GenericResponseDTO<Object> transferOTP(String uniqueKey, String otp) throws OtpValidationException {
 
 		OtpParameter otpParameter = otpParameterRepository.findAll().get(0);
 		int otpMaxAttempts = otpParameter.getOtpMaxAttempts();
 		OtpEntity otpEntity = otpRepository.findByUniqueKeyCivilId(uniqueKey);
-        Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
-        GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
-        if (civilIdEntity.isPresent()) {
-			if (otp == null) {
-				Map<String, String> data = new HashMap<>();
+		Optional<CivilIdEntity> civilIdEntity = civilIdRepository.findById(uniqueKey);
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		Map<String, Object> data = new HashMap<>();
+		if (civilIdEntity.isPresent()) {
+
+			if (otp == null || ChronoUnit.SECONDS.between(otpEntity.getLastAttemptTime(),
+					LocalDateTime.now()) >= otpParameter.getOtpResentTime()) {
 				data.put("uniqueKey", civilIdEntity.get().getId());
 				responseDTO.setStatus("Failure");
 				responseDTO.setMessage("Invalid OTP or OTP expired");
+				data.put("resendTime",
+						otpParameter.getOtpResentTime()
+								- ChronoUnit.SECONDS.between(otpEntity.getLastResendTime(), LocalDateTime.now()) < 0 ? 0
+										: otpParameter.getOtpResentTime() - ChronoUnit.SECONDS
+												.between(otpEntity.getLastResendTime(), LocalDateTime.now()));
+				responseDTO.setData(data);
+				return responseDTO;
+			}
+			if (otpEntity.getAttempts() >= otpMaxAttempts) {
+				responseDTO.setStatus("Failure");
+				responseDTO.setMessage("Maximum attempts reached. Please try again later.");
+				data.put("uniqueKey", civilIdEntity.get().getId());
+				data.put("maxAttempt", otpEntity.getAttempts());
+				data.put("resendTime",
+						otpParameter.getOtpResentTime()
+								- ChronoUnit.SECONDS.between(otpEntity.getLastResendTime(), LocalDateTime.now()) < 0 ? 0
+										: otpParameter.getOtpResentTime() - ChronoUnit.SECONDS
+												.between(otpEntity.getLastResendTime(), LocalDateTime.now()));
 				responseDTO.setData(data);
 				return responseDTO;
 			}
@@ -199,28 +233,19 @@ public class OtpServiceImpl implements OtpService {
 				otpEntity.setLastAttemptTime(LocalDateTime.now());
 				otpRepository.save(otpEntity);
 
-				if (otpEntity.getAttempts() >= otpMaxAttempts) {
-					Map<String, String> data = new HashMap<>();
 					responseDTO.setStatus("Failure");
-					responseDTO.setMessage("Maximum attempts reached. Please try again later.");
+					responseDTO.setMessage("Invalid OTP.");
 					data.put("uniqueKey", civilIdEntity.get().getId());
+					data.put("Attempts left", (otpMaxAttempts - otpEntity.getAttempts()));
 					responseDTO.setData(data);
 					return responseDTO;
-				} else {
-					Map<String, String> data = new HashMap<>();
-					responseDTO.setStatus("Failure");
-					responseDTO.setMessage("Invalid OTP. Attempts left: " + (otpMaxAttempts - otpEntity.getAttempts()));
-					data.put("uniqueKey", civilIdEntity.get().getId());
-					responseDTO.setData(data);
-					return responseDTO;
-				}
+					
 			}
 
 			// Check expiration time (e.g., within the last 10 minutes)
 			LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(10);
 			if (Objects.nonNull(otpEntity.getLastAttemptTime())
 					&& otpEntity.getLastAttemptTime().isBefore(expirationTime)) {
-				Map<String, String> data = new HashMap<>();
 				responseDTO.setStatus("Failure");
 				responseDTO.setMessage("OTP expired. Please request a new OTP.");
 				data.put("uniqueKey", civilIdEntity.get().getId());
@@ -233,7 +258,6 @@ public class OtpServiceImpl implements OtpService {
 			otpEntity.setLastAttemptTime(LocalDateTime.now());
 			otpEntity.setTransferWithinAlizzValidate(Boolean.TRUE);
 			otpRepository.save(otpEntity);
-			Map<String, String> data = new HashMap<>();
 			responseDTO.setStatus("Success");
 			responseDTO.setMessage("Success");
 			data.put("uniqueKey", civilIdEntity.get().getId());
@@ -260,7 +284,14 @@ public class OtpServiceImpl implements OtpService {
 		} else {
 			// Check cooldown period
 			LocalDateTime cooldownEndTime = otpEntity.getLastAttemptTime().plusSeconds(cooldownPeriod);
-			if (LocalDateTime.now().isBefore(cooldownEndTime)) {
+			LocalDateTime attemptResentTime = otpEntity.getLastAttemptTime()
+					.plusMinutes(otpParameter.getAttemptTimeOut());
+			if (ChronoUnit.SECONDS.between(LocalDateTime.now(), attemptResentTime) < 0) {
+				otpEntity.setResendAttempts(0);
+				otpRepository.save(otpEntity);
+			}
+//			if (LocalDateTime.now().isBefore(cooldownEndTime)) {
+			if (ChronoUnit.SECONDS.between(LocalDateTime.now(), cooldownEndTime) > 0) {
 				Map<String, String> data = new HashMap<>();
 				responseDTO.setStatus("Failure");
 				responseDTO.setMessage("Resend attempts exceeded. Please try again later.");
@@ -268,12 +299,24 @@ public class OtpServiceImpl implements OtpService {
 				responseDTO.setData(data);
 				return responseDTO;
 			}
-
+			if (otpEntity.getResendAttempts() >= otpParameter.getOtpResend()) {
+				Map<String, Object> data = new HashMap<>();
+				responseDTO.setStatus("Failure");
+				responseDTO.setMessage("Resend attempts exceeded. Please try again later.");
+				data.put("uniqueKey", uniqueKey);
+				data.put("resendTime", ChronoUnit.SECONDS.between(LocalDateTime.now(), attemptResentTime) < 0 ? 0
+						: ChronoUnit.SECONDS.between(LocalDateTime.now(), attemptResentTime));
+				data.put("otpResentAttempt", otpEntity.getResendAttempts());
+				responseDTO.setData(data);
+				return responseDTO;
+			}
 			// Reset attempts and generate a new OTP
 			otpEntity.setAttempts(0);
 			generateAndSaveOtp(otpEntity);
 		}
-
+		otpEntity.setResendAttempts(otpEntity.getResendAttempts() + 1);
+		otpEntity.setLastResendTime(LocalDateTime.now());
+		otpParameterRepository.save(otpParameter);
 		Map<String, String> data = new HashMap<>();
 		responseDTO.setStatus("Success");
 		responseDTO.setMessage("Success");
@@ -301,10 +344,10 @@ public class OtpServiceImpl implements OtpService {
 
 	private void generateAndSaveOtp(OtpEntity otpEntity) {
 //		String newOtp = CommonUtils.generateRandomOtp();
-        otpEntity.setOtp("123456");
-        otpEntity.setLastAttemptTime(LocalDateTime.now());
-        otpRepository.save(otpEntity);
-        // Send the OTP to the user (e.g., via SMS, email, etc.)
-    }
+		otpEntity.setOtp("123456");
+		otpEntity.setLastAttemptTime(LocalDateTime.now());
+		otpRepository.save(otpEntity);
+		// Send the OTP to the user (e.g., via SMS, email, etc.)
+	}
 
 }

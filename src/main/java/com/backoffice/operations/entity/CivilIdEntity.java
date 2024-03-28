@@ -23,15 +23,17 @@ import lombok.Setter;
 public class CivilIdEntity {
 
 	@Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "id", unique = true, nullable = false)
-    private String id;
+	@GeneratedValue(generator = "uuid")
+	@GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
+	@Column(name = "id", unique = true, nullable = false)
+	private String id;
 	private String userId;
-    private String civilId;
-    private String entityId;
-    private int attempts;
-    private LocalDateTime lastAttemptTime;
+	private String civilId;
+	private String entityId;
+	private int attempts;
+	private LocalDateTime lastAttemptTime;
+	@Column(name = "overall_attempts", columnDefinition = "int default 0")
+	private int overallAttempts;
 
 	public int getAttempts() {
 		return attempts;
@@ -80,5 +82,5 @@ public class CivilIdEntity {
 	public void setEntityId(String entityId) {
 		this.entityId = entityId;
 	}
-	
+
 }
