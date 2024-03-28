@@ -181,7 +181,8 @@ public class AlizzTransferServiceImpl implements AlizzTransferService {
 					alizzTransferDto.setTransaction(transaction);
 
 					GenericResponseDTO<Object> responseObject = transferLimitService.getTransferLimit(alizzTransferRequestDto.getCustomerType(),
-							alizzTransferRequestDto.getUniqueKey(),alizzTransferRequestDto.getTransactionType(),alizzTransferRequestDto.getTransactionAmount());
+							alizzTransferRequestDto.getUniqueKey(),alizzTransferRequestDto.getTransactionType(),
+							alizzTransferRequestDto.getTransactionAmount(), alizzTransferRequestDto.getFromAccountNumber());
 					Object map = responseObject.getData();
 					Map<String, Object> resMap = objectMapper.convertValue(map, new TypeReference<Map<String,Object>>() {
 					});
