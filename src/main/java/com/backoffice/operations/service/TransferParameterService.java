@@ -1,18 +1,20 @@
 package com.backoffice.operations.service;
 
 import com.backoffice.operations.entity.TransferParameter;
+import com.backoffice.operations.entity.TransfersParameter;
 import com.backoffice.operations.payloads.TransferParameterDTO;
+import com.backoffice.operations.payloads.TransfersParameterDTO;
 
 import java.util.List;
 
 public interface TransferParameterService {
-    TransferParameterDTO findById(String id);
+    TransfersParameterDTO findById(Long id);
 
-    List<TransferParameterDTO> findAll();
+    List<TransfersParameterDTO> findAll();
 
-    TransferParameterDTO save(TransferParameterDTO transferParameterDTO);
+    TransfersParameterDTO create(TransfersParameterDTO transferParameterDTO);
 
-    TransferParameterDTO update(String id, TransferParameterDTO updatedTransferParameterDTO);
+    TransfersParameterDTO update(Long id, TransfersParameterDTO transferParameterDTO);
 
-    boolean delete(String id);
+    void delete(Long id);
 }

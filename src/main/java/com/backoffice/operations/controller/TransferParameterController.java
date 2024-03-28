@@ -2,6 +2,7 @@ package com.backoffice.operations.controller;
 
 import com.backoffice.operations.exceptions.DuplicateEntryException;
 import com.backoffice.operations.payloads.TransferParameterDTO;
+import com.backoffice.operations.payloads.TransfersParameterDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.service.TransferParameterService;
 import org.slf4j.Logger;
@@ -14,120 +15,104 @@ import java.util.HashMap;
 import java.util.List;
 
 @RestController
-@RequestMapping("/transfer-parameters")
+@RequestMapping("/transfers-parameter")
 public class TransferParameterController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(TransferParameterController.class);
-
 	@Autowired
-	private TransferParameterService transferParameterService;
+	private TransferParameterService TransferParameterService;
 
-	@GetMapping("/{id}")
-	public GenericResponseDTO<Object> getTransferParameterById(@PathVariable String id,
-			@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+	@GetMapping("/getbyid/{id}")
+	public GenericResponseDTO<Object> getTransferParameterById(@PathVariable Long id) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
-			TransferParameterDTO transferParameterDTO = transferParameterService.findById(id);
-			response.setStatus("Success");
+			TransfersParameterDTO transferParameterDTO = TransferParameterService.findById(id);
 			if (transferParameterDTO == null) {
+				response.setStatus("Failure");
 				response.setMessage("Data not found with id: " + id);
 			} else {
-				response.setMessage("Success");
+				response.setStatus("Success");
+				response.setMessage("Data found successfully");
+				response.setData(transferParameterDTO);
 			}
-			response.setData(transferParameterDTO);
 		} catch (Exception e) {
-			LOGGER.error("Error occurred while fetching TransferParameter by ID: {}", id, e);
 			response.setStatus("Failure");
-			response.setMessage("Data not found with id: " + id);
-			response.setData(new HashMap<>());
+			response.setMessage("Error occurred while fetching TransferParameter by ID: " + id);
+			response.setData(null);
 		}
 		return response;
 	}
 
-	@GetMapping
-	public GenericResponseDTO<Object> getAllTransferParameters(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+	// GetMapping for getting all transfer parameters
+	@GetMapping("/getAll")
+	public GenericResponseDTO<Object> getAllTransferParameters() {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
-			List<TransferParameterDTO> transferParameterDTOs = transferParameterService.findAll();
+			List<TransfersParameterDTO> transferParameterDTOs = TransferParameterService.findAll();
 			response.setStatus("Success");
-			if (transferParameterDTOs.isEmpty()) {
-				response.setMessage("No data present");
-			} else {
-				response.setMessage("Success");
-			}
+			response.setMessage("Data retrieved successfully");
 			response.setData(transferParameterDTOs);
 		} catch (Exception e) {
-			LOGGER.error("Error occurred while fetching all TransferParameters", e);
+			LOGGER.error("Error in getAllTransferParameters {}",e);
 			response.setStatus("Failure");
-			response.setMessage("No data present");
-			response.setData(new HashMap<>());
+			response.setMessage("Error occurred while fetching TransferParameters");
+			response.setData(null);
 		}
 		return response;
 	}
 
-	@PostMapping
-	public GenericResponseDTO<Object> createTransferParameter(@RequestBody TransferParameterDTO transferParameterDTO) {
+	// PostMapping for creating a transfer parameter
+	@PostMapping("/create")
+	public GenericResponseDTO<Object> createTransferParameter(@RequestBody TransfersParameterDTO transferParameterDTO) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
-			TransferParameterDTO createdTransferParameter = transferParameterService.save(transferParameterDTO);
+			TransfersParameterDTO createdDTO = TransferParameterService.create(transferParameterDTO);
 			response.setStatus("Success");
-			response.setMessage("Success");
-			response.setData(createdTransferParameter);
-		} catch (DuplicateEntryException e) {
-			LOGGER.error("Duplicate entry error occurred while creating TransferParameter", e);
-			response.setStatus("Failure");
-			response.setMessage("Duplicate entry");
-			response.setData(null);
+			response.setMessage("TransferParameter created successfully");
+			response.setData(createdDTO);
 		} catch (Exception e) {
-			LOGGER.error("Error occurred while creating TransferParameter", e);
+			LOGGER.error("Error in createTransferParameter {}",e);
 			response.setStatus("Failure");
-			response.setMessage("Something went wrong");
+			response.setMessage("Error occurred while creating TransferParameter");
 			response.setData(null);
 		}
 		return response;
 	}
 
-	@PutMapping("/{id}")
-	public GenericResponseDTO<Object> updateTransferParameter(@PathVariable String id,
-			@RequestBody TransferParameterDTO updatedTransferParameterDTO) {
+	// PutMapping for updating a transfer parameter
+	@PutMapping("/update/{id}")
+	public GenericResponseDTO<Object> updateTransferParameter(@PathVariable Long id,
+															  @RequestBody TransfersParameterDTO transferParameterDTO
+															  ) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
-			TransferParameterDTO updatedEntity = transferParameterService.update(id, updatedTransferParameterDTO);
+			TransfersParameterDTO updatedDTO = TransferParameterService.update(id, transferParameterDTO);
 			response.setStatus("Success");
-			if (updatedEntity == null) {
-				response.setMessage("No data present");
-				response.setData(null);
-			} else {
-				response.setMessage("data updated successfully");
-				response.setData(updatedEntity);
-			}
+			response.setMessage("TransferParameter updated successfully");
+			response.setData(updatedDTO);
 		} catch (Exception e) {
-			LOGGER.error("Error occurred while updating TransferParameter by ID: {}", id, e);
+			LOGGER.error("Error in updateTransferParameter {}",e);
 			response.setStatus("Failure");
-			response.setMessage("Something went wrong");
+			response.setMessage("Error occurred while updating TransferParameter with ID: " + id);
 			response.setData(null);
 		}
 		return response;
 	}
 
-	@DeleteMapping("/{id}")
-	public GenericResponseDTO<Object> deleteTransferParameter(@PathVariable String id) {
+	// DeleteMapping for deleting a transfer parameter
+	@DeleteMapping("/delete/{id}")
+	public GenericResponseDTO<Object> deleteTransferParameter(@PathVariable Long id
+															  ) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
 		try {
-			boolean deletionSuccessful = transferParameterService.delete(id);
-			if (deletionSuccessful) {
-				response.setMessage("Entry deleted successfully");
-				response.setStatus("Success");
-				response.setData(null);
-			} else {
-				response.setMessage("Entry not found for deletion");
-				response.setStatus("Failure");
-				response.setData(null);
-			}
+			TransferParameterService.delete(id);
+			response.setStatus("Success");
+			response.setMessage("TransferParameter deleted successfully");
+			response.setData(null);
 		} catch (Exception e) {
-			LOGGER.error("Error occurred while deleting TransferParameter by ID: {}", id, e);
-			response.setMessage("Delete failed");
+			LOGGER.error("Error in deleteTransferParameter {}",e);
 			response.setStatus("Failure");
+			response.setMessage("Error occurred while deleting TransferParameter with ID: " + id);
 			response.setData(null);
 		}
 		return response;
