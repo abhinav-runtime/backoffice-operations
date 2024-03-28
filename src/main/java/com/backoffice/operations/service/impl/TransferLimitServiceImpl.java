@@ -116,7 +116,7 @@ public class TransferLimitServiceImpl implements TransferLimitService {
                             dataMap.put("message", "Max limit per transaction exceeded");
                         }
                     } else {
-                        dataMap.put("isTrxnAllowed", false);
+                        dataMap.put("isTrxnAllowed", true);
                         dataMap.put("message", "Min limit per transaction to proceed is less");
                     }
                     dataMap.put("uniqueKey", uniqueKey);
