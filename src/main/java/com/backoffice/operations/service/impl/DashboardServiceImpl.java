@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
@@ -112,7 +113,7 @@ public class DashboardServiceImpl implements DashboardService {
                                         .accountNumber(islamicAccount.getAcc())
                                         .availableBalance(islamicAccount.getAcyavlbal())
                                         .currency(islamicAccount.getCcy())
-                                        .accountCodeDesc(accountCodeDesc)
+                                        .accountCodeDesc(Objects.nonNull(dashboard) ? dashboard.getCustomerNickName() : accountCodeDesc)
                                         .accountType(islamicAccount.getAcctype())
                                         .accountNickName(accNickName)
                                         .isAccountVisible(!Objects.nonNull(dashboard) || dashboard.isAccountVisible()).currentAccountBalance(islamicAccount.getCurrbal())

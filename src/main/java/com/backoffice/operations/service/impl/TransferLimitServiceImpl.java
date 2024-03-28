@@ -116,7 +116,7 @@ public class TransferLimitServiceImpl implements TransferLimitService {
                             dataMap.put("message", "Max limit per transaction exceeded");
                         }
                     } else {
-                        dataMap.put("isTrxnAllowed", false);
+                        dataMap.put("isTrxnAllowed", true);
                         dataMap.put("message", "Min limit per transaction to proceed is less");
                     }
                     dataMap.put("uniqueKey", uniqueKey);
@@ -155,17 +155,18 @@ public class TransferLimitServiceImpl implements TransferLimitService {
 
     @Override
     public void saveUserTrxnLimitData(String uniqueKey, Double dailyTrxnAmt, String accountNumber) {
-        UserLimitTrxnEntity userLimitTrxnEntityObject = userLimitTrxnEntityRepo.findByUniqueKey("");
+        UserLimitTrxnEntity userLimitTrxnEntityObject = userLimitTrxnEntityRepo.findByAccountNumber(accountNumber);
         if (Objects.isNull(userLimitTrxnEntityObject)) {
             UserLimitTrxnEntity userLimitTrxnEntity = UserLimitTrxnEntity.builder()
                     .uniqueKey(uniqueKey).dailyTrxnLimit(dailyTrxnAmt).dailyTrxnCount(1)
                     .monthlyTrxnLimit(dailyTrxnAmt).monthlyTrxnCount(1).accountNumber(accountNumber).build();
+            userLimitTrxnEntityRepo.save(userLimitTrxnEntity);
         } else {
             userLimitTrxnEntityObject.setDailyTrxnLimit(userLimitTrxnEntityObject.getDailyTrxnLimit() + dailyTrxnAmt);
             userLimitTrxnEntityObject.setDailyTrxnCount(userLimitTrxnEntityObject.getDailyTrxnCount() + 1);
             userLimitTrxnEntityObject.setMonthlyTrxnLimit(userLimitTrxnEntityObject.getMonthlyTrxnLimit() + dailyTrxnAmt);
             userLimitTrxnEntityObject.setMonthlyTrxnCount(userLimitTrxnEntityObject.getMonthlyTrxnCount() + 1);
+            userLimitTrxnEntityRepo.save(userLimitTrxnEntityObject);
         }
-        userLimitTrxnEntityRepo.save(userLimitTrxnEntityObject);
     }
 }

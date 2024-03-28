@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 public interface UserLimitTrxnEntityRepo extends JpaRepository<UserLimitTrxnEntity, String> {
 	Boolean existsByUniqueKey(String uniqueKey);
     UserLimitTrxnEntity findByUniqueKey(String uniqueKey);
+
+    UserLimitTrxnEntity findByAccountNumber(String accountNumber);
 }
