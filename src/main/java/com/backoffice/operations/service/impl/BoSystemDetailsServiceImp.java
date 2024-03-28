@@ -32,6 +32,7 @@ import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.SystemDetailRepository;
 import com.backoffice.operations.service.BoSystemDetailsService;
 import com.backoffice.operations.utils.CommonUtils;
+import com.backoffice.operations.utils.DateToStringUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -102,7 +103,8 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 			systemDetailsResponseDTO.setIPAddress(Item.getIpAddress());
 			systemDetailsResponseDTO.setOs_version(Item.getOsVersion());
 			systemDetailsResponseDTO.setResolution(Item.getResolution());
-			systemDetailsResponseDTO.setCreated(Item.getCreated() != null ? Item.getCreated().toLocaleString() : "");
+			systemDetailsResponseDTO.setCreated(
+					Item.getCreated() != null ? DateToStringUtil.convertDateToString(Item.getCreated()) : "");
 			responseDTO.add(systemDetailsResponseDTO);
 		});
 		return responseDTO;
@@ -126,7 +128,9 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 				logDetails.setAuthType(element.getRequestBody());
 				logDetails.setResponseStatus(element.getResponseStatus());
 				logDetails.setError(element.getError());
-				logDetails.setTimestamp(element.getTimestamp().toLocaleString());
+				logDetails.setTimestamp(
+						element.getTimestamp() != null ? DateToStringUtil.convertDateToString(element.getTimestamp())
+								: "");
 				logResponse.add(logDetails);
 			});
 
