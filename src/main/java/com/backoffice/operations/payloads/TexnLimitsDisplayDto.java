@@ -1,5 +1,6 @@
 package com.backoffice.operations.payloads;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,10 @@ public class TexnLimitsDisplayDto {
 	public static class ResquestDTO {
 		String ctype;
 		String transactionType;
+		@NotNull
 		String uniqueKey;
+		@NotNull
+		String accountNumber;
 	}
 	
 	@AllArgsConstructor

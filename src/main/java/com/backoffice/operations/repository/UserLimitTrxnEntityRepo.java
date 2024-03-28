@@ -11,4 +11,5 @@ public interface UserLimitTrxnEntityRepo extends JpaRepository<UserLimitTrxnEnti
     UserLimitTrxnEntity findByUniqueKey(String uniqueKey);
 
     UserLimitTrxnEntity findByAccountNumber(String accountNumber);
+    UserLimitTrxnEntity findByUniqueKeyAndAccountNumber(String uniqueKey,String accountNumber);
 }

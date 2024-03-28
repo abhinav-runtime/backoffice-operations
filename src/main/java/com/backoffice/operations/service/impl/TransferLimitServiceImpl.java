@@ -36,7 +36,7 @@ public class TransferLimitServiceImpl implements TransferLimitService {
     }
 
     @Override
-    public GenericResponseDTO<Object> getTransferLimit(String customerType, String uniqueKey, String transactionType, Double transactionAmt) {
+    public GenericResponseDTO<Object> getTransferLimit(String customerType, String uniqueKey, String transactionType, Double transactionAmt,String accountNumber) {
         logger.info("In TransferLimitServiceImpl getTransferLimit");
         GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
         Map<String, Object> dataMap = new HashMap<>();
@@ -82,7 +82,7 @@ public class TransferLimitServiceImpl implements TransferLimitService {
                             annexureTransferWithSubLimits.getAnnexureTransferLimits().getMonthlyCount() : 0;
 
 
-                    UserLimitTrxnEntity userLimitTrxnEntity = userLimitTrxnEntityRepo.findByUniqueKey(uniqueKey);
+                    UserLimitTrxnEntity userLimitTrxnEntity = userLimitTrxnEntityRepo.findByUniqueKeyAndAccountNumber(uniqueKey,accountNumber);
                     if (Objects.nonNull(userLimitTrxnEntity) && transactionAmt >= minPerTrxnAmt) {
                         if (transactionAmt <= maxPerTrxnAmt) {
                             Integer monthlyTrxnCount = Objects.nonNull(userLimitTrxnEntity.getMonthlyTrxnCount()) ? userLimitTrxnEntity.getMonthlyTrxnCount() : 0;
@@ -155,7 +155,7 @@ public class TransferLimitServiceImpl implements TransferLimitService {
 
     @Override
     public void saveUserTrxnLimitData(String uniqueKey, Double dailyTrxnAmt, String accountNumber) {
-        UserLimitTrxnEntity userLimitTrxnEntityObject = userLimitTrxnEntityRepo.findByAccountNumber(accountNumber);
+        UserLimitTrxnEntity userLimitTrxnEntityObject = userLimitTrxnEntityRepo.findByUniqueKeyAndAccountNumber(uniqueKey,accountNumber);
         if (Objects.isNull(userLimitTrxnEntityObject)) {
             UserLimitTrxnEntity userLimitTrxnEntity = UserLimitTrxnEntity.builder()
                     .uniqueKey(uniqueKey).dailyTrxnLimit(dailyTrxnAmt).dailyTrxnCount(1)
