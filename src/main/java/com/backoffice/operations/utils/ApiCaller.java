@@ -35,9 +35,9 @@ public class ApiCaller {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(tokenResponse.getBody().getAccessToken());
             HttpEntity<String> entity = new HttpEntity<>(headers);
+            // Check if the response is successful and contains payload
             ResponseEntity<ApiResponse> response = jwtAuthRestTemplate.exchange(apiUrl + accountNumber, HttpMethod.GET, entity,
                     ApiResponse.class);
-            // Check if the response is successful and contains payload
             if (Objects.nonNull(response) && Objects.nonNull(response.getBody()) && response.getBody().isSuccess() && response.getBody().getResponse() != null) {
                 // Extract avlbal from the response payload
                 return response.getBody().getResponse().getPayload().getAccbalance().getAccbal().get(0).getAvlbal();

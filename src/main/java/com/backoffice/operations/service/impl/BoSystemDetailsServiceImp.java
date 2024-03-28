@@ -3,6 +3,7 @@ package com.backoffice.operations.service.impl;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -10,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -18,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.backoffice.operations.entity.BoSystemLogEntity;
 import com.backoffice.operations.payloads.AccessTokenResponse;
 import com.backoffice.operations.payloads.BoSystemDetailsResponseDTO;
 import com.backoffice.operations.payloads.BoSystemLogResponseDto;
@@ -27,6 +32,7 @@ import com.backoffice.operations.repository.CivilIdRepository;
 import com.backoffice.operations.repository.SystemDetailRepository;
 import com.backoffice.operations.service.BoSystemDetailsService;
 import com.backoffice.operations.utils.CommonUtils;
+import com.backoffice.operations.utils.DateToStringUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,31 +57,30 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 	private CommonUtils commonUtils;
 
 	@Override
-	public List<BoSystemDetailsResponseDTO> getSystemDetails(String custNo) {
+	public List<BoSystemDetailsResponseDTO> getSystemDetails(String custNo, int page, int size) {
 		List<BoSystemDetailsResponseDTO> responseDTO = new ArrayList<>();
+		Pageable pageable = PageRequest.of(page, size);
 
-		systemDetailRepository.findAllByCivilIdOrderByCreatedDesc(custNo).forEach(Item -> {
+		systemDetailRepository.findAllByCivilIdOrderByCreatedDesc(custNo, pageable).forEach(Item -> {
 			BoSystemDetailsResponseDTO systemDetailsResponseDTO = new BoSystemDetailsResponseDTO();
 			String accessToken = null;
 			try {
-				// ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-				// logger.info("response: {}", response.getBody());
-				// accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
-				// logger.info("accessToken: {}", accessToken);
+				ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+				logger.info("response: {}", response.getBody());
+				accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
+				logger.info("accessToken: {}", accessToken);
 
 				String uniqueKey = Item.getUniqueKey();
 				String CivilId = civilIdRepository.findById(uniqueKey).get().getEntityId();
-				// String apiUrl = externalApiUrl + CivilId;
-				String apiUrl = "http://182.18.138.199/chandan/api/v1/customer/nid/" + CivilId;
+				String apiUrl = externalApiUrl + CivilId;
 				HttpHeaders headers = new HttpHeaders();
 				headers.setBearerAuth(accessToken);
 				headers.setContentType(MediaType.APPLICATION_JSON);
 				HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-				// ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl,
-				// HttpMethod.GET,
-				// requestEntity, String.class);
-				ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
-						String.class);
+				ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET,
+						requestEntity, String.class);
+//				ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
+//						String.class);
 
 				String jsonResponse = responseEntity.getBody();
 				ObjectMapper mapper = new ObjectMapper();
@@ -98,32 +103,48 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 			systemDetailsResponseDTO.setIPAddress(Item.getIpAddress());
 			systemDetailsResponseDTO.setOs_version(Item.getOsVersion());
 			systemDetailsResponseDTO.setResolution(Item.getResolution());
-			systemDetailsResponseDTO.setCreated(Item.getCreated().toLocaleString());
+			systemDetailsResponseDTO.setCreated(
+					Item.getCreated() != null ? DateToStringUtil.convertDateToString(Item.getCreated()) : "");
 			responseDTO.add(systemDetailsResponseDTO);
 		});
 		return responseDTO;
 	}
 
 	@Override
-	public GenericResponseDTO<Object> getSystemLogs() {
+	public GenericResponseDTO<Object> getSystemLogs(int page, int size) {
 		GenericResponseDTO<Object> response = new GenericResponseDTO<>();
-		List<BoSystemLogResponseDto> logResponse  = new ArrayList<>();
+		Map<String, Object> data = new HashMap<>();
+		List<BoSystemLogResponseDto> logResponse = new ArrayList<>();
 		try {
-			loggingRepository.findAllByOrderByTimestampDesc().forEach(element ->{
-			BoSystemLogResponseDto logDetails = new BoSystemLogResponseDto();
-			logDetails.setId(element.getId());
-			logDetails.setRequestUrl(element.getRequestUrl());
-			logDetails.setHttpMethod(element.getHttpMethod());
-			logDetails.setAuthType(element.getRequestBody());
-			logDetails.setResponseStatus(element.getResponseStatus());
-			logDetails.setError(element.getError());
-			logDetails.setTimestamp(element.getTimestamp().toLocaleString());
-			logResponse.add(logDetails);
-		});
-		
+			Map<String, Object> pageinfo = new HashMap<>();
+			Pageable pageable = PageRequest.of(page, size);
+			Page<BoSystemLogEntity> logPage = loggingRepository.findByOrderByTimestampDesc(pageable);
+
+			logPage.getContent().forEach(element -> {
+				BoSystemLogResponseDto logDetails = new BoSystemLogResponseDto();
+				logDetails.setId(element.getId());
+				logDetails.setRequestUrl(element.getRequestUrl());
+				logDetails.setHttpMethod(element.getHttpMethod());
+				logDetails.setAuthType(element.getRequestBody());
+				logDetails.setResponseStatus(element.getResponseStatus());
+				logDetails.setError(element.getError());
+				logDetails.setTimestamp(
+						element.getTimestamp() != null ? DateToStringUtil.convertDateToString(element.getTimestamp())
+								: "");
+				logResponse.add(logDetails);
+			});
+
+			pageinfo.put("totalPages", logPage.getTotalPages());
+			pageinfo.put("currentPage", logPage.getNumber());
+			pageinfo.put("totalElements", logPage.getTotalElements());
+			pageinfo.put("pageSize", logPage.getSize());
+			pageinfo.put("pageContainElements", logPage.getNumberOfElements());
+
+			data.put("logs", logResponse);
+			data.put("pageInfo", pageinfo);
 			response.setStatus("Success");
 			response.setMessage("System Logs");
-			response.setData(logResponse);
+			response.setData(data);
 		} catch (Exception e) {
 			logger.error("Error : {}", e.getMessage());
 			response.setStatus("Faliure");

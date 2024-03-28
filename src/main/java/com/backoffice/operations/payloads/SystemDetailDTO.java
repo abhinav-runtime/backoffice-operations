@@ -27,6 +27,7 @@ public class SystemDetailDTO {
 	private String lang;
 	private String civilId;
 	private String resolution;
+	private String createdDate;
 
 	public String getLang() {
 		return lang;

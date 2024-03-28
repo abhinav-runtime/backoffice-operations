@@ -14,6 +14,7 @@ import com.backoffice.operations.payloads.SystemDetailDTO;
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
 import com.backoffice.operations.repository.SystemDetailRepository;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,7 @@ public class SystemDetailsController {
     private CivilIdRepository civilIdRepository;
 
     @GetMapping
-    public GenericResponseDTO<Object> getAllSystemDetails() {
+    public GenericResponseDTO<Object> getAllSystemDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
     	GenericResponseDTO<Object> response = new GenericResponseDTO<>();
         List<SystemDetail> systemDetails = systemDetailRepository.findAll();
         response.setStatus("Success");
@@ -167,6 +168,11 @@ public class SystemDetailsController {
         dto.setIpAddress(entity.getIpAddress());
         dto.setUniqueKey(entity.getUniqueKey());
         dto.setCivilId(entity.getCivilId());
+        if(Objects.nonNull(entity.getCreated())){
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+            String createdDate = formatter.format(entity.getCreated());
+            dto.setCreatedDate(createdDate);
+        }
         return dto;
     }
 

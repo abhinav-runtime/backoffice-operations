@@ -20,4 +20,5 @@ public class BeneficiaryBank {
     private String id;
     private String bankName;
     private String bankCode;
+    private String bankLogoPath;
 }

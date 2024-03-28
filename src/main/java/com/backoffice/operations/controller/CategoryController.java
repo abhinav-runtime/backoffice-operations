@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.http.HttpHeaders;
 import com.backoffice.operations.payloads.CategoryDto;
 import com.backoffice.operations.service.CategoryService;
 
@@ -14,46 +15,47 @@ import java.util.List;
 @RequestMapping("/api/v1/categories")
 public class CategoryController {
 
-    private CategoryService categoryService;
+	private CategoryService categoryService;
 
-    public CategoryController(CategoryService categoryService) {
-        this.categoryService = categoryService;
-    }
+	public CategoryController(CategoryService categoryService) {
+		this.categoryService = categoryService;
+	}
 
-    // Build Add Category REST API
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CategoryDto> addCategory(@RequestBody CategoryDto categoryDto){
-        CategoryDto savedCategory = categoryService.addCategory(categoryDto);
-        return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
-    }
+	// Build Add Category REST API
+	@PostMapping
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<CategoryDto> addCategory(@RequestBody CategoryDto categoryDto) {
+		CategoryDto savedCategory = categoryService.addCategory(categoryDto);
+		return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
+	}
 
-    // Build Get Category REST API
-    @GetMapping("{id}")
-    public ResponseEntity<CategoryDto> getCategory(@PathVariable("id") String categoryId){
-         CategoryDto categoryDto = categoryService.getCategory(categoryId);
-         return ResponseEntity.ok(categoryDto);
-    }
+	// Build Get Category REST API
+	@GetMapping("{id}")
+	public ResponseEntity<CategoryDto> getCategory(@PathVariable("id") String categoryId,
+			@RequestHeader(HttpHeaders.AUTHORIZATION)  String token) {
+		CategoryDto categoryDto = categoryService.getCategory(categoryId);
+		return ResponseEntity.ok(categoryDto);
+	}
 
-    // Build Get All Categories REST API
-    @GetMapping
-    public ResponseEntity<List<CategoryDto>> getCategories(){
-        return ResponseEntity.ok(categoryService.getAllCategories());
-    }
+	// Build Get All Categories REST API
+	@GetMapping
+	public ResponseEntity<List<CategoryDto>> getCategories(@RequestHeader(HttpHeaders.AUTHORIZATION)  String token) {
+		return ResponseEntity.ok(categoryService.getAllCategories());
+	}
 
-    // Build Update Category REST API
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("{id}")
-    public ResponseEntity<CategoryDto> updateCategory(@RequestBody CategoryDto categoryDto,
-                                                      @PathVariable("id") String categoryId){
-        return ResponseEntity.ok(categoryService.updateCategory(categoryDto, categoryId));
-    }
+	// Build Update Category REST API
+	@PreAuthorize("hasRole('ADMIN')")
+	@PutMapping("{id}")
+	public ResponseEntity<CategoryDto> updateCategory(@RequestBody CategoryDto categoryDto,
+			@PathVariable("id") String categoryId) {
+		return ResponseEntity.ok(categoryService.updateCategory(categoryDto, categoryId));
+	}
 
-    // Build Delete Category REST API
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteCategory(@PathVariable("id") String categoryId){
-        categoryService.deleteCategory(categoryId);
-        return ResponseEntity.ok("Category deleted successfully!.");
-    }
+	// Build Delete Category REST API
+	@PreAuthorize("hasRole('ADMIN')")
+	@DeleteMapping("{id}")
+	public ResponseEntity<String> deleteCategory(@PathVariable("id") String categoryId) {
+		categoryService.deleteCategory(categoryId);
+		return ResponseEntity.ok("Category deleted successfully!.");
+	}
 }

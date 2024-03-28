@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backoffice.operations.payloads.common.GenericResponseDTO;
@@ -40,6 +41,40 @@ public class BoAccountController {
 			}
 			if (accessHelper.isAccessible("CUSTOMERS_INDIVIDUAL", "VIEW")) {
 				responseDTO = boAccountService.getAccountDetails(custNo);
+				if (responseDTO.getStatus().equals("Failure")) {
+					return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
+				} else {
+					return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+				}
+			} else {
+				responseDTO.setMessage("Something went wrong.");
+				responseDTO.setStatus("Failure");
+				responseDTO.setData(new HashMap<>());
+				return new ResponseEntity<>(responseDTO, HttpStatus.METHOD_NOT_ALLOWED);
+			}
+		} catch (Exception e) {
+			logger.error("Error : {}", e.getMessage());
+			responseDTO.setMessage("Something went wrong.");
+			responseDTO.setStatus("Failure");
+			responseDTO.setData(new HashMap<>());
+			return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@GetMapping("/transaction")
+	private ResponseEntity<Object> getAccountTransactions(@RequestParam(name = "accountNumber") String accountNumber,
+			@RequestParam(name = "fromDate", required = false) String fromDate,
+			@RequestParam(name = "toDate", required = false) String toDate) {
+		GenericResponseDTO<Object> responseDTO = new GenericResponseDTO<>();
+		try {
+			if (boUserToken.getRolesFromToken().isEmpty()) {
+				responseDTO.setMessage("Something went wrong.");
+				responseDTO.setStatus("Failure");
+				responseDTO.setData(new HashMap<>());
+				return new ResponseEntity<>(responseDTO, HttpStatus.UNAUTHORIZED);
+			}
+			if (accessHelper.isAccessible("CUSTOMERS_INDIVIDUAL", "VIEW")) {
+				responseDTO = boAccountService.getTransactionDetails(accountNumber, fromDate, toDate);
 				if (responseDTO.getStatus().equals("Failure")) {
 					return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
 				} else {

@@ -6,12 +6,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpHeaders;
 
 import com.backoffice.operations.entity.Product;
 import com.backoffice.operations.repository.ProductRepository;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
@@ -21,12 +23,12 @@ public class ProductController {
     private ProductRepository productRepository ;
     
     @GetMapping
-    public java.util.List<Product> getAllProducts(){
+    public java.util.List<Product> getAllProducts(@RequestHeader(HttpHeaders.AUTHORIZATION) String token){
     	return productRepository.findAll();
     }
     
     @GetMapping("/{productCode}")
-    public Product getProductByID(@PathVariable String productCode) {
+    public Product getProductByID(@PathVariable String productCode, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         return productRepository.findById(productCode)
         		.orElseThrow(() -> new RuntimeException("Product not found with ProductCode: " + productCode));
     }

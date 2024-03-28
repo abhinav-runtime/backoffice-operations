@@ -29,6 +29,8 @@ public class OtpEntity {
 	private String uniqueKeyCivilId;
 	private String otp;
 	private int attempts;
+	@Column(columnDefinition = "boolean default false")
+	private boolean transferWithinAlizzValidate;
 	private LocalDateTime lastAttemptTime;
 
 	public String getUniqueKeyCivilId() {

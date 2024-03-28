@@ -73,7 +73,7 @@ public class SecurityConfig {
                         authorize.requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                         		.requestMatchers("/actuator/**").permitAll()
                         		.requestMatchers("/api/v1/auth/**").permitAll()
-                                .requestMatchers("/bo/v1/**").permitAll()
+                                .requestMatchers("/bo/**").permitAll()
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()
                                 .anyRequest().authenticated()
@@ -114,6 +114,7 @@ public class SecurityConfig {
         config.addAllowedOrigin("https://alizz.nuzion.in");
         config.addAllowedOrigin("http://217.21.91.165");
         config.addAllowedOrigin("https://217.21.91.165");
+        config.addAllowedOrigin("https://back-office-api-integration-2.netlify.app");
         config.addAllowedHeader("*");
         config.setAllowedMethods(Arrays.asList(
                 HttpMethod.GET.name(),
