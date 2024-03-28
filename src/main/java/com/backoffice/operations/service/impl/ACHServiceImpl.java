@@ -172,12 +172,12 @@ public class ACHServiceImpl implements ACHService {
 					alizzTransferDto.setHeader(header);
 					alizzTransferDto.setTransaction(transaction);
 
-					GenericResponseDTO<Object> responseObject = transferLimitService.getTransferLimit(alizzTransferRequestDto.getCustomerType(),
-							alizzTransferRequestDto.getUniqueKey(),alizzTransferRequestDto.getTransactionType(),alizzTransferRequestDto.getTransactionAmount());
-					Object map = responseObject.getData();
-					Map<String, Object> resMap = objectMapper.convertValue(map, new TypeReference<Map<String,Object>>() {
-					});
-					if (resMap.containsKey("isTrxnAllowed") && resMap.get("isTrxnAllowed").equals(true)) {
+//					GenericResponseDTO<Object> responseObject = transferLimitService.getTransferLimit(alizzTransferRequestDto.getCustomerType(),
+//							alizzTransferRequestDto.getUniqueKey(),alizzTransferRequestDto.getTransactionType(),alizzTransferRequestDto.getTransactionAmount());
+//					Object map = responseObject.getData();
+//					Map<String, Object> resMap = objectMapper.convertValue(map, new TypeReference<Map<String,Object>>() {
+//					});
+//					if (resMap.containsKey("isTrxnAllowed") && resMap.get("isTrxnAllowed").equals(true)) {
 						ObjectMapper objectMapper = JsonMapper.builder()
 								.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).build();
 						String jsonRequestBody = objectMapper.writeValueAsString(alizzTransferDto);
@@ -203,7 +203,17 @@ public class ACHServiceImpl implements ACHService {
 									alizzTransferRequestDto.getFromAccountNumber());
 						}
 						return responseDTO;
-					}
+//					} else {
+//						data.put("message", "User Transaction Limit Exceeded");
+//						data.put("transactionID", txnRefId);
+//						data.put("transactionDateTime", trnxDate);
+//						data.put("uniqueKey", alizzTransferRequestDto.getUniqueKey());
+//						data.put("status", "Failure");
+//						responseDTO.setStatus("Success");
+//						responseDTO.setMessage("Failure");
+//						responseDTO.setData(data);
+//						return responseDTO;
+//					}
 				}
 			} else {
 				data.put("message", "Payment failed!");

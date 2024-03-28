@@ -171,12 +171,12 @@ public class TransferServiceImpl implements TransferService {
             transferRequestDto.setTransaction(transaction);
 
 
-            GenericResponseDTO<Object> responseObject = transferLimitService.getTransferLimit(selfTransferDTO.getCustomerType(),
-                    selfTransferDTO.getUniqueKey(), selfTransferDTO.getTransactionType(), selfTransferDTO.getTransactionAmount());
-            Object map = responseObject.getData();
-            Map<String, Object> resMap = objectMapper.convertValue(map, new TypeReference<Map<String, Object>>() {
-            });
-            if (resMap.containsKey("isTrxnAllowed") && resMap.get("isTrxnAllowed").equals(true)) {
+//            GenericResponseDTO<Object> responseObject = transferLimitService.getTransferLimit(selfTransferDTO.getCustomerType(),
+//                    selfTransferDTO.getUniqueKey(), selfTransferDTO.getTransactionType(), selfTransferDTO.getTransactionAmount());
+//            Object map = responseObject.getData();
+//            Map<String, Object> resMap = objectMapper.convertValue(map, new TypeReference<Map<String, Object>>() {
+//            });
+//            if (resMap.containsKey("isTrxnAllowed") && resMap.get("isTrxnAllowed").equals(true)) {
             ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
 
             HttpHeaders headers = new HttpHeaders();
@@ -195,7 +195,17 @@ public class TransferServiceImpl implements TransferService {
 
             responseDTO = getResponseDto(selfTransferDTO.getUniqueKey(), responseEntity.getStatusCode().is2xxSuccessful(),
                     fundTransferResponseDto, txnRefId, trnxDate, selfTransferDTO.getTransactionAmount(), selfTransferDTO.getFromAccountNumber());
-        }
+//        }else {
+//                data.put("message", "User Transaction Limit Exceeded");
+//                data.put("transactionID", txnRefId);
+//                data.put("transactionDateTime", trnxDate);
+//                data.put("uniqueKey", selfTransferDTO.getUniqueKey());
+//                data.put("status", "Failure");
+//                responseDTO.setStatus("Success");
+//                responseDTO.setMessage("Failure");
+//                responseDTO.setData(data);
+//                return responseDTO;
+//            }
         } catch (Exception e) {
             logger.error("ERROR in class TransferServiceImpl method transferToBank", e);
             data.put("message", "Payment failed!");
