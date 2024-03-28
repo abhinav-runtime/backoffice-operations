@@ -46,7 +46,7 @@ public class TrxnLimitsDisplayServiceImp implements TrxnLimitsDisplayService {
 					.findByAnnexureTransferLimitsAndSubTypeLimit(annexureTransferLimits, subType);
 			UserLimitTrxnEntity userLimitTrxnEntity = new UserLimitTrxnEntity();
 			if (userLimitTrxnEntityRepo.existsByUniqueKey(requestDTO.getUniqueKey())) {
-				userLimitTrxnEntity = userLimitTrxnEntityRepo.findByUniqueKey(requestDTO.getUniqueKey());
+				userLimitTrxnEntity = userLimitTrxnEntityRepo.findByUniqueKeyAndAccountNumber(requestDTO.getUniqueKey(), requestDTO.getAccountNumber());
 			} else {
 				userLimitTrxnEntity = UserLimitTrxnEntity.builder().dailyTrxnLimit(0.0).dailyTrxnCount(0).monthlyTrxnCount(0)
 						.monthlyTrxnLimit(0.0).build();

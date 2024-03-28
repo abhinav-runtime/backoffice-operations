@@ -22,9 +22,10 @@ public class TransferLimitController {
                                                                        @RequestParam String uniqueKey,
                                                                        @RequestParam String transactionType,
                                                                        @RequestParam Double transactionAmount,
+                                                                       @RequestParam String accountNumber,
                                                                        @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         return new ResponseEntity<>(transferLimitService.getTransferLimit(customerType, uniqueKey, transactionType,
-                transactionAmount), HttpStatus.OK);
+                transactionAmount,accountNumber), HttpStatus.OK);
 
     }
 }
