@@ -56,28 +56,28 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 	private CommonUtils commonUtils;
 
 	@Override
-	public List<BoSystemDetailsResponseDTO> getSystemDetails(String custNo) {
+	public List<BoSystemDetailsResponseDTO> getSystemDetails(String custNo, int page, int size) {
 		List<BoSystemDetailsResponseDTO> responseDTO = new ArrayList<>();
+		Pageable pageable = PageRequest.of(page, size);
 
-		systemDetailRepository.findAllByCivilIdOrderByCreatedDesc(custNo).forEach(Item -> {
+		systemDetailRepository.findAllByCivilIdOrderByCreatedDesc(custNo, pageable).forEach(Item -> {
 			BoSystemDetailsResponseDTO systemDetailsResponseDTO = new BoSystemDetailsResponseDTO();
 			String accessToken = null;
 			try {
-				 ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
-				 logger.info("response: {}", response.getBody());
-				 accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
-				 logger.info("accessToken: {}", accessToken);
+				ResponseEntity<AccessTokenResponse> response = commonUtils.getToken();
+				logger.info("response: {}", response.getBody());
+				accessToken = Objects.requireNonNull(response.getBody().getAccessToken());
+				logger.info("accessToken: {}", accessToken);
 
 				String uniqueKey = Item.getUniqueKey();
 				String CivilId = civilIdRepository.findById(uniqueKey).get().getEntityId();
-				 String apiUrl = externalApiUrl + CivilId;
+				String apiUrl = externalApiUrl + CivilId;
 				HttpHeaders headers = new HttpHeaders();
 				headers.setBearerAuth(accessToken);
 				headers.setContentType(MediaType.APPLICATION_JSON);
 				HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-				 ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl,
-				 HttpMethod.GET,
-				 requestEntity, String.class);
+				ResponseEntity<String> responseEntity = jwtAuthRestTemplate.exchange(apiUrl, HttpMethod.GET,
+						requestEntity, String.class);
 //				ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
 //						String.class);
 
@@ -102,7 +102,7 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 			systemDetailsResponseDTO.setIPAddress(Item.getIpAddress());
 			systemDetailsResponseDTO.setOs_version(Item.getOsVersion());
 			systemDetailsResponseDTO.setResolution(Item.getResolution());
-			systemDetailsResponseDTO.setCreated(Item.getCreated().toLocaleString());
+			systemDetailsResponseDTO.setCreated(Item.getCreated() != null ? Item.getCreated().toLocaleString() : "");
 			responseDTO.add(systemDetailsResponseDTO);
 		});
 		return responseDTO;
@@ -135,7 +135,7 @@ public class BoSystemDetailsServiceImp implements BoSystemDetailsService {
 			pageinfo.put("totalElements", logPage.getTotalElements());
 			pageinfo.put("pageSize", logPage.getSize());
 			pageinfo.put("pageContainElements", logPage.getNumberOfElements());
-			
+
 			data.put("logs", logResponse);
 			data.put("pageInfo", pageinfo);
 			response.setStatus("Success");
