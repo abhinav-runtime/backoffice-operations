@@ -172,7 +172,7 @@ public class TransferServiceImpl implements TransferService {
 
 
             GenericResponseDTO<Object> responseObject = transferLimitService.getTransferLimit(selfTransferDTO.getCustomerType(),
-                    selfTransferDTO.getUniqueKey(), selfTransferDTO.getTransactionType(), selfTransferDTO.getTransactionAmount());
+                    selfTransferDTO.getUniqueKey(), selfTransferDTO.getTransactionType(), selfTransferDTO.getTransactionAmount(), selfTransferDTO.getFromAccountNumber());
             Object map = responseObject.getData();
             Map<String, Object> resMap = objectMapper.convertValue(map, new TypeReference<Map<String, Object>>() {
             });
